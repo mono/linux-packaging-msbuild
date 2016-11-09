@@ -1,0 +1,110 @@
+﻿<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Include the output assembly in the <FilesToSign /> item group if project being built is not a test project.
+  -->
+  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+    <FilesToSign Include="$(OutDir)\$(AssemblyName)$(TargetExt)">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+  <Import Project="..\dir.targets" />
+
+  <PropertyGroup>
+    <!-- Don't copy NuGet implementations directly, since that would require setting a runtime and targeting a specific architecture.
+         Instead, it they will be deployed by DeployDependencies.proj. -->
+    <CopyNuGetImplementations>false</CopyNuGetImplementations>
+
+    <DocumentationFile Condition="'$(EnableDocumentationFile)' == 'true'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <Import Project="$(CSharpTargets)" 
+          Condition="('$(NetCoreBuild)' != 'true') 
+                      and Exists('$(CSharpTargets)')"/>
+
+  <Import Project="$(CSharpPortableTargets)" 
+          Condition="'$(NetCoreBuild)' == 'true' 
+                      and Exists('$(CSharpPortableTargets)')"/>
+  
+  <!-- Fallback: If we're building Debug-NetCore with a mono host, MSBuildExtensionsPath32 resolves to a system wide Mono specific directory that does not have the portable targets. Fallback to using the BuildTools one -->
+  <Import Project="$(CSharpPortableTargetsFallback)"
+          Condition="'$(NetCoreBuild)' == 'true' 
+                      and Exists('$(CSharpPortableTargetsFallback)')
+                      and !Exists('$(CSharpPortableTargets)')"/>
+  
+  <Import Project="$(RepoRoot)\targets\OverrideGetReferenceAssemblyPaths.targets"
+          Condition="'$(NetCoreBuild)' == 'true'"/>
+
+  <!-- OSS sign assemblies after compile runs. -->
+  <Import Condition="Exists('$(ToolsDir)\sign.targets')" Project="$(ToolsDir)\sign.targets" />
+  
+  <Import Project="$(MicroBuildDir)\MicroBuild.Core.targets" Condition="Exists('$(MicroBuildDir)\MicroBuild.Core.targets')" />
+
+    <!-- Targets from buildtools that restore packages before building. -->
+  <!-- TODO: ideally replaced by a standard "dotnet restore" over the solution. -->
+  <Import Condition="Exists('$(ToolsDir)\packageresolve.targets')" Project="$(ToolsDir)\packageresolve.targets" />
+
+  <ItemGroup Condition="'$(NetCoreBuild)' == 'true' and '$(UpdateNuGetPackageDependencies)' == 'true'">
+    <NuSpecFile Include="$(ProjectDir)build\NuGetPackages\$(MSBuildProjectName).nuspec" Condition="Exists('$(ProjectDir)build\NuGetPackages\$(MSBuildProjectName).nuspec')">
+      <Visible>false</Visible>
+    </NuSpecFile>
+    <NuSpecFile Include="$(ProjectDir)build\NuGetPackages\$(MSBuildProjectName).Core.nuspec" Condition="Exists('$(ProjectDir)build\NuGetPackages\$(MSBuildProjectName).Core.nuspec')">
+      <Visible>false</Visible>
+    </NuSpecFile>
+    <NuSpecProjectFile Include="$(MSBuildProjectFullPath)">
+      <Visible>false</Visible>
+    </NuSpecProjectFile>
+  </ItemGroup>
+  
+  <!-- Use NuSpec.ReferenceGenerator to create / update the .NET Core dependencies of the packages -->
+  <Import Condition="'$(NetCoreBuild)'=='true'  and '$(UpdateNuGetPackageDependencies)' == 'true' and Exists('$(NuSpecReferenceGeneratorDir)\NuSpec.ReferenceGenerator.targets')"  Project="$(NuSpecReferenceGeneratorDir)\NuSpec.ReferenceGenerator.targets"/>
+
+  <!-- Debugging support -->
+  <PropertyGroup Condition="'$(NetCoreBuild)' == 'true'">
+    <StartAction>Program</StartAction>
+    <DebugEngines>{2E36F1D4-B23C-435D-AB41-18E608940038}</DebugEngines>
+    <TestHost Condition="'$(OsEnvironment)' == 'Windows_NT'">dotnet.exe</TestHost>
+    <TestHost Condition="'$(OsEnvironment)' != 'Windows_NT'">dotnet</TestHost>
+    <StartProgram Condition="'$(StartProgram)'==''">$(DeploymentDir)\$(TestHost)</StartProgram>
+    <StartArguments>$(TargetPath)</StartArguments>
+  </PropertyGroup>
+
+
+  <PropertyGroup Condition="'$(NetCoreBuild)' == 'true' And '$(IsTestProject)'=='true'">
+    <StartArguments>xunit.console.netcore.exe $(TargetFileName) $(XunitOptions)</StartArguments>
+    <StartAction>Program</StartAction>
+  </PropertyGroup>
+
+  <!-- TODO: enable for all runtime hosts https://github.com/Microsoft/msbuild/issues/694 -->
+  <Import Project="$(GitVersioningDir)dotnet\Nerdbank.GitVersioning.targets"
+          Condition="'$(MSBuildRuntimeType)' == 'Desktop'" />
+  <PropertyGroup Condition="'$(MSBuildRuntimeType)' != 'Desktop'">
+    <DefineConstants>$(DefineConstants);STATIC_VERSION_NUMBER</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Update localized resources from the default English ones-->
+  <Import Project="UpdateLocalizedResources.targets" Condition="'$(LocalizationBuildAssetsRequired)' == 'true' and '$(IsTestProject)' != 'true' and '$(DoNotLocalizeProject)' != 'true'"/>
+
+  <!-- Restore packages -->
+  <PropertyGroup>
+    <PackagesConfig Condition="Exists('$(MSBuildProjectDirectory)\packages.config')">$(MSBuildProjectDirectory)\packages.config</PackagesConfig>
+    <RestorePackages Condition="'$(RestorePackages)' == '' and Exists('$(PackagesConfig)')">true</RestorePackages>
+    <RestorePackagesSemaphore>$(PackagesDir)$(MSBuildProjectFile).package.restored</RestorePackagesSemaphore>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(NetCoreBuild)' == 'true'">
+    <NuGetTargetMoniker>$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)</NuGetTargetMoniker>
+  </PropertyGroup>
+  
+  <Import Project="$(RepoRoot)\targets\GenApi.targets" Condition="'$(OS)' == 'Windows_NT'" />
+
+  <!-- Taken from Microsoft.VisualStudio.SDK.EmbedInteropTypes NuGet package which tries to fix this issue
+       (but doesn't include this assembly in their list).  -->
+  <Target Name="LinkVSEmbeddableAssemblies" DependsOnTargets="ResolveReferences" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Microsoft.VisualStudio.Setup.Configuration.Interop'">
+        <EmbedInteropTypes>true</EmbedInteropTypes>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+</Project>
