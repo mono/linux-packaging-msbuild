@@ -1,0 +1,5 @@
+msbuild (15.0+xamarinxplat.2016.11.08.18.31-0xamarin1) unstable; urgency=medium
+
+  * Initial release
+
+ -- Jo Shields <joshield@microsoft.com>  Wed, 09 Nov 2016 11:50:17 +0000

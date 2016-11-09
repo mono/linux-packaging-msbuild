@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+MAKEFILE = $(firstword $(MAKEFILE_LIST))
+DEBIAN_DIR = $(dir $(MAKEFILE))
+TEMP_HOME = $(abspath $(DEBIAN_DIR))/homedir/
+
+override_dh_clean:
+	rm -rf $(TEMP_HOME)
+	dh_clean
+
+override_dh_auto_build:
+	mkdir -p $(TEMP_HOME)
+	HOME=$(TEMP_HOME) ./cibuild.sh --scope Compile --host Mono --target Mono
+
+override_dh_auto_install:
+	DESTDIR=debian/msbuild ./install-mono-prefix.sh /usr
+	rm -f debian/msbuild/usr/lib/mono/msbuild/15.0/bin/Microsoft.DiaSymReader.*
+
+override_dh_clideps:
+	dh_clideps \
+		--exclude-moduleref=api-ms-win-core-file-l1-1-0.dll \
+		--exclude-moduleref=clr \
+		--exclude-moduleref=crypt32.dll \
+		--exclude-moduleref=dbghelp.dll \
+		--exclude-moduleref=fusion.dll \
+		--exclude-moduleref=Microsoft.DiaSymReader.Native.x86.dll \
+		--exclude-moduleref=Microsoft.DiaSymReader.Native.amd64.dll \
+		--exclude-moduleref=mscoree.dll \
+		--exclude-moduleref=NTDLL.DLL \
+		--exclude-moduleref=ole32.dll
+
+%:
+	dh --with cli $@ 
