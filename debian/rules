@@ -22,6 +22,7 @@ override_dh_clideps:
 		--exclude-moduleref=crypt32.dll \
 		--exclude-moduleref=dbghelp.dll \
 		--exclude-moduleref=fusion.dll \
+		--exclude-moduleref=libc \
 		--exclude-moduleref=Microsoft.DiaSymReader.Native.x86.dll \
 		--exclude-moduleref=Microsoft.DiaSymReader.Native.amd64.dll \
 		--exclude-moduleref=mscoree.dll \
