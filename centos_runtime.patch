@@ -1,0 +1,11 @@
+diff --git a/targets/runtimeDependencies/project.json b/targets/runtimeDependencies/project.json
+index f8be970..13fdf48 100644
+--- a/targets/runtimeDependencies/project.json
++++ b/targets/runtimeDependencies/project.json
+@@ -1,5 +1,6 @@
+ ﻿{
+   "runtimes": {
++    "centos-x64": {},
+     "win7-x86": {},
+     "win7-x64": {},
+     "osx.10.10-x64": {},

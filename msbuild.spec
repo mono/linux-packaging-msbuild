@@ -1,0 +1,56 @@
+#
+# spec file for package msbuild
+#
+# Copyright (c) 2016 Xamarin, Inc (http://www.xamarin.com)
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+Name:           msbuild
+Version:        15.0+xamarinxplat.2016.11.08.18.31
+Release:        0.xamarin.1
+Summary:        Build system for .NET projects
+License:        MIT
+Group:          Development/Libraries/Other
+Url:            https://github.com/Microsoft/msbuild
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+Source0:        msbuild_%{version}.orig.tar.gz
+Patch0:		centos_runtime.patch
+BuildRequires:  mono-devel
+BuildRequires:  libunwind-devel
+BuildRequires:  libicu-devel
+BuildRequires:  libcurl-devel
+BuildArch:      noarch
+
+%description
+The Microsoft Build Engine is a platform for building applications.
+This engine, which is also known as MSBuild, provides an XML schema
+for a project file that controls how the build platform processes
+and builds software. Visual Studio uses MSBuild, but MSBuild does
+not depend on Visual Studio. By invoking msbuild.exe on your
+project or solution file, you can orchestrate and build products
+in environments where Visual Studio isn't installed.
+
+%prep
+%setup -n msbuild-xplat-c9
+%patch0 -p1
+
+%build
+%{?exp_env}
+%{?env_options}
+./cibuild.sh --scope Compile --host Mono --target Mono
+
+%install
+%{?env_options}
+DESTDIR=%{buildroot} ./install-mono-prefix.sh %{_prefix}
+
+%files
+%defattr(-,root,root)
+%_prefix/lib/
+%_bindir/*
