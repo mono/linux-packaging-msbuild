@@ -479,22 +479,16 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             "b",
             new string[0],
             new[] { "a" })]
-        //// items as strings: escaped include matches non-escaped exclude
+        // items as strings: escaped include matches non-escaped exclude
         [InlineData(ItemWithIncludeAndExclude,
             "%61",
             "a",
             new string[0],
             new string[0])]
-        //// items as strings: non-escaped include matches escaped exclude
+        // items as strings: non-escaped include matches escaped exclude
         [InlineData(ItemWithIncludeAndExclude,
             "a",
             "%61",
-            new string[0],
-            new string[0])]
-        // items as strings: include with escaped wildcard and non-escaped wildcard matches exclude with escaped wildcard and non-escaped wildcard. Both are treated as values and not as globs
-        [InlineData(ItemWithIncludeAndExclude,
-            @"**/a%2Axb",
-            @"**/a%2Axb",
             new string[0],
             new string[0])]
         // items as files: non-escaped wildcard include matches escaped non-wildcard character
@@ -503,8 +497,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             "a%40b",
             new[] { "acb", "a@b" },
             new[] { "acb" })]
-       // items as files: non-escaped non-wildcard include matches escaped non-wildcard character
-       [InlineData(ItemWithIncludeAndExclude,
+        // items as files: non-escaped non-wildcard include matches escaped non-wildcard character
+        [InlineData(ItemWithIncludeAndExclude,
            "acb;a@b",
            "a%40b",
            new string[0],
@@ -521,22 +515,47 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             "a%40?b",
             new[] { "a@b", "a@ab", "a@bb" },
             new[] { "a@b" })]
-       // items as files: non-escaped recursive wildcard include matches escaped recursive wildcard exclude
-       [InlineData(ItemWithIncludeAndExclude,
+        // items as files: non-escaped recursive wildcard include matches escaped recursive wildcard exclude
+        [InlineData(ItemWithIncludeAndExclude,
            @"**\a*b",
            @"**\a*%78b",
            new[] { "aab", "aaxb", @"dir\abb", @"dir\abxb" },
            new[] { "aab", @"dir\abb" })]
         // items as files: include with non-escaped glob does not match exclude with escaped wildcard character.
-        // The exclude is treated as a literal and only matches against non-glob include fragments (i.e., against values and item references). %2A is *
+        // The exclude is treated as a literal, not a glob, and therefore should not match the input files
         [InlineData(ItemWithIncludeAndExclude,
-            @"**\a*b;**\a%2Axb",
+            @"**\a*b",
             @"**\a%2Axb",
             new[] { "aab", "aaxb", @"dir\abb", @"dir\abxb" },
             new[] { "aab", "aaxb", @"dir\abb", @"dir\abxb" })]
         public void IncludeExcludeWithEscapedCharacters(string projectContents, string includeString, string excludeString, string[] inputFiles, string[] expectedInclude)
         {
             TestIncludeExcludeWithDifferentSlashes(projectContents, includeString, excludeString, inputFiles, expectedInclude);
+        }
+
+        [Theory]
+        // items as strings: include with both escaped and unescaped glob should be treated as literal and therefore not match against files as a glob
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\a%2Axb",
+            @"foo",
+            new[] { "aab", "aaxb", @"dir\abb", @"dir\abxb" },
+            new[] { @"**\a*xb" })]
+        // Include with both escaped and unescaped glob does not match exclude with escaped wildcard character which has a different slash orientation
+        // The presence of the escaped and unescaped glob should make things behave as strings-which-are-not-paths and not as strings-which-are-paths
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\a%2Axb",
+            @"**/a%2Axb",
+            new string[0],
+            new[] { @"**\a*xb" })]
+        // Slashes are not normalized when contents is not a path
+        [InlineData(ItemWithIncludeAndExclude,
+            @"a/b/foo::||bar;a/b/foo::||bar/;a/b/foo::||bar\;a/b\foo::||bar",
+            @"a/b/foo::||bar",
+            new string[0],
+            new [] { "a/b/foo::||bar/", @"a/b/foo::||bar\", @"a/b\foo::||bar" })]
+        public void IncludeExcludeWithNonPathContents(string projectContents, string includeString, string excludeString, string[] inputFiles, string[] expectedInclude)
+        {
+            TestIncludeExclude(projectContents, inputFiles, expectedInclude, includeString, excludeString, normalizeSlashes: false);
         }
 
         [Theory]
@@ -602,9 +621,115 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 @"a\foo",
                 "build.proj"
             })]
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\*",
+            @"a\af*\*",
+            new[]
+            {
+                @"a\foo",
+                @"a\a\foo",
+                @"a\b\foo",
+            },
+            new[]
+            {
+                @"a\a\foo",
+                @"a\b\foo",
+                @"a\foo",
+                "build.proj"
+            })]
         public void ExcludeVectorWithWildCards(string projectContents, string includeString, string excludeString, string[] inputFiles, string[] expectedInclude)
         {
             TestIncludeExcludeWithDifferentSlashes(projectContents, includeString, excludeString, inputFiles, expectedInclude);
+        }
+
+        [Theory]
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\*",
+            @"excludes\**.*",
+            new[]
+            {
+                @"a.cs",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            },
+            new[]
+            {
+                @"a.cs",
+                "build.proj",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            })]
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\*",
+            @"excludes\**..\*",
+            new[]
+            {
+                @"a.cs",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            },
+            new[]
+            {
+                @"a.cs",
+                "build.proj",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            })]
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**\*",
+            @"**.*",
+            new[]
+            {
+                @"a.cs",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            },
+            new[]
+            {
+                @"a.cs",
+                "build.proj",
+                @"excludes\b.cs",
+                @"excludes\subdir\c.cs",
+            })]
+        [InlineData(ItemWithIncludeAndExclude,
+            "*;**a",
+            "**a",
+            new[]
+            {
+                "a",
+            },
+            new[]
+            {
+                "a",
+                "build.proj"
+            })]
+        [InlineData(ItemWithIncludeAndExclude,
+            @"**1;**2",
+            @"**1",
+            new[]
+            {
+                @"1",
+                @"2",
+                @"excludes\1",
+                @"excludes\2",
+                @"excludes\subdir\1",
+                @"excludes\subdir\2",
+            },
+            new[]
+            {
+                "**2"
+            })]
+        [InlineData(ItemWithIncludeAndExclude,
+            @":||;||:",
+            @"||:",
+            new string[0],
+            new[]
+            {
+                ":||"
+            })]
+        public void ExcludeAndIncludeConsideredAsLiteralsWhenFilespecIsIllegal(string projectContents, string includeString, string excludeString, string[] inputFiles, string[] expectedInclude)
+        {
+            TestIncludeExclude(projectContents, inputFiles, expectedInclude, includeString, excludeString, normalizeSlashes: true);
         }
 
         [Theory]
@@ -794,6 +919,63 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             runTest(true, false);
             runTest(false, true);
             runTest(true, true);
+        }
+
+        [Theory]
+        // exclude globbing cone at project level;
+        [InlineData(
+            "../a.cs;b.cs", // include string
+            "**/*.cs", // exclude string
+            new[] {"a.cs", "ProjectDir/b.cs"}, // files to create relative to the test root dir
+            "ProjectDir", // relative path from test root to project
+            new[] {"../a.cs"} // expected items
+            )]
+        // exclude globbing cone below project level;
+        [InlineData(
+            "a.cs;a/b.cs",
+            "a/**/*.cs",
+            new[] { "a.cs", "a/b.cs" },
+            "",
+            new[] {"a.cs"}
+            )]
+        // exclude globbing above project level;
+        [InlineData(
+            "a.cs;../b.cs;../../c.cs",
+            "../**/*.cs",
+            new[] { "a/ProjectDir/a.cs", "a/b.cs", "c.cs"},
+            "a/ProjectDir",
+            new[] { "../../c.cs" }
+            )]
+        public void ExcludeWithMissmatchingGlobCones(string includeString, string excludeString, string[] files, string relativePathFromRootToProject, string[] expectedInclude)
+        {
+            var projectContents = string.Format(ItemWithIncludeAndExclude, includeString, excludeString);
+
+            using (var testFiles = new Helpers.TestProjectWithFiles(projectContents, files, relativePathFromRootToProject))
+            using (var projectCollection = new ProjectCollection())
+            {
+                ObjectModelHelpers.AssertItems(expectedInclude, new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection).Items.ToList());
+            }
+
+        }
+
+        [Theory(Skip = "https://github.com/Microsoft/msbuild/issues/1576")]
+        [InlineData(
+            "../**/*.cs", // include string
+            "a.cs", // exclude string
+            new[] {"ProjectDir/a.cs", "b.cs"}, // files to create relative to the test root dir
+            "ProjectDir", // relative path from test root to project
+            new[] {"../b.cs"} // expected items
+            )]
+        public void ExcludingRelativeItemToCurrentDirectoryShouldWorkWithAboveTheConeIncludes(string includeString, string excludeString, string[] files, string relativePathFromRootToProject, string[] expectedInclude)
+        {
+            var projectContents = string.Format(ItemWithIncludeAndExclude, includeString, excludeString);
+
+            using (var testFiles = new Helpers.TestProjectWithFiles(projectContents, files, relativePathFromRootToProject))
+            using (var projectCollection = new ProjectCollection())
+            {
+                ObjectModelHelpers.AssertItems(expectedInclude, new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection).Items.ToList());
+            }
+
         }
 
         /// <summary>
@@ -1599,6 +1781,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         /// </summary>
         [Fact]
         [Trait("Category", "netcore-osx-failing")]
+        [Trait("Category", "netcore-linux-failing")]
         public void RenameItemInProjectWithWildcards()
         {
             string projectDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -1813,6 +1996,38 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             Assert.Empty(items);
         }
+		
+		[Fact]
+        public void RemoveShouldRespectCondition()
+        {
+            var projectContents = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<i Include='a;b;c' />" +
+                @"<i Condition='0 == 1' Remove='b' />" +
+                @"<i Condition='1 == 1' Remove='c' />"
+                );
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(projectContents);
+
+            Assert.Equal(@"a;b", string.Join(";", project.Items.Select(i => i.EvaluatedInclude)));
+        }
+
+        /// <summary>
+        /// See comment for details: https://github.com/Microsoft/msbuild/issues/1475#issuecomment-275520394
+        /// </summary>
+        [Fact(Skip = "https://github.com/Microsoft/msbuild/issues/1616")]
+        public void RemoveWithConditionShouldNotApplyOnItemsIgnoringCondition()
+        {
+            var projectContents = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<i Include='a;b;c;d' />" +
+                @"<i Condition='0 == 1' Remove='b' />" +
+                @"<i Condition='1 == 1' Remove='c' />" +
+                @"<i Remove='d' />"
+                );
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(projectContents);
+
+            Assert.Equal(@"a;b;c", string.Join(";", project.ItemsIgnoringCondition.Select(i => i.EvaluatedInclude)));
+        }
 
         [Fact]
         public void UpdateMetadataShouldAddOrReplace()
@@ -1850,14 +2065,10 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 , items[1]);
         }
 
-        /// <summary>
-        /// Project evaluation is a design time evaluation. Conditions on items are ignored
-        /// Conditions on metadata on the other hand appear to be respected on the other hand (don't know why, but that's what the code does).
-        /// </summary>
         [Fact]
-        public void UpdateShouldNotRespectConditionsOnItems()
+        public void UpdateShouldRespectCondition()
         {
-            string content = @"<i Include='a;b;c'>
+            string projectContents = @"<i Include='a;b;c'>
                                   <m1>m1_contents</m1>
                               </i>
                               <i Update='a' Condition='1 == 1'>
@@ -1869,8 +2080,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                               <i Update='c'>
                                   <m1 Condition='1 == 0'>from_false_metadata</m1>
                               </i>";
-
-            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content);
+            
+            var project = ObjectModelHelpers.CreateInMemoryProject(ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(projectContents));
 
             var expectedInitial = new Dictionary<string, string>
             {
@@ -1882,15 +2093,56 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 {"m1", "from_true"}
             };
 
-            var expectedUpdateFromFalseOnItem = new Dictionary<string, string>
-            {
-                {"m1", "from_false_item"}
-            };
+            var items = project.Items.ToList();
 
             ObjectModelHelpers.AssertItemHasMetadata(expectedUpdateFromTrue, items[0]);
-            ObjectModelHelpers.AssertItemHasMetadata(expectedUpdateFromFalseOnItem, items[1]);
+            ObjectModelHelpers.AssertItemHasMetadata(expectedInitial, items[1]);
             ObjectModelHelpers.AssertItemHasMetadata(expectedInitial, items[2]);
         }
+
+        /// <summary>
+        /// See comment for details: https://github.com/Microsoft/msbuild/issues/1475#issuecomment-275520394
+        /// Conditions on metadata on appear to be respected even for items ignoring condition (don't know why, but that's what the code does).
+        /// </summary>
+        [Fact(Skip = "https://github.com/Microsoft/msbuild/issues/1616")]
+        public void UpdateWithConditionShouldNotApplyOnItemsIgnoringCondition()
+        {
+            string projectContents = @"<i Include='a;b;c;d'>
+                                  <m1>m1_contents</m1>
+                              </i>
+                              <i Update='a' Condition='1 == 1'>
+                                  <m1>from_true</m1>
+                              </i>
+                              <i Update='b' Condition='1 == 0'>
+                                  <m1>from_false_item</m1>
+                              </i>
+                              <i Update='c'>
+                                  <m1 Condition='1 == 0'>from_false_metadata</m1>
+                              </i>
+                              <i Update='d'>
+                                  <m1>from_uncoditioned_update</m1>
+                              </i>";
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(projectContents));
+
+            var expectedInitial = new Dictionary<string, string>
+            {
+                {"m1", "m1_contents"}
+            };
+
+            var expectedUpdateFromUnconditionedElement = new Dictionary<string, string>
+            {
+                {"m1", "from_uncoditioned_update"}
+            };
+
+            var itemsIgnoringCondition = project.ItemsIgnoringCondition.ToList();
+
+            ObjectModelHelpers.AssertItemHasMetadata(expectedInitial, itemsIgnoringCondition[0]);
+            ObjectModelHelpers.AssertItemHasMetadata(expectedInitial, itemsIgnoringCondition[1]);
+            ObjectModelHelpers.AssertItemHasMetadata(expectedInitial, itemsIgnoringCondition[2]);
+            ObjectModelHelpers.AssertItemHasMetadata(expectedUpdateFromUnconditionedElement, itemsIgnoringCondition[3]);
+        }
+
 
         [Fact]
         public void LastUpdateWins()

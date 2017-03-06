@@ -1439,6 +1439,207 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 File.Delete(path);
             }
         }
+        
+        /// <summary>
+        /// Adding an import to an existing PRE object and re-evaluating should preserve the initial import PRE object
+        /// </summary>
+        [Fact]
+        public void ImportingExistingPREObjectShouldPreserveTheObject()
+        {
+            var importProjectContents = ObjectModelHelpers.CleanupFileContents(
+@"<Project xmlns=`msbuildnamespace`>
+
+  <PropertyGroup>
+    <P>p1</P>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <I Include=`i1`>
+      <M>m1</M>
+    </I>
+  </ItemGroup>
+
+</Project>");
+
+            using (var projectFiles = new Helpers.TestProjectWithFiles("", new[] {"import.proj"}))
+            using (var projectCollection = new ProjectCollection())
+            {
+                var importFile = projectFiles.CreatedFiles.First();
+                ProjectRootElement import =
+                    ProjectRootElement.Create(
+                        XmlReader.Create(new StringReader(importProjectContents)),
+                        projectCollection,
+                        // preserve formatting to simulate IDE usage
+                        preserveFormatting: true);
+
+                // puts the import in the PRE cache
+                import.Save(importFile);
+                Assert.False(import.HasUnsavedChanges);
+
+                Project project = new Project(projectCollection);
+                project.Xml.AddImport(importFile);
+                project.ReevaluateIfNecessary();
+
+                Assert.Same(import, project.Imports.First().ImportedProject);
+            }
+        }
+
+        [Fact]
+        public void ReloadedImportsMarkProjectAsDirty()
+        {
+            var importProjectContents = ObjectModelHelpers.CleanupFileContents(
+@"<Project xmlns=`msbuildnamespace`>
+
+  <PropertyGroup>
+    <P>p1</P>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <I Include=`i1`>
+      <M>m1</M>
+    </I>
+  </ItemGroup>
+
+</Project>");
+
+            var changedImportContents = ObjectModelHelpers.CleanupFileContents(
+@"<Project xmlns=`msbuildnamespace`>
+
+  <PropertyGroup>
+    <P>p2</P>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <I Include=`i2`>
+      <M>m2</M>
+    </I>
+  </ItemGroup>
+
+</Project>");
+
+            Action<string, string, string, Project> assertContents = (p, i, m, project) =>
+            {
+                Assert.Equal(p, project.GetPropertyValue("P"));
+                Assert.Equal(1, project.GetItems("I").Count);
+                Assert.Equal(i, project.GetItems("I").First().EvaluatedInclude);
+                Assert.Equal(m, project.GetItems("I").First().GetMetadataValue("M"));
+            };
+
+            using (var projectFiles = new Helpers.TestProjectWithFiles("", new[] {"import.proj"}))
+            using (var projectCollection = new ProjectCollection())
+            {
+                var importFile = projectFiles.CreatedFiles.First();
+
+                var import = ProjectRootElement.Create(
+                    XmlReader.Create(new StringReader(importProjectContents)),
+                    projectCollection,
+                    // preserve formatting to simulate IDE usage
+                    preserveFormatting: true);
+
+                // add to cache by saving
+                import.Save(importFile);
+                Assert.False(import.HasUnsavedChanges);
+
+                var project = new Project(projectCollection);
+                project.Xml.AddImport(importFile);
+                project.ReevaluateIfNecessary();
+
+                assertContents("p1", "i1", "m1", project);
+                Assert.False(project.IsDirty);
+
+                import.ReloadFrom(XmlReader.Create(new StringReader(changedImportContents)));
+                Assert.True(import.HasUnsavedChanges);
+
+                Assert.True(project.IsDirty);
+                assertContents("p1", "i1", "m1", project);
+
+                project.ReevaluateIfNecessary();
+                Assert.False(project.IsDirty);
+                assertContents("p2", "i2", "m2", project);
+
+                var newProject = new Project(projectCollection);
+                newProject.Xml.AddImport(importFile);
+                newProject.ReevaluateIfNecessary();
+                assertContents("p2", "i2", "m2", newProject);
+
+                Assert.Same(import, project.Imports.First().ImportedProject);
+                Assert.Same(import, newProject.Imports.First().ImportedProject);
+            }
+        }
+
+        [Fact]
+        public void ReloadedProjectRootElementMarksProjectAsDirty()
+        {
+            var projectContents = ObjectModelHelpers.CleanupFileContents(
+@"<Project xmlns=`msbuildnamespace`>
+
+  <PropertyGroup>
+    <P>p1</P>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <I Include=`i1`>
+      <M>m1</M>
+    </I>
+  </ItemGroup>
+
+</Project>");
+
+            var changedProjectContents = ObjectModelHelpers.CleanupFileContents(
+@"<Project xmlns=`msbuildnamespace`>
+
+  <PropertyGroup>
+    <P>p2</P>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <I Include=`i2`>
+      <M>m2</M>
+    </I>
+  </ItemGroup>
+
+</Project>");
+
+            Action<string, string, string, Project> assertContents = (p, i, m, project) =>
+            {
+                Assert.Equal(p, project.GetPropertyValue("P"));
+                Assert.Equal(1, project.GetItems("I").Count);
+                Assert.Equal(i, project.GetItems("I").First().EvaluatedInclude);
+                Assert.Equal(m, project.GetItems("I").First().GetMetadataValue("M"));
+            };
+
+            using (var projectFiles = new Helpers.TestProjectWithFiles("", new[] {"build.proj"}))
+            using (var projectCollection = new ProjectCollection())
+            {
+                var projectFile = projectFiles.CreatedFiles.First();
+
+                var projectRootElement = ProjectRootElement.Create(
+                    XmlReader.Create(new StringReader(projectContents)),
+                    projectCollection,
+                    // preserve formatting to simulate IDE usage
+                    preserveFormatting: true);
+
+                // add to cache by saving
+                projectRootElement.Save(projectFile);
+                Assert.False(projectRootElement.HasUnsavedChanges);
+
+                var project = new Project(projectRootElement, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection);
+                project.ReevaluateIfNecessary();
+
+                assertContents("p1", "i1", "m1", project);
+                Assert.False(project.IsDirty);
+
+                projectRootElement.ReloadFrom(XmlReader.Create(new StringReader(changedProjectContents)));
+                Assert.True(projectRootElement.HasUnsavedChanges);
+
+                Assert.True(project.IsDirty);
+                assertContents("p1", "i1", "m1", project);
+
+                project.ReevaluateIfNecessary();
+                Assert.False(project.IsDirty);
+                assertContents("p2", "i2", "m2", project);
+            }
+        }
 
         /// <summary>
         /// To support certain corner cases, it is possible to explicitly mark a Project
@@ -2575,6 +2776,27 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         }
 
         [Fact]
+        public void GetItemProvenanceSimpleGlob()
+        {
+            var project =
+            @"<Project ToolsVersion='msbuilddefaulttoolsversion' DefaultTargets='Build' xmlns='msbuildnamespace'>
+                  <ItemGroup>
+                    <A Include=`*`/>
+                  </ItemGroup>
+                </Project>
+            ";
+
+            var expected = new ProvenanceResultTupleList
+            {
+                Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+            };
+
+            AssertProvenanceResult(expected, project, "a");
+            AssertProvenanceResult(expected, project, "2.foo");
+            AssertProvenanceResult(new ProvenanceResultTupleList(), project, "a/2.foo");
+        }
+
+        [Fact]
         public void GetItemProvenanceOnlyGlob()
         {
             var project =
@@ -3024,21 +3246,36 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         [Fact]
         public void GetItemProvenanceMatchesLiteralsWithNonCanonicPaths()
         {
-            var project =
+            var projectContents =
                 @"<Project ToolsVersion='msbuilddefaulttoolsversion' DefaultTargets='Build' xmlns='msbuildnamespace'>
                   <ItemGroup>
                     <A Include=`1.foo;.\1.foo;.\.\1.foo`/>
+                    <B Include=`../../u/x/d11/d21/../d22/../../d12/2.foo`/>
                   </ItemGroup>
                 </Project>
                 ";
 
-            var expected = new ProvenanceResultTupleList
+            var expected1Foo = new ProvenanceResultTupleList
             {
                 Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 3)
             };
 
-            AssertProvenanceResult(expected, project, "1.foo");
-            AssertProvenanceResult(expected, project, @".\1.foo");
+            AssertProvenanceResult(expected1Foo, projectContents, "1.foo");
+            AssertProvenanceResult(expected1Foo, projectContents, @".\1.foo");
+
+            using (var testFiles = new Helpers.TestProjectWithFiles(projectContents, new string[0], "u/x"))
+            using (var projectCollection = new ProjectCollection())
+            {
+                var project = new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection);
+
+                var expected2Foo = new ProvenanceResultTupleList
+                {
+                    Tuple.Create("B", Operation.Include, Provenance.StringLiteral, 1)
+                };
+
+                AssertProvenanceResult(expected2Foo, project.GetItemProvenance(@"../x/d13/../../x/d12/d23/../2.foo"));
+                AssertProvenanceResult(new ProvenanceResultTupleList(), project.GetItemProvenance(@"../x/d13/../x/d12/d23/../2.foo"));
+            }
         }
 
         [Fact]
@@ -3099,28 +3336,143 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             AssertProvenanceResult(expected, project, "A");
         }
 
-        [Fact]
-        public void GetItemProvenanceShouldWorkWithEscapedCharacters()
+
+        public static IEnumerable<object[]> GetItemProvenanceShouldWorkWithEscapedCharactersTestData
         {
-            var project =
+            get
+            {
+                var projectTemplate =
                 @"<Project ToolsVersion='msbuilddefaulttoolsversion' DefaultTargets='Build' xmlns='msbuildnamespace'>
                   <ItemGroup>
-                    <A Include=`a;%61;*%61*`/>
-                    <A Update=`a;%61;*%61*`/>
-                    <A Remove=`a;%61;*%61*`/>
+                    <A Include=`{0}`/>
+                    <A Update=`{0}`/>
+                    <A Remove=`{0}`/>
                   </ItemGroup>
-                </Project>
-                ";
+                </Project>";
 
-            var expected = new ProvenanceResultTupleList
-            {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral | Provenance.Glob, 3),
-                Tuple.Create("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 3),
-                Tuple.Create("A", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 3)
-            };
+                yield return new object[]
+                {
+                    // the itemspec for the include, update, and remove
+                    string.Format(projectTemplate, "a;%61;*%61*"),
+                    // the string argument sent to GetItemProvenance
+                    "a",
+                    // the expected GetItemProvenance result
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral | Provenance.Glob, 3),
+                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 3),
+                        Tuple.Create("A", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 3)
+                    }
+                };
 
-            AssertProvenanceResult(expected, project, "a");
-            AssertProvenanceResult(expected, project, "%61");
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a;%61;*%61*"),
+                    "%61",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "%61b%63"),
+                    "abc",
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
+                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral, 1),
+                        Tuple.Create("A", Operation.Remove, Provenance.StringLiteral, 1)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "%61b%63"),
+                    "ab%63",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a?c"),
+                    "ab%63",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a?c"),
+                    "a%62c",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a?%63"),
+                    "abc",
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a?%63"),
+                    "ab%63",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a?%63"),
+                    "a%62c",
+                    new ProvenanceResultTupleList()
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a*c"),
+                    "a%62c",
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a*%63"),
+                    "abcdefc",
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    string.Format(projectTemplate, "a*%63"),
+                    "a%62%61c",
+                    new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
+                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                    }
+                };
+            }
+        }
+        [Theory]
+        [MemberData(nameof(GetItemProvenanceShouldWorkWithEscapedCharactersTestData))]
+        public void GetItemProvenanceShouldWorkWithEscapedCharacters(string project, string provenanceArgument, ProvenanceResultTupleList expectedProvenance)
+        {
+            AssertProvenanceResult(expectedProvenance, project, provenanceArgument);
         }
 
         [Fact]
@@ -3181,6 +3533,232 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             };
 
             AssertProvenanceResult(expected, project, "1.foo");
+        }
+
+        [Theory]
+        // recursive globing cone is at the project directory
+        [InlineData(
+            // item include glob
+            "**/*.cs",
+            // argument to GetItemProvenance
+            "a/a.cs",
+            // subdirectory path the project file should be placed in, relative to the test directory root.
+            // Subdirs are necessary if .. appears in any of the test paths.
+            // This is to ensure that Path.GetFullpath has enough path fragments to eat into, and to keep the glob inside the test directory root
+            "", 
+            true // should GetItemProvenance find a match
+            )]
+        [InlineData(
+            "**/*.cs",
+            "../a/a.cs",
+            "ProjectDirectory",
+            false
+            )]
+        // recursive globing cone is a superset of the project directory via relative path
+        [InlineData(
+            "../**/*.cs",
+            "../a/a.cs",
+            "ProjectDirectory",
+            true
+            )]
+        [InlineData(
+            "../**/*.cs",
+            "a/a.cs",
+            "ProjectDirectory",
+            true
+            )]
+        [InlineData(
+            "../**/*.cs",
+            "../../a/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // recursive globing cone is a subset of the project directory via relative path
+        [InlineData(
+            "a/**/*.cs",
+            "b/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "a/**/*.cs",
+            "a/b/a.cs",
+            "",
+            true
+            )]
+        [InlineData(
+            "a/**/*.cs",
+            "../a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // recursive globing cone is disjoint of the project directory via relative path
+        [InlineData(
+            "../a/**/*.cs",
+            "../a/b/a.cs",
+            "dir/ProjectDirectory",
+            true
+            )]
+        [InlineData(
+            "../a/**/*.cs",
+            "../b/c/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        [InlineData(
+            "../a/**/*.cs",
+            "a/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // directory name glob is at the project directory
+        [InlineData(
+            "a*a/*.cs",
+            "aba/a.cs",
+            "",
+            true
+            )]
+        [InlineData(
+            "a*a/*.cs",
+            "aba/aba/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "a*a/*.cs",
+            "../aba/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // directory name glob is inside the project directory
+        [InlineData(
+            "a/a*a/*.cs",
+            "a/aba/a.cs",
+            "",
+            true
+            )]
+        [InlineData(
+            "a/a*a/*.cs",
+            "a/aba/a/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "a/a*a/*.cs",
+            "../a/aba/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // directory name glob is disjoing to the project directory
+        [InlineData(
+            "../a/a*a/*.cs",
+            ".././a/aba/a.cs",
+            "dir/ProjectDirectory",
+            true
+            )]
+        [InlineData(
+            "../a/a*a/*.cs",
+            "../a/a/aba/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        [InlineData(
+            "../a/a*a/*.cs",
+            "../../a/aba/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // filename glob is at the project directory
+        [InlineData(
+            "*.cs",
+            "a.cs",
+            "",
+            true
+            )]
+        [InlineData(
+            "*.cs",
+            "a/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "*.cs",
+            "../a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // filename glob is under the project directory
+        [InlineData(
+            "a/*.cs",
+            "a/a.cs",
+            "",
+            true
+            )]
+        [InlineData(
+            "a/*.cs",
+            "a/b/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "a/*.cs",
+            "b/a.cs",
+            "",
+            false
+            )]
+        [InlineData(
+            "a/*.cs",
+            "../a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        // filename glob is disjoing to the project directory
+        [InlineData(
+            ".././a/*.cs",
+            "../a/a.cs",
+            "dir/ProjectDirectory",
+            true
+            )]
+        [InlineData(
+            "../a/*.cs",
+            "a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        [InlineData(
+            "../a/*.cs",
+            "../a/a/a.cs",
+            "dir/ProjectDirectory",
+            false
+            )]
+        public void GetItemProvenanceShouldBeSensitiveToGlobbingCone(string includeGlob, string getItemProvenanceArgument, string relativePathOfProjectFile, bool provenanceShouldFindAMatch)
+        {
+            var projectContents =
+                @"<Project ToolsVersion='msbuilddefaulttoolsversion' DefaultTargets='Build' xmlns='msbuildnamespace'>
+                  <ItemGroup>
+                    <A Include=`{0}`/>
+                  </ItemGroup>
+                </Project>
+                ";
+
+            projectContents = string.Format(projectContents, includeGlob);
+
+            using (var testFiles = new Helpers.TestProjectWithFiles(projectContents, new string[0], relativePathOfProjectFile))
+            using (var projectCollection = new ProjectCollection())
+            {
+                var project = new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection);
+
+                ProvenanceResultTupleList expectedProvenance = null;
+
+                expectedProvenance = provenanceShouldFindAMatch
+                    ? new ProvenanceResultTupleList
+                    {
+                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1)
+                    }
+                    : new ProvenanceResultTupleList();
+
+                AssertProvenanceResult(expectedProvenance, project.GetItemProvenance(getItemProvenanceArgument));
+            }
         }
 
         [Fact]

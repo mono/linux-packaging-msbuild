@@ -85,8 +85,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <TargetPlatformIdentifier Condition="'$(TargetPlatformIdentifier)' == ''">Windows</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition="'$(TargetPlatformVersion)' == ''">7.0</TargetPlatformVersion>
-    <TargetPlatformSdkPath Condition=" '$(TargetPlatformIdentifier)' == 'Windows' and '$(OS)' == 'Windows_NT' and '$(MSBuildRuntimeType)' != 'Core'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\Microsoft SDKs\Windows\v$(TargetPlatformVersion)', InstallationFolder, null, RegistryView.Registry32, RegistryView.Default))</TargetPlatformSdkPath>
-    <TargetPlatformSdkPath Condition=" '$(TargetPlatformSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation($(TargetPlatformIdentifier), $(TargetPlatformVersion)))</TargetPlatformSdkPath>
+    <TargetPlatformSdkPath Condition="'$(TargetPlatformSdkPath)' == '' and '$(TargetPlatformSdkRootOverride)' != ''">$(TargetPlatformSdkRootOverride)\</TargetPlatformSdkPath>
+    <TargetPlatformSdkPath Condition="'$(TargetPlatformSdkPath)' == '' and '$(TargetPlatformIdentifier)' == 'Windows' and '$(OS)' == 'Windows_NT' and '$(MSBuildRuntimeType)' != 'Core'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\Microsoft SDKs\Windows\v$(TargetPlatformVersion)', InstallationFolder, null, RegistryView.Registry32, RegistryView.Default))</TargetPlatformSdkPath>
+    <TargetPlatformSdkPath Condition="'$(TargetPlatformSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation($(TargetPlatformIdentifier), $(TargetPlatformVersion)))</TargetPlatformSdkPath>
     <TargetPlatformSdkMetadataLocation Condition="'$(TargetPlatformSdkMetadataLocation)' == '' and Exists('$(TargetPlatformSdkPath)')">$(TargetPlatformSdkPath)Windows Metadata</TargetPlatformSdkMetadataLocation>
     <TargetPlatformSdkMetadataLocation Condition="Exists('$(TargetPlatformSdkPath)') and ('$(TargetPlatformSdkMetadataLocation)' == '' or !Exists('$(TargetPlatformSdkMetadataLocation)'))">$(TargetPlatformSdkPath)References\CommonConfiguration\Neutral</TargetPlatformSdkMetadataLocation>
     <TargetPlatformWinMDLocation Condition="'$(TargetPlatformWinMDLocation)' == '' and Exists('$(TargetPlatformSdkMetadataLocation)')">$(TargetPlatformSdkMetadataLocation)</TargetPlatformWinMDLocation>
@@ -329,6 +330,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AutoUnifyAssemblyReferences Condition="'$(GenerateBindingRedirectsOutputType)' == 'true' and '$(AutoGenerateBindingRedirects)' != 'true'">false</AutoUnifyAssemblyReferences>
   </PropertyGroup>
   <PropertyGroup>
+    <BaseIntermediateOutputPath Condition="!HasTrailingSlash('$(BaseIntermediateOutputPath)')">$(BaseIntermediateOutputPath)\</BaseIntermediateOutputPath>
     <CleanFile Condition="'$(CleanFile)'==''">$(MSBuildProjectFile).FileListAbsolute.txt</CleanFile>
     <!-- During DesignTime Builds, skip project reference build as Design time is only queueing information.-->
     <BuildProjectReferences Condition="'$(BuildProjectReferences)' == '' and '$(DesignTimeBuild)' == 'true'">false</BuildProjectReferences>
@@ -536,7 +538,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AssemblyFoldersSuffix Condition=" '$(AssemblyFoldersSuffix)' == '' ">AssemblyFoldersEx</AssemblyFoldersSuffix>
     <FrameworkRegistryBase Condition=" '$(FrameworkRegistryBase)' == '' ">Software\Microsoft\$(TargetFrameworkIdentifier)</FrameworkRegistryBase>
     <TargetPlatformRegistryBase Condition="'$(TargetPlatformRegistryBase)' == ''">Software\Microsoft\Microsoft SDKs\$(TargetPlatformIdentifier)</TargetPlatformRegistryBase>
-    <AssemblyFoldersConfigFile Condition="'$(AssemblyFoldersConfigFile)' == ''">$(MSBuildToolsPath)\AssemblyFolders.config</AssemblyFoldersConfigFile>
+    <AssemblyFoldersConfigFile Condition="'$(AssemblyFoldersConfigFile)' == ''">$(MSBuildToolsPath32)\AssemblyFolders.config</AssemblyFoldersConfigFile>
     <AssemblyFoldersConfigFileSearchPath Condition="Exists('$(AssemblyFoldersConfigFile)')">{AssemblyFoldersFromConfig:$(AssemblyFoldersConfigFile),$(TargetFrameworkVersion)};</AssemblyFoldersConfigFileSearchPath>
     <!--
         The SearchPaths property is set to find assemblies in the following order:
@@ -579,20 +581,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!--
         These are the extensions that reference resolution will consider when looking for debug files related
-        to resolved references, for .pdb files
+        to resolved references, default is .pdb
         -->
-    <AllowedReferenceRelatedDebugFileExtensions Condition="'$(_DebugFileExt)' == '.pdb'">
-        $(_DebugFileExt)
-    </AllowedReferenceRelatedDebugFileExtensions>
-
-    <!--
-        These are the extensions that reference resolution will consider when looking for debug files related
-        to resolved references, for .mdb files when using mono's compilers.
-        Mono's compilers use foo.dll.mdb as the debug filename for an assembly named foo.dll
-        -->
-    <AllowedReferenceRelatedDebugFileExtensions Condition="'$(_DebugFileExt)' != '.pdb'">
-        .exe$(_DebugFileExt);
-        .dll$(_DebugFileExt)
+    <AllowedReferenceRelatedDebugFileExtensions Condition="'$(AllowedReferenceRelatedDebugFileExtensions)' == ''">
+      .pdb;
     </AllowedReferenceRelatedDebugFileExtensions>
 
     <!--
@@ -602,7 +594,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AllowedReferenceRelatedFileExtensions Condition=" '$(AllowedReferenceRelatedFileExtensions)' == '' ">
       $(AllowedReferenceRelatedDebugFileExtensions);
       .xml;
-      .pri
+      .pri;
+      .dll.config;
+      .exe.config
     </AllowedReferenceRelatedFileExtensions>
 
     <!--
@@ -1534,24 +1528,75 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target Name="_GetProjectReferenceTargetFrameworkProperties"
           Outputs="%(_MSBuildProjectReferenceExistent.Identity)">
-    <!-- As a mitigation for https://github.com/Microsoft/msbuild/issues/1276
-       .vcxproj is treated specially to avoid the cost of double-evaluating
-       for easily-identifiable-as-not-cross-targeting C++ projects. -->
+    <!--
+      Honor SkipGetTargetFrameworkProperties=true metadata on project references
+      to mean that the project reference is known not to target multiple frameworks
+      and the mechanism here for selecting the best one can be skipped as an optimization.
+
+      We give this treatment to .vcxproj by default since no .vcxproj can target more
+      than one framework.
+   -->
+   <ItemGroup>
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.SkipGetTargetFrameworkProperties)' == '' and '%(Extension)' == '.vcxproj'">
+        <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+      </_MSBuildProjectReferenceExistent>
+   </ItemGroup>
+
+    <!--
+       Allow project references to specify which target framework properties to set and their values
+       without consulting the referenced project. This has two use cases:
+
+       1. A caller may wish to pick a compatible but sub-optimal target framework. For example,
+          to unit test the .NETStandard implementation using a .NETFramework caller even though
+          there is also a .NETFramework implementation.
+
+       2. As an escape hatch for cases where the compatibility check performed by 
+          GetTargetFrameworkProperties is faulty.
+    -->
+    <ItemGroup>
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.SetTargetFramework)' != ''">
+        <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+      </_MSBuildProjectReferenceExistent>
+    </ItemGroup>
+
+    <!--
+      Select the moniker to send to each project reference  if not already set. NugetTargetMoniker (NTM) is preferred by default over 
+      TargetFrameworkMoniker (TFM) because it is required to disambiguate the UWP case where TFM is fixed at .NETCore,Version=v5.0 and 
+      has floating NTM=UAP,Version=vX.Y.Z. However, in other cases (classic PCLs), NTM contains multiple values and that will cause the MSBuild
+      invocation below to fail by passing invalid properties. Therefore we do not use the NTM if it contains a semicolon.
+    -->
+    <PropertyGroup Condition="'$(ReferringTargetFrameworkForProjectReferences)' == ''">
+      <ReferringTargetFrameworkForProjectReferences Condition="'$(NugetTargetMoniker)' != '' and !$(NuGetTargetMoniker.Contains(';'))">$(NugetTargetMoniker)</ReferringTargetFrameworkForProjectReferences>
+      <ReferringTargetFrameworkForProjectReferences Condition="'$(NugetTargetMoniker)' == ''">$(TargetFrameworkMoniker)</ReferringTargetFrameworkForProjectReferences>
+    </PropertyGroup>
+
     <MSBuild
         Projects="%(_MSBuildProjectReferenceExistent.Identity)"
         Targets="GetTargetFrameworkProperties"
         BuildInParallel="$(BuildInParallel)"
-        Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration); %(_MSBuildProjectReferenceExistent.SetPlatform); ReferringTargetFramework=$(TargetFrameworkMoniker)"
+        Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration); %(_MSBuildProjectReferenceExistent.SetPlatform); ReferringTargetFramework=$(ReferringTargetFrameworkForProjectReferences)"
         ContinueOnError="!$(BuildingProject)"
-        RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove);TargetFramework"
-        Condition="'%(_MSBuildProjectReferenceExistent.Extension)' != '.vcxproj'">
+        RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove);TargetFramework;RuntimeIdentifier"
+        Condition="'%(_MSBuildProjectReferenceExistent.SkipGetTargetFrameworkProperties)' != 'true'">
 
       <Output TaskParameter="TargetOutputs" PropertyName="_ProjectReferenceTargetFrameworkProperties" />
     </MSBuild>
 
     <ItemGroup>
-      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.Identity)' == '%(Identity)'">
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.Identity)' == '%(Identity)' and '$(_ProjectReferenceTargetFrameworkProperties)' != ''">
         <SetTargetFramework>$(_ProjectReferenceTargetFrameworkProperties)</SetTargetFramework>
+
+        <UndefineProperties Condition="$(_ProjectReferenceTargetFrameworkProperties.Contains(`ProjectHasSingleTargetFramework=true`))">%(_MSBuildProjectReferenceExistent.UndefineProperties);TargetFramework;ProjectHasSingleTargetFramework</UndefineProperties>
+        <!-- Unconditionally remove the property that was set as a marker to indicate that for this call we should remove TargetFramework -->
+        <UndefineProperties Condition="!$(_ProjectReferenceTargetFrameworkProperties.Contains(`ProjectHasSingleTargetFramework=true`))">%(_MSBuildProjectReferenceExistent.UndefineProperties);ProjectHasSingleTargetFramework</UndefineProperties>
+      </_MSBuildProjectReferenceExistent>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_MSBuildProjectReferenceExistent Condition="'%(_MSBuildProjectReferenceExistent.Identity)' == '%(Identity)' and '$(_ProjectReferenceTargetFrameworkProperties)' != ''">
+        <UndefineProperties Condition="$(_ProjectReferenceTargetFrameworkProperties.Contains(`ProjectIsRidAgnostic=true`))">%(_MSBuildProjectReferenceExistent.UndefineProperties);RuntimeIdentifier;ProjectIsRidAgnostic</UndefineProperties>
+        <!-- Unconditionally remove the property that was set as a marker to indicate that for this call we should remove RuntimeIdentifier -->
+        <UndefineProperties Condition="!$(_ProjectReferenceTargetFrameworkProperties.Contains(`ProjectIsRidAgnostic=true`))">%(_MSBuildProjectReferenceExistent.UndefineProperties);ProjectIsRidAgnostic</UndefineProperties>
       </_MSBuildProjectReferenceExistent>
     </ItemGroup>
 
@@ -3036,6 +3081,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       _GenerateCompileInputs;
       BeforeCompile;
       _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
       CoreCompile;
       _TimeStampAfterCompile;
       AfterCompile;
@@ -3188,6 +3234,31 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_AssemblyTimestampBeforeCompile>%(IntermediateAssembly.ModifiedTime)</_AssemblyTimestampBeforeCompile>
     </PropertyGroup>
 
+  </Target>
+
+  <!--
+    ============================================================
+                                        _GenerateCompileDependencyCache
+
+    Generate a file used to track compiler dependencies between incremental build
+    executions. This handles cases where items are added or removed from a glob (e.g.
+    <Compile Include="**\*.cs" />) and can't otherwise be detected with timestamp 
+    comparisons. The file contains a hash of compiler inputs that are known to 
+    contribute to incremental build inconsistencies.
+    ============================================================
+    -->
+  <Target Name="_GenerateCompileDependencyCache" DependsOnTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Include="$(IntermediateOutputPath)CoreCompileInputs.cache" />
+      <CoreCompileCache Include="@(Compile->'%(FullPath)')" />
+      <CoreCompileCache Include="@(ReferencePath->'%(FullPath)')" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(CoreCompileCache)">
+      <Output TaskParameter="HashResult" PropertyName="CoreCompileDependencyHash" />
+    </Hash>
+
+    <WriteLinesToFile Lines="$(CoreCompileDependencyHash)" File="$(IntermediateOutputPath)CoreCompileInputs.cache" Overwrite="True" WriteOnlyWhenDifferent="True" />
   </Target>
 
   <!--
@@ -4214,6 +4285,35 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <AllItemsFullPathWithTargetPath            Include="@(_SourceItemsToCopyToOutputDirectoryAlways->'%(FullPath)');@(_SourceItemsToCopyToOutputDirectory->'%(FullPath)')"/>
     </ItemGroup>
 
+  </Target>
+
+  <!--
+    ============================================================
+                                        GetCopyToPublishDirectoryItems
+
+    Default implementation of GetCopyToPublishDirectoryItems for projects that do not 
+    use Microsoft.NET.Sdk. It simply returns whatever GetCopyToOutputDirectoryItems 
+    does with CopyToPublishDirectory implied  by CopyToOutputDirectory, which is the 
+    same as Microsoft.NET.Sdk default when its CopyToPublishDirectory is not used. 
+
+    Microsoft.NET.Sdk projects  will override this to allow the publish output to be
+    customized independently from the build output.
+
+    Having a default implementation here allows the Microsoft.NET.Sdk Publish target
+    to work when a Microsoft.NET.Sdk-based project references a non-Microsoft.NET.Sdk-based
+    project.
+    ============================================================
+    -->
+    <Target
+      Name="GetCopyToPublishDirectoryItems" 
+      DependsOnTargets="GetCopyToOutputDirectoryItems"
+      Returns="@(AllPublishItemsFullPathWithTargetPath)">
+
+    <ItemGroup>
+      <AllPublishItemsFullPathWithTargetPath Include="@(AllItemsFullPathWithTargetPath)">
+        <CopyToPublishDirectory>%(CopyToOutputDirectory)</CopyToPublishDirectory>
+      </AllPublishItemsFullPathWithTargetPath>
+    </ItemGroup>
   </Target>
 
   <!--
@@ -5323,6 +5423,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <SatelliteDllsProjectOutputGroupOutputIntermediate Include="$(IntermediateOutputPath)%(EmbeddedResource.Culture)\$(TargetName).resources.dll"
                                                          Condition="'%(WithCulture)' == 'true'">
         <TargetPath>%(EmbeddedResource.Culture)\$(TargetName).resources.dll</TargetPath>
+        <Culture>%(EmbeddedResource.Culture)</Culture>
       </SatelliteDllsProjectOutputGroupOutputIntermediate>
     </ItemGroup>
 

@@ -812,6 +812,8 @@ namespace Microsoft.Build.Evaluation
             DataCollection.CommentMarkProfile(8818, endPass2);
 #endif
             LazyItemEvaluator<P, I, M, D> lazyEvaluator = null;
+
+            // comment next line to turn off lazy Evaluation
             lazyEvaluator = new LazyItemEvaluator<P, I, M, D>(_data, _itemFactory, _buildEventContext, _loggingService);
 
             // Pass3: evaluate project items
@@ -987,6 +989,39 @@ namespace Microsoft.Build.Evaluation
                 DebuggerManager.BakeStates(Path.GetFileNameWithoutExtension(currentProjectOrImport.FullPath));
             }
 #endif
+            IList<ProjectImportElement> implicitImports = new List<ProjectImportElement>();
+
+            if (!String.IsNullOrWhiteSpace(currentProjectOrImport.Sdk))
+            {
+                // SDK imports are added implicitly where they are evaluated at the top and bottom as if they are in the XML
+                //
+                foreach (string sdk in currentProjectOrImport.Sdk.Split(';').Select(i => i.Trim()))
+                {
+                    if (String.IsNullOrWhiteSpace(sdk))
+                    {
+                        ProjectErrorUtilities.ThrowInvalidProject(currentProjectOrImport.SdkLocation, "InvalidSdkFormat", currentProjectOrImport.Sdk);
+                    }
+
+                    int slashIndex = sdk.LastIndexOf("/", StringComparison.Ordinal);
+                    string sdkName = slashIndex > 0 ? sdk.Substring(0, slashIndex) : sdk;
+
+                    // TODO: do something other than just ignore the version
+
+                    if (sdkName.Contains("/"))
+                    {
+                        ProjectErrorUtilities.ThrowInvalidProject(currentProjectOrImport.SdkLocation, "InvalidSdkFormat", currentProjectOrImport.Sdk);
+                    }
+
+                    implicitImports.Add(ProjectImportElement.CreateImplicit("Sdk.props", currentProjectOrImport, ImplicitImportLocation.Top, sdkName));
+                    
+                    implicitImports.Add(ProjectImportElement.CreateImplicit("Sdk.targets", currentProjectOrImport, ImplicitImportLocation.Bottom, sdkName));
+                }
+            }
+
+            foreach (var import in implicitImports.Where(i => i.ImplicitImportLocation == ImplicitImportLocation.Top))
+            {
+                EvaluateImportElement(currentProjectOrImport.DirectoryPath, import);
+            }
 
             foreach (ProjectElement element in currentProjectOrImport.Children)
             {
@@ -1081,7 +1116,6 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 ProjectImportElement import = element as ProjectImportElement;
-
                 if (import != null)
                 {
                     EvaluateImportElement(currentProjectOrImport.DirectoryPath, import);
@@ -1142,6 +1176,11 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 ErrorUtilities.ThrowInternalError("Unexpected child type");
+            }
+
+            foreach (var import in implicitImports.Where(i => i.ImplicitImportLocation == ImplicitImportLocation.Bottom))
+            {
+                EvaluateImportElement(currentProjectOrImport.DirectoryPath, import);
             }
 
 #if FEATURE_MSBUILD_DEBUGGER
@@ -1663,6 +1702,7 @@ namespace Microsoft.Build.Evaluation
                 return;
             }
 
+            // legacy, dead code beyond this point. Runs only if the lazy evaluator is null. Also, the interpretation of Remove is not implemented
             if (!string.IsNullOrEmpty(itemElement.Include))
             {
                 EvaluateItemElementInclude(itemGroupConditionResult, itemConditionResult, itemElement);
@@ -1670,6 +1710,10 @@ namespace Microsoft.Build.Evaluation
             else if (!string.IsNullOrEmpty(itemElement.Update))
             {
                 EvaluateItemElementUpdate(itemElement);
+            }
+            else
+            {
+                ErrorUtilities.ThrowInternalError("Unexpected item operation");
             }
         }
 
@@ -2241,7 +2285,14 @@ namespace Microsoft.Build.Evaluation
                     continue;
                 }
 
-                var newExpandedImportPath = importElement.Project.Replace(extensionPropertyRefAsString, extensionPathExpanded);
+                string project = importElement.Project;
+                if (!String.IsNullOrWhiteSpace(importElement.Sdk))
+                {
+                    project = Path.Combine(BuildEnvironmentHelper.Instance.MSBuildSDKsPath, importElement.Sdk, "Sdk", project);
+                }
+                
+
+                var newExpandedImportPath = project.Replace(extensionPropertyRefAsString, extensionPathExpanded);
                 _loggingService.LogComment(_buildEventContext, MessageImportance.Low, "TryingExtensionsPath", newExpandedImportPath, extensionPathExpanded);
 
                 List<ProjectRootElement> projects;
@@ -2308,7 +2359,13 @@ namespace Microsoft.Build.Evaluation
                 return LoadImportsResult.ConditionWasFalse;
             }
 
-            return ExpandAndLoadImportsFromUnescapedImportExpression(directoryOfImportingFile, importElement, importElement.Project, throwOnFileNotExistsError, out projects);
+            string project = importElement.Project;
+            if (!String.IsNullOrWhiteSpace(importElement.Sdk))
+            {
+                project = Path.Combine(BuildEnvironmentHelper.Instance.MSBuildSDKsPath, importElement.Sdk, "Sdk", project);
+            }
+
+            return ExpandAndLoadImportsFromUnescapedImportExpression(directoryOfImportingFile, importElement, project, throwOnFileNotExistsError, out projects);
         }
 
         /// <summary>
@@ -2411,7 +2468,7 @@ namespace Microsoft.Build.Evaluation
                     {
                         parenthesizedProjectLocation = "[" + _projectRootElement.FullPath + "]";
                     }
-
+                    // TODO: Detect if the duplicate import came from an SDK attribute
                     _loggingService.LogWarning(_buildEventContext, null, new BuildEventFileInfo(importLocationInProject), "DuplicateImport", importFileUnescaped, previouslyImportedAt.Location.LocationString, parenthesizedProjectLocation);
                     duplicateImport = true;
                 }
@@ -2440,7 +2497,8 @@ namespace Microsoft.Build.Evaluation
                             _buildEventContext,
                             explicitlyLoaded),
                         explicitlyLoaded,
-                        preserveFormatting: false);
+                        // don't care about formatting, reuse whatever is there
+                        preserveFormatting: null);
 
                     if (duplicateImport)
                     {
@@ -2655,13 +2713,28 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         private void ThrowForImportedProjectWithSearchPathsNotFound(ProjectImportPathMatch searchPathMatch, ProjectImportElement importElement)
         {
-            string extensionsPathPropValue = _data.GetProperty(searchPathMatch.PropertyName).EvaluatedValue;
+            var extensionsPathProp = _data.GetProperty(searchPathMatch.PropertyName);
+            string importExpandedWithDefaultPath;
+            string relativeProjectPath;
 
-            string importExpandedWithDefaultPath = _expander.ExpandIntoStringLeaveEscaped(
-                                                                    importElement.Project.Replace(searchPathMatch.MsBuildPropertyFormat, extensionsPathPropValue),
-                                                                    ExpanderOptions.ExpandProperties, importElement.ProjectLocation);
+            if (extensionsPathProp != null)
+            {
+                string extensionsPathPropValue = extensionsPathProp.EvaluatedValue;
+                importExpandedWithDefaultPath =
+                    _expander.ExpandIntoStringLeaveEscaped(
+                        importElement.Project.Replace(searchPathMatch.MsBuildPropertyFormat, extensionsPathPropValue),
+                        ExpanderOptions.ExpandProperties, importElement.ProjectLocation);
 
-            string relativeProjectPath = FileUtilities.MakeRelative(extensionsPathPropValue, importExpandedWithDefaultPath);
+                relativeProjectPath = FileUtilities.MakeRelative(extensionsPathPropValue, importExpandedWithDefaultPath);
+            }
+            else
+            {
+                // If we can't get the original property, just use the actual text from the project file in the error message.
+                // This should be a very rare case where the toolset is out of sync with the fallback. This will resolve
+                // a null ref calling EvaluatedValue on the property.
+                importExpandedWithDefaultPath = importElement.Project;
+                relativeProjectPath = importElement.Project;
+            }
 
             var onlyFallbackSearchPaths = searchPathMatch.SearchPaths.Select(s => _data.ExpandString(s)).ToList();
 
