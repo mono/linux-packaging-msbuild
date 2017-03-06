@@ -18,6 +18,9 @@ override_dh_auto_install:
 override_dh_clideps:
 	dh_clideps \
 		--exclude-moduleref=api-ms-win-core-file-l1-1-0.dll \
+		--exclude-moduleref=api-ms-win-core-localization-l1-2-0.dll \
+		--exclude-moduleref=api-ms-win-core-sysinfo-l1-1-0.dll \
+		--exclude-moduleref=api-ms-win-core-sysinfo-l1-2-0.dll \
 		--exclude-moduleref=clr \
 		--exclude-moduleref=crypt32.dll \
 		--exclude-moduleref=dbghelp.dll \
@@ -27,6 +30,7 @@ override_dh_clideps:
 		--exclude-moduleref=Microsoft.DiaSymReader.Native.amd64.dll \
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=NTDLL.DLL \
+		--exclude-moduleref=ntdll.dll \
 		--exclude-moduleref=ole32.dll
 
 %:
