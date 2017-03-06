@@ -722,9 +722,12 @@ namespace Microsoft.Build.Shared
                     filesToExclude = new HashSet<string>();
                     foreach (var excludeStep in excludeNextSteps)
                     {
-                        foreach (var file in excludeStep.Files)
+                        if (excludeStep.Files != null)
                         {
-                            filesToExclude.Add(file);
+                            foreach (var file in excludeStep.Files)
+                            {
+                                filesToExclude.Add(file);
+                            }
                         }
                     }
                 }
@@ -1164,14 +1167,9 @@ namespace Microsoft.Build.Shared
                 out matchFileExpression, out needsRecursion, out isLegalFileSpec,
                 getFileSystemEntries);
 
-            if (isLegalFileSpec)
-            {
-                regexFileMatch = new Regex(matchFileExpression, RegexOptions.IgnoreCase);
-            }
-            else
-            {
-                regexFileMatch = null;
-            }
+            regexFileMatch = isLegalFileSpec
+                ? new Regex(matchFileExpression, RegexOptions.IgnoreCase)
+                : null;
         }
 
         /// <summary>
@@ -1185,7 +1183,7 @@ namespace Microsoft.Build.Shared
         /// <param name="needsRecursion">Receives the flag that is true if recursion is required.</param>
         /// <param name="isLegalFileSpec">Receives the flag that is true if the filespec is legal.</param>
         /// <param name="getFileSystemEntries">Delegate.</param>
-        private static void GetFileSpecInfo
+        internal static void GetFileSpecInfo
         (
             string filespec,
             out string fixedDirectoryPart,
@@ -1472,18 +1470,24 @@ namespace Microsoft.Build.Shared
             {
                 foreach (string excludeSpec in excludeSpecsUnescaped)
                 {
-                    //  The FileMatch method always creates a Regex to check if the file matches the pattern
-                    //  Creating a Regex is relatively expensive, so we may want to avoid doing so if possible
-                    Result match = FileMatch(excludeSpec, filespecUnescaped);
+
+                    // Try a path equality check first to:
+                    // - avoid the expensive regex
+                    // - maintain legacy behaviour where an illegal filespec is treated as a normal string
+                    if (FileUtilities.PathsEqual(filespecUnescaped, excludeSpec))
+                    {
+                        return new string[0];
+                    }
+
+                    var match = FileMatch(excludeSpec, filespecUnescaped);
 
                     if (match.isLegalFileSpec && match.isMatch)
                     {
-                        //  This file is excluded
                         return new string[0];
                     }
                 }
             }
-            return new string[] { filespecUnescaped };
+            return new[] { filespecUnescaped };
         }
 
         /// <summary>
@@ -1566,6 +1570,8 @@ namespace Microsoft.Build.Shared
                             resultsToExclude = new HashSet<string>();
                         }
                         resultsToExclude.Add(excludeSpec);
+
+                        continue;
                     }
                     else if (excludeAction == SearchAction.ReturnEmptyList)
                     {

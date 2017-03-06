@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.IO;
 using System.Linq;
@@ -121,7 +122,7 @@ namespace Microsoft.Build.Internal
                 // Unescape before handing it to the filesystem.
                 var directoryUnescaped = EscapingUtilities.UnescapeAll(directoryEscaped);
                 var filespecUnescaped = EscapingUtilities.UnescapeAll(filespecEscaped);
-                var excludeSpecsUnescaped = excludeSpecsEscaped.Where(IsValidExclude).Select(EscapingUtilities.UnescapeAll);
+                var excludeSpecsUnescaped = excludeSpecsEscaped.Where(IsValidExclude).Select(EscapingUtilities.UnescapeAll).ToList();
 
                 // Get the list of actual files which match the filespec.  Put
                 // the list into a string array.  If the filespec started out
@@ -172,53 +173,83 @@ namespace Microsoft.Build.Internal
         }
 
         /// Returns a Func that will return true IFF its argument matches any of the specified filespecs
-        /// Assumes inputs may be escaped, so it unescapes them
-        internal static Func<string, bool> GetMatchTester(IList<string> filespecsEscaped, string currentDirectory)
+        /// Assumes filespec may be escaped, so it unescapes it
+        /// The returned function makes no escaping assumptions or escaping operations. Its callers should control escaping.
+        internal static Func<string, bool> GetFileSpecMatchTester(IList<string> filespecsEscaped, string currentDirectory)
         {
             var matchers = filespecsEscaped
-                .Select(fs => new Lazy<Func<string, bool>>(() => GetMatchTester(fs, currentDirectory)))
+                .Select(fs => new Lazy<Func<string, bool>>(() => GetFileSpecMatchTester(fs, currentDirectory)))
                 .ToList();
 
             return file => matchers.Any(m => m.Value(file));
         }
 
-        internal static Func<string, bool> GetMatchTester(string filespec, string currentDirectory)
+        internal static Func<string, bool> GetFileSpecMatchTester(string filespec, string currentDirectory)
         {
+            Debug.Assert(!string.IsNullOrEmpty(filespec));
+
             var unescapedSpec = EscapingUtilities.UnescapeAll(filespec);
-            Regex regex = null;
 
-            // TODO: assumption on file system case sensitivity: https://github.com/Microsoft/msbuild/issues/781
+            var regex = FilespecHasWildcards(filespec) ? CreateRegex(unescapedSpec, currentDirectory) : null;
 
-            if (FilespecHasWildcards(filespec))
+            return fileToMatch =>
             {
-                Regex regexFileMatch;
-                bool isRecursive;
-                bool isLegal;
-
-                //  TODO: If creating Regex's here ends up being expensive perf-wise, consider how to avoid it in common cases
-                FileMatcher.GetFileSpecInfo(
-                    unescapedSpec,
-                    out regexFileMatch,
-                    out isRecursive,
-                    out isLegal,
-                    FileMatcher.s_defaultGetFileSystemEntries);
-
-                // If the spec is not legal, it doesn't match anything
-                regex = isLegal ? regexFileMatch : null;
-            }
-
-            return file =>
-            {
-                var unescapedFile = EscapingUtilities.UnescapeAll(file);
+                Debug.Assert(!string.IsNullOrEmpty(fileToMatch));
 
                 // check if there is a regex matching the file
                 if (regex != null)
                 {
-                    return regex.IsMatch(unescapedFile);
+                    var normalizedFileToMatch = FileUtilities.GetFullPathNoThrow(Path.Combine(currentDirectory, fileToMatch));
+                    return regex.IsMatch(normalizedFileToMatch);
                 }
 
-                return FileUtilities.ComparePathsNoThrow(unescapedSpec, unescapedFile, currentDirectory);
+                return FileUtilities.ComparePathsNoThrow(unescapedSpec, fileToMatch, currentDirectory);
             };
+        }
+
+        // this method parses the glob and extracts the fixed directory part in order to normalize it and make it absolute
+        // without this normalization step, strings pointing outside the globbing cone would still match when they shouldn't
+        // for example, we dont want "**/*.cs" to match "../Shared/Foo.cs"
+        private static Regex CreateRegex(string unescapedFileSpec, string currentDirectory)
+        {
+            Regex regex = null;
+            string fixedDirPart = null;
+            string wildcardDirectoryPart = null;
+            string filenamePart = null;
+
+            FileMatcher.SplitFileSpec(
+                unescapedFileSpec,
+                out fixedDirPart,
+                out wildcardDirectoryPart,
+                out filenamePart,
+                FileMatcher.s_defaultGetFileSystemEntries);
+
+            if (FileUtilities.PathIsInvalid(fixedDirPart))
+            {
+                return null;
+            }
+
+            var absoluteFixedDirPart = Path.Combine(currentDirectory, fixedDirPart);
+            var normalizedFixedDirPart = string.IsNullOrEmpty(absoluteFixedDirPart)
+                // currentDirectory is empty for some in-memory projects
+                ? Directory.GetCurrentDirectory()
+                : FileUtilities.GetFullPathNoThrow(absoluteFixedDirPart);
+
+            normalizedFixedDirPart = FileUtilities.EnsureTrailingSlash(normalizedFixedDirPart);
+
+            var recombinedFileSpec = string.Join("", normalizedFixedDirPart, wildcardDirectoryPart, filenamePart);
+
+            bool isRecursive;
+            bool isLegal;
+
+            FileMatcher.GetFileSpecInfo(
+                recombinedFileSpec,
+                out regex,
+                out isRecursive,
+                out isLegal,
+                FileMatcher.s_defaultGetFileSystemEntries);
+
+            return isLegal ? regex : null;
         }
     }
 }

@@ -480,9 +480,9 @@ namespace Microsoft.Build.Construction
                 // If none is found, then the node being added is inserted as the only node of its kind
 
                 ProjectElement referenceSibling;
-                Predicate<ProjectElement> siblingIsSameAsChild = _ => _.ExpressedAsAttribute == false;
+                Predicate<ProjectElement> siblingIsExplicitElement = _ => _.ExpressedAsAttribute == false;
 
-                if (TrySearchLeftSiblings(child.PreviousSibling, siblingIsSameAsChild, out referenceSibling))
+                if (TrySearchLeftSiblings(child.PreviousSibling, siblingIsExplicitElement, out referenceSibling))
                 {
                     //  Add after previous sibling
                     XmlElement.InsertAfter(child.XmlElement, referenceSibling.XmlElement);
@@ -498,7 +498,7 @@ namespace Microsoft.Build.Construction
                         }
                     }
                 }
-                else if (TrySearchRightSiblings(child.NextSibling, siblingIsSameAsChild, out referenceSibling))
+                else if (TrySearchRightSiblings(child.NextSibling, siblingIsExplicitElement, out referenceSibling))
                 {
                     //  Add as first child
                     XmlElement.InsertBefore(child.XmlElement, referenceSibling.XmlElement);
@@ -530,8 +530,8 @@ namespace Microsoft.Build.Construction
 
                         var parentIndentation = GetElementIndentation(XmlElement);
 
-                        var leadingWhitespaceNode = XmlDocument.CreateWhitespace("\n" + parentIndentation + DEFAULT_INDENT);
-                        var trailingWhiteSpaceNode = XmlDocument.CreateWhitespace("\n" + parentIndentation);
+                        var leadingWhitespaceNode = XmlDocument.CreateWhitespace(Environment.NewLine + parentIndentation + DEFAULT_INDENT);
+                        var trailingWhiteSpaceNode = XmlDocument.CreateWhitespace(Environment.NewLine + parentIndentation);
 
                         XmlElement.InsertBefore(leadingWhitespaceNode, child.XmlElement);
                         XmlElement.InsertAfter(trailingWhiteSpaceNode, child.XmlElement);
@@ -619,6 +619,7 @@ namespace Microsoft.Build.Construction
             AddToXml(child);
 
             _count++;
+
             MarkDirty("Add child element named '{0}'", child.ElementName);
         }
 

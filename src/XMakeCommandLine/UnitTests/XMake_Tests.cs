@@ -24,10 +24,10 @@ namespace Microsoft.Build.UnitTests
 {
     public class XMakeAppTests
     {
-#if FEATURE_RUN_EXE_IN_TESTS
-        private const string MSBuildExeName = "MSBuild.exe";
-#else
+#if USE_MSBUILD_DLL_EXTN
         private const string MSBuildExeName = "MSBuild.dll";
+#else
+        private const string MSBuildExeName = "MSBuild.exe";
 #endif
 
         private const string AutoResponseFileName = "MSBuild.rsp";
@@ -799,11 +799,7 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// Basic case
         /// </summary>
-#if RUNTIME_TYPE_NETCORE
-        [Fact(Skip = "https://github.com/Microsoft/msbuild/issues/624")]
-#else
         [Fact]
-#endif
         public void GetCommandLine()
         {
             var msbuildParameters = "\"" + _pathToArbitraryBogusFile + "\"" + (NativeMethodsShared.IsWindows ? " /v:diag" : " -v:diag");
@@ -819,11 +815,7 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// Quoted path
         /// </summary>
-#if RUNTIME_TYPE_NETCORE
-        [Fact(Skip = "https://github.com/Microsoft/msbuild/issues/624")]
-#else
         [Fact]
-#endif
         public void GetCommandLineQuotedExe()
         {
             var msbuildParameters = "\"" + _pathToArbitraryBogusFile + "\"" + (NativeMethodsShared.IsWindows ? " /v:diag" : " -v:diag");
@@ -847,11 +839,7 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// On path
         /// </summary>
-#if RUNTIME_TYPE_NETCORE
-        [Fact(Skip = "https://github.com/Microsoft/msbuild/issues/624")]
-#else
         [Fact]
-#endif
         public void GetCommandLineQuotedExeOnPath()
         {
             string output = null;
@@ -1569,6 +1557,54 @@ namespace Microsoft.Build.UnitTests
                 return fileNamesToReturn.ToArray();
             }
         }
+
+        /// <summary>
+        /// Verifies that when a directory is specified that a project can be found.
+        /// </summary>
+        [Fact]
+        public void TestProcessProjectSwitchDirectory()
+        {
+            string projectDirectory = Directory.CreateDirectory(Path.Combine(ObjectModelHelpers.TempProjectDir, Guid.NewGuid().ToString("N"))).FullName;
+
+            try
+            {
+                string expectedProject = "project1.proj";
+                string[] extensionsToIgnore = null;
+                IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(new[] { expectedProject });
+                string actualProject = MSBuildApp.ProcessProjectSwitch(new[] { projectDirectory }, extensionsToIgnore, projectHelper.GetFiles);
+
+                Assert.Equal(expectedProject, actualProject);
+            }
+            finally
+            {
+                RobustDelete(projectDirectory);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that when a directory is specified and there are multiple projects that the correct error is thrown.
+        /// </summary>
+        [Fact]
+        public void TestProcessProjectSwitchDirectoryMultipleProjects()
+        {
+            string projectDirectory = Directory.CreateDirectory(Path.Combine(ObjectModelHelpers.TempProjectDir, Guid.NewGuid().ToString("N"))).FullName;
+
+            try
+            {
+                InitializationException exception = Assert.Throws<InitializationException>(() =>
+                {
+                    string[] extensionsToIgnore = null;
+                    IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(new[] { "project1.proj", "project2.proj" });
+                    MSBuildApp.ProcessProjectSwitch(new[] { projectDirectory }, extensionsToIgnore, projectHelper.GetFiles);
+                });
+
+                Assert.Equal(ResourceUtilities.FormatResourceString("AmbiguousProjectDirectoryError", projectDirectory), exception.Message);
+            }
+            finally
+            {
+                RobustDelete(projectDirectory);
+            }
+        }
 #endregion
 
 #region ProcessFileLoggerSwitches
@@ -1880,7 +1916,7 @@ namespace Microsoft.Build.UnitTests
                 // Copy MSBuild.exe & dependent files (they will not be in the GAC so they must exist next to msbuild.exe)
                 var filesToCopy = Directory
                     .EnumerateFiles(source)
-                    .Where(f=> f.EndsWith(".dll") || f.EndsWith(".tasks") || f.EndsWith(".exe") || f.EndsWith(".exe.config") || f.EndsWith(".runtimeconfig.json"));
+                    .Where(f=> f.EndsWith(".dll") || f.EndsWith(".tasks") || f.EndsWith(".exe") || f.EndsWith(".exe.config") || f.EndsWith(".dll.config") || f.EndsWith(".runtimeconfig.json"));
 
                 var directoriesToCopy = Directory
                     .EnumerateDirectories(source)

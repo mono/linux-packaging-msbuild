@@ -184,6 +184,7 @@ namespace Microsoft.Build.Utilities
         public Microsoft.Build.Framework.IBuildEngine2 BuildEngine2 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine3 BuildEngine3 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine4 BuildEngine4 { get { throw null; } }
+        public Microsoft.Build.Framework.IBuildEngine5 BuildEngine5 { get { throw null; } }
         protected string HelpKeywordPrefix { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskHost HostObject { get { throw null; } set { } }
         public Microsoft.Build.Utilities.TaskLoggingHelper Log { get { throw null; } }
@@ -380,7 +381,7 @@ namespace Microsoft.Build.Utilities
         protected virtual string GenerateCommandLineCommands() { throw null; }
         protected abstract string GenerateFullPathToTool();
         protected virtual string GenerateResponseFileCommands() { throw null; }
-        protected System.Diagnostics.ProcessStartInfo GetProcessStartInfo(string pathToTool, string commandLineCommands, string responseFileSwitch) { throw null; }
+        protected virtual System.Diagnostics.ProcessStartInfo GetProcessStartInfo(string pathToTool, string commandLineCommands, string responseFileSwitch) { throw null; }
         protected virtual string GetResponseFileSwitch(string responseFilePath) { throw null; }
         protected virtual string GetWorkingDirectory() { throw null; }
         protected virtual bool HandleTaskExecutionErrors() { throw null; }

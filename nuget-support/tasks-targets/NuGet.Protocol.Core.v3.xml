@@ -238,7 +238,7 @@
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_FailedToDownloadPackage">
             <summary>
-               Looks up a localized string similar to Failed to download package from &apos;{0}&apos;..
+               Looks up a localized string similar to Failed to download package &apos;{0}&apos; from &apos;{1}&apos;..
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_FailedToFetchV2Feed">
@@ -263,7 +263,17 @@
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_FailedToRetrievePackage">
             <summary>
-               Looks up a localized string similar to Failed to retrieve information from remote source &apos;{0}&apos;..
+               Looks up a localized string similar to Failed to retrieve information about &apos;{0}&apos; from remote source &apos;{1}&apos;..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Log_FailedToVerifyRootDirectory">
+            <summary>
+               Looks up a localized string similar to Failed to verify the root directory of local source &apos;{0}&apos;..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Log_FailedToVerifyValidFile">
+            <summary>
+               Looks up a localized string similar to Failed to validate the file &apos;{0}&apos;..
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_FileIsCorrupt">
@@ -876,6 +886,16 @@
             Convert a V2 feed package into a V3 PackageDependencyInfo
             </summary>
         </member>
+        <member name="T:NuGet.Protocol.LegacyFeedCapabilityResourceV2Feed">
+            <summary>
+            A resource for detecting a V2 feed's capabilities based on the metadata document.
+            </summary>
+        </member>
+        <member name="T:NuGet.Protocol.LegacyFeedCapabilityResourceV2Feed.DataServiceMetadataExtractor">
+            <summary>
+            This implementation is copied from NuGet 2.x.
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.ODataServiceDocumentResourceV2Provider.MaxCacheDuration">
             <summary>
             Maximum amount of time to store index.json
@@ -902,6 +922,11 @@
             Parses Dependencies into actual groups
             </summary>
         </member>
+        <member name="T:NuGet.Protocol.V2FeedPage">
+            <summary>
+            A page of items from a V2 feed as well as a link to get the next page.
+            </summary>
+        </member>
         <member name="T:NuGet.Protocol.V2FeedParser">
             <summary>
             A light weight XML parser for NuGet V2 Feeds
@@ -914,7 +939,7 @@
             <param name="httpSource">HttpSource and message handler containing auth/proxy support</param>
             <param name="baseAddress">base address for all services from this OData service</param>
         </member>
-        <member name="M:NuGet.Protocol.V2FeedParser.#ctor(NuGet.Protocol.HttpSource,System.String,NuGet.Configuration.PackageSource)">
+        <member name="M:NuGet.Protocol.V2FeedParser.#ctor(NuGet.Protocol.HttpSource,System.String,System.String)">
             <summary>
             Creates a V2 parser
             </summary>
@@ -950,6 +975,11 @@
         <member name="M:NuGet.Protocol.V2FeedParser.GetValue(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
             <summary>
             Retrieve an XML value safely
+            </summary>
+        </member>
+        <member name="T:NuGet.Protocol.V2FeedQueryBuilder">
+            <summary>
+            Build the path part of a V2 feed URL. These values are appended to the V2 base URL.
             </summary>
         </member>
         <member name="T:NuGet.Protocol.FindLocalPackagesResourcePackagesConfig">
@@ -1064,6 +1094,26 @@
         <member name="M:NuGet.Protocol.LocalPackageSearchMetadata.Convert(System.String)">
             <summary>
             Convert a string to a URI safely. This will return null if there are errors.
+            </summary>
+        </member>
+        <member name="T:NuGet.Protocol.ServiceIndexEntry">
+            <summary>
+            index.json entry for v3
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.ServiceIndexEntry.Uri">
+            <summary>
+            Service Uri
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.ServiceIndexEntry.Type">
+            <summary>
+            Service Type
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.ServiceIndexEntry.ClientVersion">
+            <summary>
+            Client version
             </summary>
         </member>
         <member name="T:NuGet.Protocol.DependencyInfoResourceV3Provider">
@@ -1253,19 +1303,40 @@
             Time the index was requested
             </summary>
         </member>
-        <member name="P:NuGet.Protocol.ServiceIndexResourceV3.Empty">
+        <member name="P:NuGet.Protocol.ServiceIndexResourceV3.Entries">
             <summary>
-            Empty set of endpoints - needed to efficiently meet indexer contract
+            All service index entries.
             </summary>
         </member>
-        <member name="P:NuGet.Protocol.ServiceIndexResourceV3.Item(System.String)">
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetServiceEntries(System.String[])">
             <summary>
-            A list of endpoints for a service type
+            Get the list of service entries that best match the current clientVersion and type.
             </summary>
         </member>
-        <member name="P:NuGet.Protocol.ServiceIndexResourceV3.Item(System.String[])">
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetServiceEntries(NuGet.Versioning.NuGetVersion,System.String[])">
             <summary>
-            A list of endpoints for a service type - in priority order
+            Get the list of service entries that best match the clientVersion and type.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetServiceEntryUri(System.String[])">
+            <summary>
+            Get the best match service URI.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetServiceEntryUris(System.String[])">
+            <summary>
+            Get the list of service URIs that best match the current clientVersion and type.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetServiceEntryUris(NuGet.Versioning.NuGetVersion,System.String[])">
+            <summary>
+            Get the list of service URIs that best match the clientVersion and type.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.ServiceIndexResourceV3.GetValues(Newtonsoft.Json.Linq.JToken)">
+            <summary>
+            Read string values from an array or string.
+            Returns an empty enumerable if the value is null.
             </summary>
         </member>
         <member name="M:NuGet.Protocol.FeedTypeUtility.GetFeedType(NuGet.Configuration.PackageSource)">
@@ -1510,6 +1581,22 @@
             Find all nupkgs in the top level of a directory.
             </summary>
         </member>
+        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream)">
+            <summary>
+            Read a stream into a memory stream if CanSeek is false.
+            This method is used to ensure that network streams
+            can be read by non-async reads without hanging.
+            
+            Closes the original stream by default.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream,System.Boolean)">
+            <summary>
+            Read a stream into a memory stream if CanSeek is false.
+            This method is used to ensure that network streams
+            can be read by non-async reads without hanging.
+            </summary>
+        </member>
         <member name="M:NuGet.Protocol.TimeoutUtility.StartWithTimeout``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.TimeSpan,System.String,System.Threading.CancellationToken)">
             <summary>
             Starts a task with a timeout. If the timeout occurs, a <see cref="T:System.TimeoutException"/>
@@ -1522,17 +1609,7 @@
             with no message will be thrown.
             </summary>
         </member>
-        <member name="T:NuGet.Shared.HashCodeCombiner">
-            <summary>
-            Hash code creator, based on the original NuGet hash code combiner/ASP hash code combiner implementations
-            </summary>
-        </member>
-        <member name="M:NuGet.Shared.HashCodeCombiner.GetHashCode(System.Object[])">
-            <summary>
-            Create a unique hash code for the given set of items
-            </summary>
-        </member>
-        <member name="M:NuGet.Shared.Extensions.OrderedEquals``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Collections.Generic.IComparer{``1},System.Collections.Generic.IEqualityComparer{``0})">
+        <member name="M:NuGet.Shared.EqualityUtility.OrderedEquals``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Collections.Generic.IComparer{``1},System.Collections.Generic.IEqualityComparer{``0})">
             <summary>
             Compares two enumberables for equality, ordered according to the specified key and optional comparer. Handles null values gracefully.
             </summary>
@@ -1543,6 +1620,22 @@
             <param name="keySelector">The function to extract the key from each item in the list</param>
             <param name="orderComparer">An optional comparer for comparing keys</param>
             <param name="sequenceComparer">An optional comparer for sequences</param>
+        </member>
+        <member name="M:NuGet.Shared.EqualityUtility.SequenceEqualWithNullCheck``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEqualityComparer{``0})">
+            <summary>
+            Compares two sequence for equality, allowing either sequence to be null. If one is null, both have to be
+            null for equality.
+            </summary>
+        </member>
+        <member name="T:NuGet.Shared.HashCodeCombiner">
+            <summary>
+            Hash code creator, based on the original NuGet hash code combiner/ASP hash code combiner implementations
+            </summary>
+        </member>
+        <member name="M:NuGet.Shared.HashCodeCombiner.GetHashCode(System.Object[])">
+            <summary>
+            Create a unique hash code for the given set of items
+            </summary>
         </member>
     </members>
 </doc>

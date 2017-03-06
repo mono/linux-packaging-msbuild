@@ -19,7 +19,7 @@ using Microsoft.Build.Shared;
 using System.Diagnostics;
 using System.Globalization;
 using Microsoft.Build.BackEnd;
-
+using Microsoft.Build.Internal;
 using OutOfProcNode = Microsoft.Build.Execution.OutOfProcNode;
 
 namespace Microsoft.Build.Evaluation
@@ -194,7 +194,7 @@ namespace Microsoft.Build.Evaluation
         /// <param name="preserveFormatting"><code>true</code> to the project was loaded with the formated preserved, otherwise <code>false</code>.</param>
         /// <returns>The ProjectRootElement instance if one exists.  Null otherwise.</returns>
         internal ProjectRootElement Get(string projectFile, OpenProjectRootElement openProjectRootElement, bool isExplicitlyLoaded,
-            bool preserveFormatting)
+            bool? preserveFormatting)
         {
             // Should already have been canonicalized
             ErrorUtilities.VerifyThrowInternalRooted(projectFile);
@@ -204,10 +204,10 @@ namespace Microsoft.Build.Evaluation
                 ProjectRootElement projectRootElement;
                 _weakCache.TryGetValue(projectFile, out projectRootElement);
 
-                if (projectRootElement != null && projectRootElement.XmlDocument.PreserveWhitespace != preserveFormatting)
+                if (preserveFormatting != null && projectRootElement != null && projectRootElement.XmlDocument.PreserveWhitespace != preserveFormatting)
                 {
-                    //  Cached project doesn't match preserveFormatting setting, so don't use it
-                    projectRootElement = null;
+                    //  Cached project doesn't match preserveFormatting setting, so reload it
+                    projectRootElement.Reload(true, preserveFormatting);
                 }
 
                 if (projectRootElement != null && _autoReloadFromDisk)
@@ -238,13 +238,9 @@ namespace Microsoft.Build.Evaluation
                             XmlDocument document = new XmlDocument();
                             document.PreserveWhitespace = projectRootElement.XmlDocument.PreserveWhitespace;
 
-                            XmlReaderSettings dtdSettings = new XmlReaderSettings();
-                            dtdSettings.DtdProcessing = DtdProcessing.Ignore;
-
-                            using (var stream = new FileStream(projectRootElement.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                            using (XmlReader xtr = XmlReader.Create(stream, dtdSettings))
+                            using (var xtr = XmlReaderExtension.Create(projectRootElement.FullPath))
                             {
-                                document.Load(xtr);
+                                document.Load(xtr.Reader);
                             }
 
                             string diskContent = document.OuterXml;
@@ -350,8 +346,20 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         internal ProjectRootElement TryGet(string projectFile)
         {
-            ProjectRootElement result = Get(projectFile, null /* no delegate to load it */, false, /*Since we are not creating a PRE this can be true or false*/
-                preserveFormatting: false);
+            return TryGet(projectFile, preserveFormatting: null);
+        }
+
+        /// <summary>
+        /// Returns any a ProjectRootElement in the cache with the provided full path,
+        /// otherwise null.
+        /// </summary>
+        internal ProjectRootElement TryGet(string projectFile, bool? preserveFormatting)
+        {
+            ProjectRootElement result = Get(
+                projectFile,
+                openProjectRootElement: null, // no delegate to load it
+                isExplicitlyLoaded: false, // Since we are not creating a PRE this can be true or false
+                preserveFormatting: preserveFormatting);
 
             return result;
         }

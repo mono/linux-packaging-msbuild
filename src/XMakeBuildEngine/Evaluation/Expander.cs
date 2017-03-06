@@ -3080,6 +3080,27 @@ namespace Microsoft.Build.Evaluation
                         args[0] = Convert.ChangeType(args[0], objectInstance.GetType(), CultureInfo.InvariantCulture);
                     }
 
+                    if (_receiverType == typeof(IntrinsicFunctions))
+                    {
+                        // Special case a few methods that take extra parameters that can't be passed in by the user
+                        //
+
+                        if (_methodMethodName.Equals("GetPathOfFileAbove") && args.Length == 1)
+                        {
+                            // Append the IElementLocation as a parameter to GetPathOfFileAbove if the user only
+                            // specified the file name.  This is syntactic sugar so they don't have to always
+                            // include $(MSBuildThisFileDirectory) as a parameter.
+                            //
+                            string startingDirectory = String.IsNullOrWhiteSpace(elementLocation.File) ? String.Empty : Path.GetDirectoryName(elementLocation.File);
+
+                            args = new []
+                            {
+                                args[0],
+                                startingDirectory,
+                            };
+                        }
+                    }
+
                     // If we've been asked to construct an instance, then we
                     // need to locate an appropriate constructor and invoke it
                     if (String.Equals("new", _methodMethodName, StringComparison.OrdinalIgnoreCase))
@@ -3341,12 +3362,12 @@ namespace Microsoft.Build.Evaluation
 
                 // Try to load the assembly with the computed name
 #if FEATURE_GAC
-#pragma warning disable 618
+#pragma warning disable 618, 612
                 // Unfortunately Assembly.Load is not an alternative to LoadWithPartialName, since
                 // Assembly.Load requires the full assembly name to be passed to it.
                 // Therefore we must ignore the deprecated warning.
                 Assembly candidateAssembly = Assembly.LoadWithPartialName(candidateAssemblyName);
-#pragma warning restore 618
+#pragma warning restore 618, 612
 #else
                 Assembly candidateAssembly = null;
                 try
