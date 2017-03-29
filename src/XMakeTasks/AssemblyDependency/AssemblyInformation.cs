@@ -502,7 +502,7 @@ namespace Microsoft.Build.Tasks
         /// <returns>The array of assembly dependencies.</returns>
         private AssemblyNameExtension[] ImportAssemblyDependencies()
         {
-#if FEATURE_ASSEMBLY_LOADFROM
+#if FEATURE_ASSEMBLY_LOADFROM && !MONO
             ArrayList asmRefs = new ArrayList();
 
             if (!NativeMethodsShared.IsWindows)
@@ -602,7 +602,16 @@ namespace Microsoft.Build.Tasks
                     var assemblyName = new AssemblyName();
                     assemblyName.Name = metadataReader.GetString(entry.Name);
                     assemblyName.Version = entry.Version;
-                    assemblyName.CultureName = metadataReader.GetString(entry.Culture);
+                    var cultureString = metadataReader.GetString(entry.Culture);
+                    if (!NativeMethodsShared.IsMono)
+                    {
+                        // set_CultureName throws NotImplementedException on Mono
+                        assemblyName.CultureName = cultureString;
+                    }
+                    else if (cultureString != null)
+                    {
+                        assemblyName.CultureInfo = new CultureInfo(cultureString);
+                    }
                     var publicKeyOrToken = metadataReader.GetBlobBytes(entry.PublicKeyOrToken);
                     if (publicKeyOrToken != null)
                     {
