@@ -31,6 +31,7 @@ override_dh_clideps:
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=NTDLL.DLL \
 		--exclude-moduleref=ntdll.dll \
+		--exclude-moduleref=ntdll \
 		--exclude-moduleref=ole32.dll
 
 %:
