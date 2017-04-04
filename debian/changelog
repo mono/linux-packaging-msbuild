@@ -1,3 +1,9 @@
+msbuild (15.1+xamarinxplat.2017.03.17.16.15-0xamarin2) alpha; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 04 Apr 2017 10:33:13 +0000
+
 msbuild (15.1+xamarinxplat.2017.03.17.16.15-0xamarin1) alpha; urgency=medium
 
   * New release - msbuild_15.1+xamarinxplat.2017.03.17.16.15.orig.tar.gz
