@@ -20,6 +20,11 @@ using Xunit.Abstractions;
 
 using TempPaths = System.Collections.Generic.Dictionary<string, string>;
 
+// Microsoft.Build.Tasks has MSBuildConstants compiled into it under a different namespace otherwise
+// there are collisions with the one compiled into Microsoft.Build.Framework
+#if MICROSOFT_BUILD_TASKS_UNITTESTS
+using MSBuildConstants = Microsoft.Build.Tasks.MSBuildConstants;
+#endif
 
 namespace Microsoft.Build.UnitTests
 {
@@ -633,15 +638,14 @@ namespace Microsoft.Build.UnitTests
         }
 
         internal static void BuildProjectExpectSuccess
-           (
-           string projectContents,
-            ILogger logger
-           )
+            (
+            string projectContents,
+            params ILogger[] loggers
+            )
         {
-            Project project = ObjectModelHelpers.CreateInMemoryProject(projectContents, logger);
-
-            bool success = project.Build(logger);
-            Assert.True(success); // "Build failed.  See Standard Out tab for details"
+            Project project = CreateInMemoryProject(projectContents, logger: null); // logger is null so we take care of loggers ourselves
+            bool success = project.Build(loggers);
+            Assert.True(success);
         }
 
         /// <summary>
@@ -993,7 +997,7 @@ namespace Microsoft.Build.UnitTests
         /// </summary>
         internal static IList<ProjectItem> GetItems(string content, bool allItems = false)
         {
-            ProjectRootElement projectXml = ProjectRootElement.Create(XmlReader.Create(new StringReader(content)));
+            var projectXml = ProjectRootElement.Create(XmlReader.Create(new StringReader(CleanupFileContents(content))));
             Project project = new Project(projectXml);
             IList<ProjectItem> item = Helpers.MakeList(allItems ? project.Items : project.GetItems("i"));
 

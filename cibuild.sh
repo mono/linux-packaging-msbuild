@@ -99,6 +99,10 @@ get_current_linux_name() {
         echo "centos"
         return 0
     elif [ "$(cat /etc/*-release | grep -cim1 rhel)" -eq 1 ]; then
+        if [ "$(cat /etc/os-release | grep -cim1 'VERSION_ID="7\.')" -eq 1 ]; then
+            echo "rhel.7"
+            return 0
+        fi
         echo "rhel"
         return 0
     elif [ "$(cat /etc/*-release | grep -cim1 debian)" -eq 1 ]; then
@@ -125,7 +129,7 @@ get_current_linux_name() {
     fi
 
     # Cannot determine Linux distribution, assuming Ubuntu 14.04.
-    echo "ubuntu.14.04"
+    echo "ubuntu"
     return 0
 }
 
@@ -290,12 +294,15 @@ esac
 
 BOOTSTRAP_BUILD_LOG_PATH="$THIS_SCRIPT_PATH"/"msbuild_bootstrap_build-$host.log"
 LOCAL_BUILD_LOG_PATH="$THIS_SCRIPT_PATH"/"msbuild_local_build-$host.log"
+LOCAL_BUILD_BINLOG_PATH="$THIS_SCRIPT_PATH"/"msbuild_rebuild-$host.binlog"
 MOVE_LOG_PATH="$THIS_SCRIPT_PATH"/"msbuild_move_bootstrap-$host.log"
 
 BUILD_MSBUILD_ARGS="$PROJECT_FILE_ARG /p:OS=$OS_ARG /p:Configuration=$CONFIGURATION /p:OverrideToolHost=$RUNTIME_HOST /verbosity:minimal $EXTRA_ARGS"
 
 setHome
 
+#temporary workaround to this being set on wrench and breaking tests!
+unset FOO
 restoreBuildTools
 
 echo
@@ -336,4 +343,4 @@ _NOWARN="MSB3276;MSB3277;MSB3026;AL1053"
 
 echo
 echo "** Rebuilding MSBuild with locally built binaries"
-runMSBuildWith "$RUNTIME_HOST" "$RUNTIME_HOST_ARGS" "$MSBUILD_BOOTSTRAPPED_EXE" "/t:$TARGET_ARG $BUILD_MSBUILD_ARGS $CSC_ARGS /warnaserror /nowarn:\"$_NOWARN\"" "$LOCAL_BUILD_LOG_PATH"
+runMSBuildWith "$RUNTIME_HOST" "$RUNTIME_HOST_ARGS" "$MSBUILD_BOOTSTRAPPED_EXE" "/t:$TARGET_ARG $BUILD_MSBUILD_ARGS $CSC_ARGS /warnaserror /nowarn:\"$_NOWARN\"" "$LOCAL_BUILD_LOG_PATH" /bl:"$LOCAL_BUILD_BINLOG_PATH"
