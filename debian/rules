@@ -32,6 +32,7 @@ override_dh_clideps:
 		--exclude-moduleref=NTDLL.DLL \
 		--exclude-moduleref=ntdll.dll \
 		--exclude-moduleref=ntdll \
+		--exclude-moduleref=axnative.dll \
 		--exclude-moduleref=ole32.dll
 
 %:
