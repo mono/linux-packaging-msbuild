@@ -78,6 +78,10 @@
 
   </Target>
 
+  <Target Name="DumpTestLogFile">
+      <Exec Command="cat @(AssemblyUnderTest)_stdout.txt"/>
+  </Target>
+
   <Target Name="Test"
           DependsOnTargets="Build;CopyBuildOutputToDeploymentDirectories;EnsureDependenciesDeployed;EnsurePrerequisitesCopied"
           Condition="'$(IsTestProject)' == 'true'">
@@ -103,6 +107,8 @@
           IgnoreStandardErrorWarningFormat="true"
           EnvironmentVariables="MSBUILDDONOTLAUNCHDEBUGGER=1"
           Condition="'$(NetCoreBuild)' == 'true'" />
+
+    <OnError ExecuteTargets="DumpTestLogFile" Condition="'$(DumpTestLogFilesOnFailure)' == 'true'" />
   </Target>
 
   <Target Name="EnsureSDKTargetPresent"
@@ -152,13 +158,22 @@
            produce the right outputs. Continuing on error to allow
            test results even on a misconfigured build machine. -->
       <EditBinContinueOnError Condition="'$(TF_BUILD)' == 'True' or '$(JENKINS_URL)' != ''">ErrorAndContinue</EditBinContinueOnError>
+
+      <!--
+        * VSINSTALLDIR is set by the Developer Command Prompt. When building from MicroBuild, this isn't set.
+        * VsInstallRoot is discovered by MSBuild, but in our bootstrapped build it's wrong (VS isn't installed
+          to our 'bin' folder). When building from MicroBuild (or any installed VS), this value is correct.
+      -->
+      <EditBinCommand Condition="'$(VSINSTALLDIR)' != ''">call &quot;$(VSINSTALLDIR)\Common7\Tools\VsDevCmd.bat&quot; &amp;&amp; editbin.exe /NOLOGO $(EditBinFlags) @(IntermediateAssembly)</EditBinCommand>
+      <EditBinCommand Condition="'$(VsInstallRoot)' != '' and '$(EditBinCommand)' == ''">call &quot;$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat&quot; &amp;&amp; editbin.exe /NOLOGO $(EditBinFlags) @(IntermediateAssembly)</EditBinCommand>
     </PropertyGroup>
 
     <Exec Condition="'$(EditBinFlags)'!=''"
-          Command="call &quot;$(VS140COMNTOOLS)..\tools\vsvars32.bat&quot; &amp;&amp; editbin.exe /NOLOGO $(EditBinFlags) @(IntermediateAssembly)"
+          Command="$(EditBinCommand)"
           ContinueOnError="$(EditBinContinueOnError)" />
 
   </Target>
 
   <Import Project="$(NuGetConfigDir)\packageLoad.targets" />
+  <Import Project="Mono.Override.targets" Condition="'$(MonoBuild)' == 'true'" />
 </Project>
