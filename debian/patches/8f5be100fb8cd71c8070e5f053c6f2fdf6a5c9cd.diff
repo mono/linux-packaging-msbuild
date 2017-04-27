@@ -1,8 +1,148 @@
-diff --git a/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs b/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
-index bea807f..2baa4a1 100644
+From 88d6afcbdb976d0d8b996cad046dfdacdb5ba16d Mon Sep 17 00:00:00 2001
+From: Patrick Dwyer <pat@patdwyer.com.au>
+Date: Fri, 14 Apr 2017 04:07:57 +1000
+Subject: [PATCH 1/3] Detect paths in filesystem root (#1954)
+
+FileUtilities.LooksLikeUnixPath() only returned true if the first path
+segment is a directory. This can't be true for files in the root directory
+on *nix systems. This commit adds an additional check to determine if the
+parameter is a file or directory in the root. Fixes #1894.
+---
+ src/Shared/FileUtilities.cs                 | 6 ++++++
+ src/Shared/UnitTests/FileUtilities_Tests.cs | 5 +++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/src/Shared/FileUtilities.cs b/src/Shared/FileUtilities.cs
+index 689157b..202b6da 100644
+--- a/src/Shared/FileUtilities.cs
++++ b/src/Shared/FileUtilities.cs
+@@ -464,6 +464,12 @@ namespace Microsoft.Build.Shared
+                 return true;
+             }
+ 
++            // Check for actual files or directories under / that get missed by the above logic
++            if (firstSlash == 0 && value[0] == '/' && (Directory.Exists(value) || File.Exists(value)))
++            {
++                return true;
++            }
++
+             return false;
+         }
+ 
+From fb17570342ed84a0700f484e9b0d7a476ddbc0a1 Mon Sep 17 00:00:00 2001
+From: Ankit Jain <ankit.jain@xamarin.com>
+Date: Thu, 27 Apr 2017 00:58:00 -0400
+Subject: [PATCH 2/3] Add a `baseDirectory` argument for LooksLikeUnixFilePath
+ and ..
+
+.. MaybeAdjustFilePath. The former checks if the first segment of the
+path might be the name of an existent directory. This depends on the
+CWD, but in some cases we might need to check this in a different
+directory.
+
+For example, project A initiates a build of project B, and while B is
+being evaluated the CWD may not have been updated, but the paths in B's
+project file are relative to B. So, the checks should be done in B's
+directory.
+
+This will be useful in an upcoming fix.
+---
+ src/Shared/FileUtilities.cs                 | 13 ++++--
+ src/Shared/UnitTests/FileUtilities_Tests.cs | 63 +++++++++++++++++++++++++++++
+ 2 files changed, 72 insertions(+), 4 deletions(-)
+
+diff --git a/src/Shared/FileUtilities.cs b/src/Shared/FileUtilities.cs
+index 202b6da..bd73294 100644
+--- a/src/Shared/FileUtilities.cs
++++ b/src/Shared/FileUtilities.cs
+@@ -401,8 +401,10 @@ namespace Microsoft.Build.Shared
+         /// first segment exists and is a directory.
+         /// Use a native shared method to massage file path. If the file is adjusted,
+         /// that qualifies is as a path.
++        ///
++        /// @baseDirectory is just passed to LooksLikeUnixFilePath, to help with the check
+         /// </summary>
+-        internal static string MaybeAdjustFilePath(string value)
++        internal static string MaybeAdjustFilePath(string value, string baseDirectory="")
+         {
+             // Don't bother with arrays or properties or network paths, or those that
+             // have no slashes.
+@@ -436,15 +438,18 @@ namespace Microsoft.Build.Shared
+                 }
+             }
+ 
+-            return LooksLikeUnixFilePath(checkValue) ? newValue : value;
++            return LooksLikeUnixFilePath(checkValue, baseDirectory) ? newValue : value;
+         }
+ 
+         /// <summary>
+         /// If on Unix, check if the string looks like a file path.
+         /// The heuristic is if something resembles paths (contains slashes) check if the
+         /// first segment exists and is a directory.
++        ///
++        /// If @baseDirectory is not null, then look for the first segment exists under
++        /// that
+         /// </summary>
+-        internal static bool LooksLikeUnixFilePath(string value)
++        internal static bool LooksLikeUnixFilePath(string value, string baseDirectory="")
+         {
+             if (!NativeMethodsShared.IsUnixLike)
+             {
+@@ -459,7 +464,7 @@ namespace Microsoft.Build.Shared
+                 firstSlash = value.Substring(1).IndexOf('/') + 1;
+             }
+ 
+-            if (firstSlash > 0 && Directory.Exists(value.Substring(0, firstSlash)))
++            if (firstSlash > 0 && Directory.Exists(Path.Combine(baseDirectory, value.Substring(0, firstSlash))))
+             {
+                 return true;
+             }
+From 8f5be100fb8cd71c8070e5f053c6f2fdf6a5c9cd Mon Sep 17 00:00:00 2001
+From: Ankit Jain <ankit.jain@xamarin.com>
+Date: Thu, 27 Apr 2017 01:03:12 -0400
+Subject: [PATCH 3/3] Fix file path in item metadata, when CWD != project
+ directory
+
+If a project A has:
+
+    <Reference Include="foo">
+        <HintPath>lib\foo.dll</HintPath>
+    </Reference>
+
+.. we want to convert the HintPath metadata to unix style. And that
+happens in Expander.ExpandInto* methods.
+
+But if the solution is building A, then at evaluation time the CWD may not
+be set to the project A's directory, which would cause the
+`LooksLikeUnixFilePath` test to fail for `lib\foo.dll`, since `lib` does
+not exist in the solution's directory. And Expander methods don't have
+the context to know about this.
+
+So, instead we do this conversion in LazyItemOperation and attempt to
+convert the path, as if we were in that project A's directory.
+
+    #/abc/foo/foo.sln
+    abc/ $ msbuild foo/foo.sln
+
+Or basically any case where the CWD doesn't match project A's directory.
+
+The test project fails in ResolveAssemblyReference with:
+
+warning MSB3246: Resolved file has a bad image, no metadata, or is otherwise inaccessible. Could not find file "/Users/ankit/Projects/tests/nuget-tests/ConsoleApp2/ConsoleApp2/lib\fsharpFailsToEmbedResources.exe"
+.. or ..
+warning MSB3245: Could not resolve this reference. Could not locate the assembly "fsharpFailsToEmbedResources, Version=1.0.0.0". Check to make sure the assembly exists on disk. If this reference is required by your code, you may get compilation errors.
+
+Fixes: https://bugzilla.xamarin.com/show_bug.cgi?id=55629
+---
+ src/Build.UnitTests/FixPathOnUnix_Tests.cs         | 81 ++++++++++++++++++++++
+ .../Microsoft.Build.Engine.UnitTests.csproj        |  3 +-
+ .../LazyItemEvaluator.LazyItemOperation.cs         |  3 +-
+ 3 files changed, 85 insertions(+), 2 deletions(-)
+ create mode 100644 src/Build.UnitTests/FixPathOnUnix_Tests.cs
+
 --- a/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
 +++ b/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
-@@ -169,7 +169,7 @@ protected void DecorateItemsWithMetadata(ICollection<I> items, ImmutableList<Pro
+@@ -169,7 +169,7 @@ namespace Microsoft.Build.Evaluation
  
                                  string evaluatedValue = _expander.ExpandIntoStringLeaveEscaped(metadataElement.Value, metadataExpansionOptions, metadataElement.Location);
  
@@ -11,7 +151,7 @@ index bea807f..2baa4a1 100644
                              }
                          }
  
-@@ -207,6 +207,7 @@ protected void DecorateItemsWithMetadata(ICollection<I> items, ImmutableList<Pro
+@@ -207,6 +207,7 @@ namespace Microsoft.Build.Evaluation
  #endif
  
                              string evaluatedValue = _expander.ExpandIntoStringLeaveEscaped(metadataElement.Value, metadataExpansionOptions, metadataElement.Location);
@@ -19,3 +159,6 @@ index bea807f..2baa4a1 100644
  
                              metadataTable.SetValue(metadataElement, evaluatedValue);
                              metadataList.Add(new Pair<ProjectMetadataElement, string>(metadataElement, evaluatedValue));
+-- 
+2.7.4
+
