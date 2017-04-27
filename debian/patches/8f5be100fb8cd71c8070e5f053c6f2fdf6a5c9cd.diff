@@ -1,0 +1,21 @@
+diff --git a/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs b/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
+index bea807f..2baa4a1 100644
+--- a/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
++++ b/src/Build/Evaluation/LazyItemEvaluator.LazyItemOperation.cs
+@@ -169,7 +169,7 @@ protected void DecorateItemsWithMetadata(ICollection<I> items, ImmutableList<Pro
+ 
+                                 string evaluatedValue = _expander.ExpandIntoStringLeaveEscaped(metadataElement.Value, metadataExpansionOptions, metadataElement.Location);
+ 
+-                                item.SetMetadata(metadataElement, evaluatedValue);
++                                item.SetMetadata(metadataElement, FileUtilities.MaybeAdjustFilePath(evaluatedValue, metadataElement.ContainingProject.DirectoryPath));
+                             }
+                         }
+ 
+@@ -207,6 +207,7 @@ protected void DecorateItemsWithMetadata(ICollection<I> items, ImmutableList<Pro
+ #endif
+ 
+                             string evaluatedValue = _expander.ExpandIntoStringLeaveEscaped(metadataElement.Value, metadataExpansionOptions, metadataElement.Location);
++                            evaluatedValue = FileUtilities.MaybeAdjustFilePath(evaluatedValue, metadataElement.ContainingProject.DirectoryPath);
+ 
+                             metadataTable.SetValue(metadataElement, evaluatedValue);
+                             metadataList.Add(new Pair<ProjectMetadataElement, string>(metadataElement, evaluatedValue));
