@@ -129,7 +129,7 @@ get_current_linux_name() {
     fi
 
     # Cannot determine Linux distribution, assuming Ubuntu 14.04.
-    echo "ubuntu"
+    echo "ubuntu.14.04"
     return 0
 }
 
@@ -303,6 +303,7 @@ setHome
 
 #temporary workaround to this being set on wrench and breaking tests!
 unset FOO
+
 restoreBuildTools
 
 echo
