@@ -21,6 +21,7 @@ override_dh_clideps:
 		--exclude-moduleref=api-ms-win-core-localization-l1-2-0.dll \
 		--exclude-moduleref=api-ms-win-core-sysinfo-l1-1-0.dll \
 		--exclude-moduleref=api-ms-win-core-sysinfo-l1-2-0.dll \
+		--exclude-moduleref=axnative.dll \
 		--exclude-moduleref=clr \
 		--exclude-moduleref=crypt32.dll \
 		--exclude-moduleref=dbghelp.dll \
@@ -29,11 +30,12 @@ override_dh_clideps:
 		--exclude-moduleref=Microsoft.DiaSymReader.Native.x86.dll \
 		--exclude-moduleref=Microsoft.DiaSymReader.Native.amd64.dll \
 		--exclude-moduleref=mscoree.dll \
+		--exclude-moduleref=mscorwks.dll \
 		--exclude-moduleref=NTDLL.DLL \
 		--exclude-moduleref=ntdll.dll \
 		--exclude-moduleref=ntdll \
-		--exclude-moduleref=axnative.dll \
-		--exclude-moduleref=ole32.dll
+		--exclude-moduleref=ole32.dll \
+		--exclude-moduleref=sfc.dll
 
 %:
 	dh --with cli $@ 
