@@ -1,3 +1,14 @@
+msbuild (15.2+xamarinxplat.2017.04.21.22.45-0xamarin2) alpha; urgency=medium
+
+  [ Xamarin Public Jenkins (auto-signing) ]
+  * Packaging bugfix:
+
+  [ Ubuntu ]
+  * [7daaf01] Merge branch 'master' of github.com:mono/linux-packaging-
+    msbuild [ad43148] More cherries in picked patch
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 27 Apr 2017 09:38:38 +0000
+
 msbuild (15.2+xamarinxplat.2017.04.21.22.45-0xamarin1) alpha; urgency=medium
 
   * New release - msbuild-15.2+xamarinxplat.2017.04.21.22.45.tar.gz
