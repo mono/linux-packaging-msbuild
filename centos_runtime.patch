@@ -17,3 +17,14 @@ index f8be970..74d415b 100644
          "Microsoft.NETCore.Platforms": "1.0.1",
          "System.Collections.NonGeneric": "4.0.1",
          "System.Console": "4.0.0",
+diff --git a/targets/roslyn/project.json b/targets/roslyn/project.json
+index 8c0407e..3ae46e5 100644
+--- a/targets/roslyn/project.json
++++ b/targets/roslyn/project.json
+@@ -1,5 +1,6 @@
+ ﻿{
+   "runtimes": {
++    "centos-x64": {},
+     "win7-x86": {},
+     "win7-x64": {},
+     "osx.10.10-x64": {},
