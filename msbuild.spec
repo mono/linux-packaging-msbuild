@@ -61,5 +61,6 @@ DESTDIR=%{buildroot} ./install-mono-prefix.sh %{_prefix}
 
 %files
 %defattr(-,root,root)
-%_prefix/lib/
+%_prefix/lib/mono/msbuild
+%_prefix/lib/mono/xbuild/*
 %_bindir/*
