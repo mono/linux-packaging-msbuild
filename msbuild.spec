@@ -20,7 +20,7 @@ License:        MIT
 Group:          Development/Libraries/Other
 Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Source0:        msbuild_%{version}.orig.tar.gz
+Source0:        msbuild-%{version}.tar.gz
 Patch0:		centos_runtime.patch
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
