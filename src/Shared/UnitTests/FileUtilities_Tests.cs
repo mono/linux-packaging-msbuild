@@ -833,7 +833,11 @@ namespace Microsoft.Build.UnitTests
         [PlatformSpecific(Xunit.PlatformID.AnyUnix)]
         public void AbsolutePathLooksLikeUnixPathOnUnix()
         {
+            var secondSlash = SystemSpecificAbsolutePath.Substring(1).IndexOf(Path.DirectorySeparatorChar) + 1;
+            var rootLevelPath = SystemSpecificAbsolutePath.Substring(0, secondSlash);
+
             Assert.True(FileUtilities.LooksLikeUnixFilePath(SystemSpecificAbsolutePath));
+            Assert.True(FileUtilities.LooksLikeUnixFilePath(rootLevelPath));
         }
 
         [Fact]
@@ -842,6 +846,70 @@ namespace Microsoft.Build.UnitTests
         {
             Assert.False(FileUtilities.LooksLikeUnixFilePath(SystemSpecificAbsolutePath));
             Assert.False(FileUtilities.LooksLikeUnixFilePath("/path/that/looks/unixy"));
+            Assert.False(FileUtilities.LooksLikeUnixFilePath("/root"));
+        }
+
+        [Fact]
+        [PlatformSpecific(Xunit.PlatformID.AnyUnix)]
+        public void RelativePathLooksLikeUnixPathOnUnixWithBaseDirectory()
+        {
+            string filePath = ObjectModelHelpers.CreateFileInTempProjectDirectory("first/second/file.txt", String.Empty);
+            string oldCWD = Environment.CurrentDirectory;
+
+            try
+            {
+                // <tmp_dir>/first
+                string firstDirectory = Path.GetDirectoryName(Path.GetDirectoryName(filePath));
+                string tmpDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(filePath)));
+
+                Directory.SetCurrentDirectory(tmpDirectory);
+
+                // We are in <tmp_dir> and second is not under that, so this will be false
+                Assert.False(FileUtilities.LooksLikeUnixFilePath("second/file.txt"));
+
+                // .. but if we have baseDirectory:firstDirectory, then it will be true
+                Assert.True(FileUtilities.LooksLikeUnixFilePath("second/file.txt", firstDirectory));
+            }
+            finally
+            {
+                if (filePath != null)
+                {
+                    File.Delete(filePath);
+                }
+                Directory.SetCurrentDirectory(oldCWD);
+            }
+        }
+
+        [Fact]
+        [PlatformSpecific(Xunit.PlatformID.AnyUnix)]
+        public void RelativePathMaybeAdjustFilePathWithBaseDirectory()
+        {
+            // <tmp_dir>/first/second/file.txt
+            string filePath = ObjectModelHelpers.CreateFileInTempProjectDirectory("first/second/file.txt", String.Empty);
+            string oldCWD = Environment.CurrentDirectory;
+
+            try
+            {
+                // <tmp_dir>/first
+                string firstDirectory = Path.GetDirectoryName(Path.GetDirectoryName(filePath));
+                string tmpDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(filePath)));
+
+                Directory.SetCurrentDirectory(tmpDirectory);
+
+                // We are in <tmp_dir> and second is not under that, so this won't convert
+                Assert.Equal("second\\file.txt", FileUtilities.MaybeAdjustFilePath("second\\file.txt"));
+
+                // .. but if we have baseDirectory:firstDirectory, then it will
+                Assert.Equal("second/file.txt", FileUtilities.MaybeAdjustFilePath("second\\file.txt", firstDirectory));
+            }
+            finally
+            {
+                if (filePath != null)
+                {
+                    File.Delete(filePath);
+                }
+                Directory.SetCurrentDirectory(oldCWD);
+            }
         }
 
         private static string SystemSpecificAbsolutePath => FileUtilities.ExecutingAssemblyPath;
