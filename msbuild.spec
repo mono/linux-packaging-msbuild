@@ -38,7 +38,7 @@ project or solution file, you can orchestrate and build products
 in environments where Visual Studio isn't installed.
 
 %prep
-%setup -n msbuild-d15.2-beta-1
+%setup -n msbuild-d15.2
 %patch0 -p1
 
 %define _use_internal_dependency_generator 0
