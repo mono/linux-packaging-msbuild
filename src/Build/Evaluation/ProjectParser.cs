@@ -11,6 +11,7 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Microsoft.Build.Framework;
 #if (!STANDALONEBUILD)
 using Microsoft.Internal.Performance;
 
@@ -237,7 +238,9 @@ namespace Microsoft.Build.Construction
                     case XMakeElements.projectExtensions:
                         child = ParseProjectExtensionsElement(childElement);
                         break;
-
+                    case XMakeElements.sdk:
+                        child = ParseProjectSdkElement(childElement);
+                        break;
                     // Obsolete
                     case XMakeElements.error:
                     case XMakeElements.warning:
@@ -513,12 +516,19 @@ namespace Microsoft.Build.Construction
                 );
 
             ProjectXmlUtilities.VerifyThrowProjectAttributes(element, s_validAttributesOnImport);
-
             ProjectXmlUtilities.VerifyThrowProjectRequiredAttribute(element, XMakeAttributes.project);
-
             ProjectXmlUtilities.VerifyThrowProjectNoChildElements(element);
 
-            return new ProjectImportElement(element, parent, _project);
+            SdkReference sdk = null;
+            if (element.HasAttribute(XMakeAttributes.sdk))
+            {
+                sdk = new SdkReference(
+                    ProjectXmlUtilities.GetAttributeValue(element, XMakeAttributes.sdk, nullIfNotExists: true),
+                    ProjectXmlUtilities.GetAttributeValue(element, XMakeAttributes.sdkVersion, nullIfNotExists: true),
+                    ProjectXmlUtilities.GetAttributeValue(element, XMakeAttributes.sdkMinimumVersion, nullIfNotExists: true));
+            }
+
+            return new ProjectImportElement(element, parent, _project, sdk);
         }
 
         /// <summary>
@@ -945,6 +955,19 @@ namespace Microsoft.Build.Construction
 
             // All children inside ProjectExtensions are ignored, since they are only part of its value
             return new ProjectExtensionsElement(element, _project, _project);
+        }
+
+        /// <summary>
+        /// Parse a ProjectExtensionsElement
+        /// </summary>
+        private ProjectSdkElement ParseProjectSdkElement(XmlElementWithLocation element)
+        {
+            if (string.IsNullOrEmpty(element.GetAttribute(XMakeAttributes.sdkName)))
+            {
+                ProjectErrorUtilities.ThrowInvalidProject(element.Location, "InvalidSdkElementName", element.Name);
+            }
+
+            return new ProjectSdkElement(element, _project, _project);
         }
     }
 }
