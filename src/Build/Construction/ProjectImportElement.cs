@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System.Diagnostics;
-
+using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 
 using ProjectXmlUtilities = Microsoft.Build.Internal.ProjectXmlUtilities;
@@ -22,16 +22,17 @@ namespace Microsoft.Build.Construction
         /// <summary>
         /// Initialize a parented ProjectImportElement
         /// </summary>
-        internal ProjectImportElement(XmlElementWithLocation xmlElement, ProjectElementContainer parent, ProjectRootElement containingProject)
+        internal ProjectImportElement(XmlElementWithLocation xmlElement, ProjectElementContainer parent, ProjectRootElement containingProject, SdkReference sdkReference = null)
             : base(xmlElement, parent, containingProject)
         {
             ErrorUtilities.VerifyThrowArgumentNull(parent, "parent");
+            ParsedSdkReference = sdkReference;
         }
 
         /// <summary>
         /// Initialize an unparented ProjectImportElement
         /// </summary>
-        private ProjectImportElement(XmlElementWithLocation xmlElement, ProjectRootElement containingProject)
+        internal ProjectImportElement(XmlElementWithLocation xmlElement, ProjectRootElement containingProject)
             : base(xmlElement, null, containingProject)
         {
         }
@@ -75,9 +76,37 @@ namespace Microsoft.Build.Construction
             set
             {
                 ErrorUtilities.VerifyThrowArgumentLength(value, XMakeAttributes.sdk);
-
+                if (!CheckUpdatedSdk()) return;
                 ProjectXmlUtilities.SetOrRemoveAttribute(XmlElement, XMakeAttributes.sdk, value);
                 MarkDirty("Set Import Sdk {0}", value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the version associated with this SDK import
+        /// </summary>
+        public string Version
+        {
+            get { return ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkVersion); }
+            set
+            {
+                if (!CheckUpdatedSdk()) return;
+                ProjectXmlUtilities.SetOrRemoveAttribute(XmlElement, XMakeAttributes.sdkVersion, value);
+                MarkDirty("Set Import Version {0}", value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum SDK version required by this import.
+        /// </summary>
+        public string MinimumVersion
+        {
+            get { return ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkMinimumVersion); }
+            set
+            {
+                if (!CheckUpdatedSdk()) return;
+                ProjectXmlUtilities.SetOrRemoveAttribute(XmlElement, XMakeAttributes.sdkMinimumVersion, value);
+                MarkDirty("Set Import Minimum Version {0}", value);
             }
         }
 
@@ -91,7 +120,12 @@ namespace Microsoft.Build.Construction
         /// added because of the <see cref="ProjectRootElement.Sdk"/> attribute and the location where the project was
         /// imported.
         /// </summary>
-        public ImplicitImportLocation ImplicitImportLocation { get; internal set; } = ImplicitImportLocation.None;
+        public ImplicitImportLocation ImplicitImportLocation { get; internal set; }
+
+        /// <summary>
+        /// <see cref="SdkReference"/> if applicable to this import element.
+        /// </summary>
+        internal SdkReference ParsedSdkReference { get; set; }
 
         /// <summary>
         /// Creates an unparented ProjectImportElement, wrapping an unparented XmlElement.
@@ -101,27 +135,23 @@ namespace Microsoft.Build.Construction
         internal static ProjectImportElement CreateDisconnected(string project, ProjectRootElement containingProject)
         {
             XmlElementWithLocation element = containingProject.CreateElement(XMakeElements.import);
-
-            ProjectImportElement import = new ProjectImportElement(element, containingProject);
-
-            import.Project = project;
-
-            return import;
+            return new ProjectImportElement(element, containingProject) {Project = project};
         }
 
         /// <summary>
         /// Creates an implicit ProjectImportElement as if it was in the project.
         /// </summary>
         /// <returns></returns>
-        internal static ProjectImportElement CreateImplicit(string project, ProjectRootElement containingProject, ImplicitImportLocation implicitImportLocation, string sdkName)
+        internal static ProjectImportElement CreateImplicit(string project, ProjectRootElement containingProject, ImplicitImportLocation implicitImportLocation, SdkReference sdkReference)
         {
-            ProjectImportElement import = CreateDisconnected(project, containingProject);
-
-            import.ImplicitImportLocation = implicitImportLocation;
-
-            import.Sdk = sdkName;
-
-            return import;
+            XmlElementWithLocation element = containingProject.CreateElement(XMakeElements.import);
+            return new ProjectImportElement(element, containingProject)
+            {
+                Project = project,
+                Sdk = sdkReference.ToString(),
+                ImplicitImportLocation = implicitImportLocation,
+                ParsedSdkReference = sdkReference
+            };
         }
 
         /// <summary>
@@ -137,6 +167,28 @@ namespace Microsoft.Build.Construction
         protected override ProjectElement CreateNewInstance(ProjectRootElement owner)
         {
             return owner.CreateImportElement(this.Project);
+        }
+
+        /// <summary>
+        /// Helper method to extract attribute values and update the ParsedSdkReference property if
+        /// necessary (update only when changed).
+        /// </summary>
+        /// <returns>True if the ParsedSdkReference was updated, otherwise false (no update necessary).</returns>
+        private bool CheckUpdatedSdk()
+        {
+
+            SdkReference sdk = new SdkReference(
+                ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdk, true),
+                ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkVersion, true),
+                ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkMinimumVersion, true));
+
+            if (sdk.Equals(ParsedSdkReference))
+            {
+                return false;
+            }
+
+            ParsedSdkReference = sdk;
+            return true;
         }
     }
 }
