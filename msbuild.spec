@@ -39,7 +39,7 @@ project or solution file, you can orchestrate and build products
 in environments where Visual Studio isn't installed.
 
 %prep
-%setup -n msbuild-d15.2
+%setup -n msbuild-d15.3
 %patch0 -p1
 %patch1 -p1
 
@@ -55,7 +55,7 @@ in environments where Visual Studio isn't installed.
 %build
 %{?exp_env}
 %{?env_options}
-./cibuild.sh --scope Compile --host Mono --target Mono
+./cibuild.sh --scope Compile --host Mono --target Mono --config Release
 
 %install
 %{?env_options}
