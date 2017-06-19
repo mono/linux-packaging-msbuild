@@ -1,3 +1,9 @@
+msbuild (15.3+xamarinxplat.2017.05.31.20.38-0xamarin1) prealpha; urgency=medium
+
+  * New release - msbuild-15.3+xamarinxplat.2017.05.31.20.38.tar.gz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 19 Jun 2017 15:36:06 +0000
+
 msbuild (15.3+xamarinxplat.2017.05.08.23.51-0xamarin2) prealpha; urgency=medium
 
   * Packaging bugfix:
