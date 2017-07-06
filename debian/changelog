@@ -1,3 +1,15 @@
+msbuild (15.3+xamarinxplat.2017.06.19.14.09-0xamarin3) alpha; urgency=medium
+
+  [ Xamarin Public Jenkins (auto-signing) ]
+  * Packaging bugfix:
+
+  [ Ubuntu ]
+  * [13418c5] Merge branch 'master' of github.com:mono/linux-packaging-
+    msbuild [62da15f] Add breaks/replaces since we moved files to a new
+    package
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 06 Jul 2017 09:02:00 +0000
+
 msbuild (15.3+xamarinxplat.2017.06.19.14.09-0xamarin2) alpha; urgency=medium
 
   * Packaging bugfix:
