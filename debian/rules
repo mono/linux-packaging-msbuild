@@ -13,8 +13,8 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	DESTDIR=debian/tmp ./install-mono-prefix.sh /usr
-	find debian/msbuild/usr/lib/mono/ -name Microsoft.DiaSymReader.Native.*dll -delete
-	find debian/msbuild/usr/lib/mono/ -name *.dylib -delete
+	find debian/tmp/usr/lib/mono/ -name Microsoft.DiaSymReader.Native.*dll -delete
+	find debian/tmp/usr/lib/mono/ -name *.dylib -delete
 
 override_dh_clideps:
 	dh_clideps \
