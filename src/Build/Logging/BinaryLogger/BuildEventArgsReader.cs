@@ -33,11 +33,24 @@ namespace Microsoft.Build.Logging
         }
 
         /// <summary>
+        /// Raised when the log reader encounters a binary blob embedded in the stream.
+        /// The arguments include the blob kind and the byte buffer with the contents.
+        /// </summary>
+        internal event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
+
+        /// <summary>
         /// Reads the next log record from the binary reader. If there are no more records, returns null.
         /// </summary>
         public BuildEventArgs Read()
         {
             BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
+
+            while (IsBlob(recordKind))
+            {
+                ReadBlob(recordKind);
+
+                recordKind = (BinaryLogRecordKind)ReadInt32();
+            }
 
             BuildEventArgs result = null;
             switch (recordKind)
@@ -83,11 +96,57 @@ namespace Microsoft.Build.Logging
                 case BinaryLogRecordKind.TaskCommandLine:
                     result = ReadTaskCommandLineEventArgs();
                     break;
+                case BinaryLogRecordKind.ProjectEvaluationStarted:
+                    result = ReadProjectEvaluationStartedEventArgs();
+                    break;
+                case BinaryLogRecordKind.ProjectEvaluationFinished:
+                    result = ReadProjectEvaluationFinishedEventArgs();
+                    break;
+                case BinaryLogRecordKind.ProjectImported:
+                    result = ReadProjectImportedEventArgs();
+                    break;
                 default:
                     break;
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// For now it's just the ProjectImportArchive.
+        /// </summary>
+        private static bool IsBlob(BinaryLogRecordKind recordKind)
+        {
+            return recordKind == BinaryLogRecordKind.ProjectImportArchive;
+        }
+
+        private void ReadBlob(BinaryLogRecordKind kind)
+        {
+            int length = ReadInt32();
+            byte[] bytes = binaryReader.ReadBytes(length);
+            OnBlobRead?.Invoke(kind, bytes);
+        }
+
+        private BuildEventArgs ReadProjectImportedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            // Read unused Importance, it defaults to Low
+            ReadInt32();
+            var importedProjectFile = ReadOptionalString();
+            var unexpandedProject = ReadOptionalString();
+
+            var e = new ProjectImportedEventArgs(
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.Message);
+
+            SetCommonFields(e, fields);
+
+            e.ProjectFile = fields.ProjectFile;
+
+            e.ImportedProjectFile = importedProjectFile;
+            e.UnexpandedProject = unexpandedProject;
+            return e;
         }
 
         private BuildEventArgs ReadBuildStartedEventArgs()
@@ -113,6 +172,32 @@ namespace Microsoft.Build.Logging
                 fields.HelpKeyword,
                 succeeded,
                 fields.Timestamp);
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadProjectEvaluationStartedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var projectFile = ReadString();
+
+            var e = new ProjectEvaluationStartedEventArgs(fields.Message)
+            {
+                ProjectFile = projectFile
+            };
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadProjectEvaluationFinishedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var projectFile = ReadString();
+
+            var e = new ProjectEvaluationFinishedEventArgs(fields.Message)
+            {
+                ProjectFile = projectFile
+            };
             SetCommonFields(e, fields);
             return e;
         }
@@ -493,10 +578,12 @@ namespace Microsoft.Build.Logging
             int taskId = ReadInt32();
             int submissionId = ReadInt32();
             int projectInstanceId = ReadInt32();
+            int evaluationId = ReadInt32();
 
             var result = new BuildEventContext(
                 submissionId,
                 nodeId,
+                evaluationId,
                 projectInstanceId,
                 projectContextId,
                 targetId,
