@@ -1344,7 +1344,14 @@ namespace Microsoft.Build.CommandLine
                 )
             {
                 thisThread.CurrentUICulture = new CultureInfo("en-US");
+                return;
             }
+#endif
+#if RUNTIME_TYPE_NETCORE
+            // https://github.com/dotnet/roslyn/issues/10785#issuecomment-238940601
+            // by default, .NET Core doesn't have all code pages needed for Console apps.
+            // see the .NET Core Notes in https://msdn.microsoft.com/en-us/library/system.diagnostics.process(v=vs.110).aspx
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
         }
 
@@ -2749,10 +2756,10 @@ namespace Microsoft.Build.CommandLine
                 return;
             }
 
-            string outputLogFilePath = binaryLoggerParameters[binaryLoggerParameters.Length - 1];
+            string arguments = binaryLoggerParameters[binaryLoggerParameters.Length - 1];
 
             BinaryLogger logger = new BinaryLogger();
-            logger.Parameters = outputLogFilePath;
+            logger.Parameters = arguments;
 
             // If we have a binary logger, force verbosity to diagnostic.
             // The only place where verbosity is used downstream is to determine whether to log task inputs.

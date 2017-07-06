@@ -15,6 +15,10 @@
         Warning,
         Message,
         TaskCommandLine,
-        CriticalBuildMessage
+        CriticalBuildMessage,
+        ProjectEvaluationStarted,
+        ProjectEvaluationFinished,
+        ProjectImported,
+        ProjectImportArchive
     }
 }

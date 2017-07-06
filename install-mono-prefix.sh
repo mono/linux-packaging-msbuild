@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 set -x
 if [ $# -ne 1 ]; then
@@ -11,14 +11,24 @@ MONO_PREFIX=$1
 MSBUILD_INSTALL_BIN_DIR="$MONO_PREFIX/lib/mono/msbuild/${MSBUILD_TOOLSVERSION}/bin"
 XBUILD_DIR=$MONO_PREFIX/lib/mono/xbuild
 
+# based on the check that cibuild.sh uses
+# determine OS
+if [ `uname -s` = "Darwin" ]; then
+    OS_ARG="OSX"
+else
+    OS_ARG="Unix"
+fi
+
 if [ -d "bin/Release-MONO" ]; then
-    MSBUILD_OUT_DIR="bin/Release-MONO/*_Deployment"
+    CONFIG=Release
 elif [ -d "bin/Debug-MONO" ]; then
-    MSBUILD_OUT_DIR="bin/Debug-MONO/*_Deployment"
+    CONFIG=Debug
 else
     echo "Error: No bin directory 'bin/Release-MONO' or 'bin/Debug-MONO' found."
     exit 1
 fi
+
+MSBUILD_OUT_DIR="bin/${CONFIG}-MONO/AnyCPU/${OS_ARG}/${OS_ARG}_Deployment"
 
 mkdir -p ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
 mkdir -p ${DESTDIR}${XBUILD_DIR}/$MSBUILD_TOOLSVERSION
@@ -48,6 +58,7 @@ rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/*UnitTests*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/*xunit*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/NuGet*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/System.Runtime.InteropServices.RuntimeInformation.dll
+rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/System.Runtime.InteropServices.RuntimeInformation.dll
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/csc.exe*
 
 FILES="\

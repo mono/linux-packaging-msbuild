@@ -306,6 +306,59 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
+        public void RoundtripProjectEvaluationStartedEventArgs()
+        {
+            var args = new ProjectEvaluationStartedEventArgs("Message")
+            {
+                BuildEventContext = BuildEventContext.Invalid,
+                ProjectFile = @"C:\foo\bar.proj",
+            };
+
+            Roundtrip(args,
+                e => e.Message,
+                e => e.ProjectFile);
+        }
+
+        [Fact]
+        public void RoundtripProjectEvaluationFinishedEventArgs()
+        {
+            var args = new ProjectEvaluationFinishedEventArgs("Message")
+            {
+                BuildEventContext = BuildEventContext.Invalid,
+                ProjectFile = @"C:\foo\bar.proj",
+            };
+
+            Roundtrip(args,
+                e => e.Message,
+                e => e.ProjectFile);
+        }
+
+        [Fact]
+        public void RoundtripProjectImportedEventArgs()
+        {
+            var args = new ProjectImportedEventArgs(
+                1,
+                2,
+                "Message")
+            {
+                BuildEventContext = BuildEventContext.Invalid,
+                ImportedProjectFile = "foo.props",
+                ProjectFile = "foo.csproj",
+                UnexpandedProject = "$(Something)"
+            };
+
+            Roundtrip(args,
+                e => e.ImportedProjectFile,
+                e => e.UnexpandedProject,
+                e => e.Importance.ToString(),
+                e => e.LineNumber.ToString(),
+                e => e.ColumnNumber.ToString(),
+                e => e.LineNumber.ToString(),
+                e => e.Message,
+                e => e.ProjectFile);
+        }
+
+        [Fact]
         public void ReadingCorruptedStreamThrows()
         {
             var memoryStream = new MemoryStream();
