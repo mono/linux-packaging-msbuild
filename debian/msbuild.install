@@ -8,5 +8,6 @@
 /usr/lib/mono/msbuild/15.0/bin/*.pdb
 /usr/lib/mono/msbuild/15.0/bin/*.props
 /usr/lib/mono/msbuild/15.0/bin/*.targets
+/usr/lib/mono/msbuild/15.0/bin/*.tasks
 /usr/lib/mono/msbuild/15.0/bin/*.xml
 /usr/lib/mono/msbuild/15.0/bin/*.xsd
