@@ -26,6 +26,8 @@ Description: build platform for .NET and Visual Studio
 Package: msbuild-sdkresolver
 Architecture: all
 Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr
+Breaks: msbuild (<< 15.3+xamarinxplat.2017.06.19.14.09)
+Replaces: msbuild (<< 15.3+xamarinxplat.2017.06.19.14.09)
 Description: build platform for .NET and Visual Studio
  The Microsoft Build Engine is a platform for building applications.
  This engine, which is also known as MSBuild, provides an XML schema
