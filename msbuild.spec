@@ -84,8 +84,10 @@ find %{buildroot} -name *.dylib -delete
 %_prefix/lib/mono/msbuild/15.0/bin/Sdks
 %_prefix/lib/mono/msbuild/15.0/bin/*.config
 %_prefix/lib/mono/msbuild/15.0/bin/*.dll
+%_prefix/lib/mono/msbuild/15.0/bin/*.overridetasks
 %_prefix/lib/mono/msbuild/15.0/bin/*.pdb
 %_prefix/lib/mono/msbuild/15.0/bin/*.props
+%_prefix/lib/mono/msbuild/15.0/bin/*.rsp
 %_prefix/lib/mono/msbuild/15.0/bin/*.targets
 %_prefix/lib/mono/msbuild/15.0/bin/*.tasks
 %_prefix/lib/mono/msbuild/15.0/bin/*.xml
