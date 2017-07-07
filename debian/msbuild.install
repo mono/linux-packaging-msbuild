@@ -5,8 +5,10 @@
 /usr/lib/mono/msbuild/15.0/bin/Sdks/
 /usr/lib/mono/msbuild/15.0/bin/*.config
 /usr/lib/mono/msbuild/15.0/bin/*.dll
+/usr/lib/mono/msbuild/15.0/bin/*.overridetasks
 /usr/lib/mono/msbuild/15.0/bin/*.pdb
 /usr/lib/mono/msbuild/15.0/bin/*.props
+/usr/lib/mono/msbuild/15.0/bin/*.rsp
 /usr/lib/mono/msbuild/15.0/bin/*.targets
 /usr/lib/mono/msbuild/15.0/bin/*.tasks
 /usr/lib/mono/msbuild/15.0/bin/*.xml
