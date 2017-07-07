@@ -22,7 +22,6 @@ Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.gz
 Patch0:		centos_runtime.patch
-Patch1:		0001-Explicitly-use-bin-bash-for-install-script-15.patch
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
@@ -41,7 +40,6 @@ in environments where Visual Studio isn't installed.
 %prep
 %setup -n msbuild-d15.3
 %patch0 -p1
-%patch1 -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
