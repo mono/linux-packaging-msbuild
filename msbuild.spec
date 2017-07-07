@@ -27,6 +27,7 @@ BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
 BuildRequires:  libcurl-devel
 BuildArch:      noarch
+Requires:       msbuild-libhostfxr
 
 %description
 The Microsoft Build Engine is a platform for building applications.
@@ -36,6 +37,21 @@ and builds software. Visual Studio uses MSBuild, but MSBuild does
 not depend on Visual Studio. By invoking msbuild.exe on your
 project or solution file, you can orchestrate and build products
 in environments where Visual Studio isn't installed.
+
+%package sdkresolver
+Summary:        Build system for .NET projects - .NET Core location resolver
+License:        MIT
+Group:          Development/Libraries/Other
+
+%description sdkresolver
+The Microsoft Build Engine is a platform for building applications.
+This engine, which is also known as MSBuild, provides an XML schema
+for a project file that controls how the build platform processes
+and builds software. Visual Studio uses MSBuild, but MSBuild does
+not depend on Visual Studio. By invoking msbuild.exe on your
+project or solution file, you can orchestrate and build products
+in environments where Visual Studio isn't installed. This package
+contains components needed to build with .NET Core.
 
 %prep
 %setup -n msbuild-d15.3
@@ -58,10 +74,26 @@ in environments where Visual Studio isn't installed.
 %install
 %{?env_options}
 DESTDIR=%{buildroot} ./install-mono-prefix.sh %{_prefix}
+find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
+find %{buildroot} -name *.dylib -delete
 
 %files
 %defattr(-,root,root)
-%_prefix/lib/mono/msbuild
+%_prefix/lib/mono/msbuild/15.0/bin/Extensions
+%_prefix/lib/mono/msbuild/15.0/bin/Roslyn
+%_prefix/lib/mono/msbuild/15.0/bin/Sdks
+%_prefix/lib/mono/msbuild/15.0/bin/*.config
+%_prefix/lib/mono/msbuild/15.0/bin/*.dll
+%_prefix/lib/mono/msbuild/15.0/bin/*.pdb
+%_prefix/lib/mono/msbuild/15.0/bin/*.props
+%_prefix/lib/mono/msbuild/15.0/bin/*.targets
+%_prefix/lib/mono/msbuild/15.0/bin/*.tasks
+%_prefix/lib/mono/msbuild/15.0/bin/*.xml
+%_prefix/lib/mono/msbuild/15.0/bin/*.xsd
 %_prefix/lib/mono/xbuild/*
 %_prefix/share/man/*/*
 %_bindir/*
+
+%files sdkresolver
+%defattr(-,root,root)
+%_prefix/lib/mono/msbuild/15.0/bin/SdkResolvers/*/*
