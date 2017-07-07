@@ -10,8 +10,7 @@ Homepage: https://github.com/mono/msbuild
 
 Package: msbuild
 Architecture: all
-Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends},
-	msbuild-libhostfxr [amd64 i386 armel armhf arm64]
+Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr
 Description: build platform for .NET and Visual Studio
  The Microsoft Build Engine is a platform for building applications.
  This engine, which is also known as MSBuild, provides an XML schema
