@@ -1265,7 +1265,7 @@ Copyright (C) Microsoft Corporation. Wszelkie prawa zastrzeżone.
     </note>
       </trans-unit>
       <trans-unit id="HelpMessage_30_BinaryLoggerSwitch">
-        <source>  /binaryLogger[:output.binlog]
+        <source>  /binaryLogger[:[LogFile=]output.binlog[;ProjectImports={None,Embed,ZipFile}]]
                      Serializes all build events to a compressed binary file.
                      By default the file is in the current directory and named
                      "msbuild.binlog". The binary log is a detailed description
@@ -1275,26 +1275,80 @@ Copyright (C) Microsoft Corporation. Wszelkie prawa zastrzeżone.
                      diagnostic-level log, but it contains more information.
                      (Short form: /bl)
 
+                     The binary logger by default collects the source text of
+                     project files, including all imported projects and target
+                     files encountered during the build. The optional 
+                     ProjectImports switch controls this behavior:
+
+                      ProjectImports=None     - Don't collect the project
+                                                imports.
+                      ProjectImports=Embed    - Embed project imports in the
+                                                log file.
+                      ProjectImports=ZipFile  - Save project files to 
+                                                output.projectimports.zip
+                                                where output is the same name
+                                                as the binary log file name.
+
+                     The default setting for ProjectImports is Embed.
+                     Note: the logger does not collect non-MSBuild source files
+                     such as .cs, .cpp etc.
+
+                     A .binlog file can be "played back" by passing it to
+                     msbuild.exe as an argument instead of a project/solution.
+                     Other loggers will receive the information contained
+                     in the log file as if the original build was happening.
+                     You can read more about the binary log and its usages at:
+                     https://github.com/Microsoft/msbuild/wiki/Binary-Log
+
                      Examples:
                        /bl
                        /bl:output.binlog
+                       /bl:output.binlog;ProjectImports=None
+                       /bl:output.binlog;ProjectImports=ZipFile
                        /bl:..\..\custom.binlog
                        /binaryLogger
     </source>
-        <target state="translated">  /binaryLogger[:output.binlog]
-                     Serializuje wszystkie zdarzenia kompilacji do skompresowanego pliku binarnego.
-                     Domyślnie plik znajduje się w bieżącym katalogu i ma nazwę
-                     „msbuild.binlog”. Dziennik binarny to szczegółowy opis
-                     procesu kompilacji, którego można później użyć do odtworzenia
-                     dzienników tekstowych i wykorzystać w innych narzędziach do analizy. Dziennik binarny
-                     jest zwykle 10-20 razy mniejszy od większości szczegółowych, tekstowych
-                     dzienników poziomu diagnostycznego, ale zawiera więcej informacji.
-                     (Krótka forma: /bl)
+        <target state="translated">  /binaryLogger[:[LogFile=]wyjście.binlog[;ProjectImports={None,Embed,ZipFile}]]
+                     Serializuje wszystkie zdarzenia kompilacji do skompresowanego pliku
+                     binarnego. Domyślnie plik znajduje się w bieżącym katalogu i ma
+                     nazwę „msbuild.binlog”. Dziennik binarny to szczegółowy opis procesu
+                     kompilacji, którego można później użyć do odtworzenia dzienników
+                     tekstowych i wykorzystać w innych narzędziach do analizy. Dziennik
+                     binarny jest zwykle 10–20 razy mniejszy od najbardziej szczegółowych
+                     tekstowych dzienników na poziomie diagnostycznym, ale zawiera
+                     więcej informacji. (Krótka forma: /bl)
+
+                     Rejestrator binarny domyślnie zbiera tekst źródłowy plików
+                     projektu, w tym wszystkie zaimportowane projekty i pliki
+                     docelowe napotkane podczas kompilowania. Tym zachowaniem
+                     steruje opcjonalny przełącznik ProjectImports:
+
+                      ProjectImports=None     — Nie zbieraj importów
+                                                projektu.
+                      ProjectImports=Embed    — Osadź importy projektu
+                                                w pliku dziennika.
+                      ProjectImports=ZipFile  — Zapisz pliki projektu w pliku
+                                                wyjście.projectimports.zip,
+                                                gdzie wyjście to ciąg podany
+                                                dla nazwy pliku dziennika binarnego.
+
+                     Domyślne ustawienie przełącznika ProjectImports to Embed.
+                     Uwaga: rejestrator nie zbiera plików źródłowych
+                     niepochodzących z programu MSBuild, np. cs, cpp itd.
+
+                     Plik binlog można „odtworzyć”, przekazując go do programu
+                     msbuild.exe jako argument zamiast projektu/rozwiązania.
+                     Inne rejestratory otrzymają informacje zawarte w pliku
+                     dziennika tak, jak podczas wykonywania pierwotnej kompilacji.
+                     Więcej informacji o dzienniku binarnym i jego zastosowaniach:
+                     https://github.com/Microsoft/msbuild/wiki/Binary-Log
 
                      Przykłady:
                        /bl
-                       /bl:output.binlog
-                       /bl:..\..\custom.binlog
+                       /bl:wyjście.binlog
+                       /bl:wyjście.binlog;ProjectImports=None
+                       /bl:wyjście.binlog;ProjectImports=ZipFile
+                       /bl:..\..\niestandardowy.binlog
                        /binaryLogger
     </target>
         <note>
