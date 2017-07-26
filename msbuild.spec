@@ -13,7 +13,7 @@
 # published by the Open Source Initiative.
 
 Name:           msbuild
-Version:	15.3+xamarinxplat.2017.06.27.00.35
+Version:	15.3+xamarinxplat.2017.07.17.13.01
 Release:	0.xamarin.1
 Summary:        Build system for .NET projects
 License:        MIT
