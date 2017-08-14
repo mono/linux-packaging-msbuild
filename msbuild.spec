@@ -78,7 +78,7 @@ DESTDIR=%{buildroot} ./install-mono-prefix.sh %{_prefix}
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
 rm %{buildroot}/%_prefix/lib/mono/msbuild/15.0/bin/SdkResolvers/*/*
-cp %{source1} %{buildroot}/%{_prefix}/lib/mono/msbuild/15.0/bin/SdkResolvers/*/
+cp %{SOURCE1} %{buildroot}/%{_prefix}/lib/mono/msbuild/15.0/bin/SdkResolvers/*/
 
 %files
 %defattr(-,root,root)
