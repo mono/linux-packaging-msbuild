@@ -38,6 +38,7 @@ override_dh_clideps:
 		--exclude-moduleref=ntdll.dll \
 		--exclude-moduleref=ntdll \
 		--exclude-moduleref=ole32.dll \
+		--exclude-moduleref=wintrust.dll \
 		--exclude-moduleref=sfc.dll
 
 %:
