@@ -83,7 +83,6 @@ cp %{SOURCE1} %{buildroot}/%{_prefix}/lib/mono/msbuild/15.0/bin/SdkResolvers/*/
 %files
 %defattr(-,root,root)
 %_prefix/lib/mono/msbuild/15.0/bin/Extensions
-%_prefix/lib/mono/msbuild/15.0/bin/Roslyn
 %_prefix/lib/mono/msbuild/15.0/bin/Sdks
 %_prefix/lib/mono/msbuild/15.0/bin/*.config
 %_prefix/lib/mono/msbuild/15.0/bin/*.dll
