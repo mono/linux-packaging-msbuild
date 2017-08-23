@@ -375,7 +375,7 @@ namespace Microsoft.Build.BackEnd.Logging
         }
 
         /// <summary>
-        /// Sets foreground color to color specified using Ansi escape codes
+        /// Sets foreground color to color specified using ANSI escape codes
         /// </summary>
         /// <param name="c">foreground color</param>
         internal static void SetColorAnsi(ConsoleColor c)
@@ -409,14 +409,14 @@ namespace Microsoft.Build.BackEnd.Logging
         }
 
         /// <summary>
-        /// Resets the color using Ansi escape codes
+        /// Resets the color using ANSI escape codes
         /// </summary>
         internal static void ResetColorAnsi()
         {
             Console.Out.Write("\x1b[m");
         }
 
-        #region Ansi color support detection
+        #region ANSI color support detection
 
         private static bool? useAnsiColors;
         private static bool UseAnsiColors
