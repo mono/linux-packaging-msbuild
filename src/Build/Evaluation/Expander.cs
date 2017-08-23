@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Utilities;
 using Microsoft.Win32;
 using AvailableStaticMethods = Microsoft.Build.Internal.AvailableStaticMethods;
 using ReservedPropertyNames = Microsoft.Build.Internal.ReservedPropertyNames;
@@ -68,6 +69,11 @@ namespace Microsoft.Build.Evaluation
         /// out early
         /// </summary>
         BreakOnNotEmpty = 0x10,
+
+        /// <summary>
+        /// When an error occurs expanding a property, just leave it unexpanded.  This should only be used when attempting to log a message with a best effort expansion of a string.
+        /// </summary>
+        LeavePropertiesUnexpandedOnError = 0x20,
 
         /// <summary>
         /// Expand only properties and then item lists
@@ -314,7 +320,7 @@ namespace Microsoft.Build.Evaluation
         {
             if (expression.Length == 0)
             {
-                return ReadOnlyEmptyList<T>.Instance;
+                return Array.Empty<T>();
             }
 
             ErrorUtilities.VerifyThrowInternalNull(elementLocation, "elementLocation");
@@ -389,7 +395,7 @@ namespace Microsoft.Build.Evaluation
             if (expression.Length == 0)
             {
                 isTransformExpression = false;
-                return ReadOnlyEmptyList<T>.Instance;
+                return Array.Empty<T>();
             }
 
             ErrorUtilities.VerifyThrowInternalNull(elementLocation, "elementLocation");
@@ -1181,10 +1187,17 @@ namespace Microsoft.Build.Evaluation
 
                 if (function != null)
                 {
-                    // Because of the rich expansion capabilities of MSBuild, we need to keep things
-                    // as strings, since property expansion & string embedding can happen anywhere
-                    // propertyValue can be null here, when we're invoking a static function
-                    propertyValue = function.Execute(propertyValue, properties, options, elementLocation);
+                    try
+                    {
+                        // Because of the rich expansion capabilities of MSBuild, we need to keep things
+                        // as strings, since property expansion & string embedding can happen anywhere
+                        // propertyValue can be null here, when we're invoking a static function
+                        propertyValue = function.Execute(propertyValue, properties, options, elementLocation);
+                    }
+                    catch (Exception) when (options.HasFlag(ExpanderOptions.LeavePropertiesUnexpandedOnError))
+                    {
+                        propertyValue = propertyBody;
+                    }
                 }
 
                 return propertyValue;
@@ -2824,7 +2837,7 @@ namespace Microsoft.Build.Evaluation
                 _methodMethodName = methodName;
                 if (arguments == null)
                 {
-                    _arguments = new string[0];
+                    _arguments = Array.Empty<string>();
                 }
                 else
                 {
@@ -3187,6 +3200,11 @@ namespace Microsoft.Build.Evaluation
                 {
                     // We ended up with something other than a function expression
                     string partiallyEvaluated = GenerateStringOfMethodExecuted(_expression, objectInstance, _methodMethodName, args);
+                    if (options.HasFlag(ExpanderOptions.LeavePropertiesUnexpandedOnError))
+                    {
+                        // If the caller wants to ignore errors (in a log statement for example), just return the partially evaluated value
+                        return partiallyEvaluated;
+                    }
                     ProjectErrorUtilities.ThrowInvalidProject(elementLocation, "InvalidFunctionPropertyExpression", partiallyEvaluated, ex.InnerException.Message.Replace("\r\n", " "));
                     return null;
                 }
@@ -3402,7 +3420,7 @@ namespace Microsoft.Build.Evaluation
                 // If there are no arguments, then just create an empty array
                 if (String.IsNullOrEmpty(argumentsContent))
                 {
-                    functionArguments = new string[0];
+                    functionArguments = Array.Empty<string>();
                 }
                 else
                 {
@@ -3487,7 +3505,7 @@ namespace Microsoft.Build.Evaluation
                     if (argumentStartIndex == expressionFunction.Length - 1)
                     {
                         argumentsContent = String.Empty;
-                        functionArguments = new string[0];
+                        functionArguments = Array.Empty<string>();
                     }
                     else
                     {
@@ -3497,7 +3515,7 @@ namespace Microsoft.Build.Evaluation
                         // If there are no arguments, then just create an empty array
                         if (String.IsNullOrEmpty(argumentsContent))
                         {
-                            functionArguments = new string[0];
+                            functionArguments = Array.Empty<string>();
                         }
                         else
                         {
@@ -3520,7 +3538,7 @@ namespace Microsoft.Build.Evaluation
                         nextMethodIndex = indexerIndex;
                     }
 
-                    functionArguments = new string[0];
+                    functionArguments = Array.Empty<string>();
 
                     if (nextMethodIndex > 0)
                     {
@@ -3709,9 +3727,9 @@ namespace Microsoft.Build.Evaluation
                     return true;
                 }
 
-                if (Environment.GetEnvironmentVariable("MSBUILDENABLEALLPROPERTYFUNCTIONS") == "1")
+                if (Traits.Instance.EnableAllPropertyFunctions)
                 {
-                    // If MSBUILDENABLEALLPROPERTYFUNCTION == 1, then anything goes
+                    // anything goes
                     return true;
                 }
 

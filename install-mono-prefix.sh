@@ -44,7 +44,10 @@ cp $MSBUILD_OUT_DIR/Microsoft.*.{props,targets} ${DESTDIR}${MSBUILD_INSTALL_BIN_
 cp $MSBUILD_OUT_DIR/Workflow* ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
 cp $MSBUILD_OUT_DIR/*.dll ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
 
-cp -r $MSBUILD_OUT_DIR/Roslyn ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
+# this needs to be in extensions path only
+mv ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Mono.Build.Tasks.* ${DESTDIR}${XBUILD_DIR}
+
+#cp -r $MSBUILD_OUT_DIR/Roslyn ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
 cp -r $MSBUILD_OUT_DIR/Extensions ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
 
 # Deploy files meant for the default $(MSBuildExtensionsPath)
@@ -58,8 +61,7 @@ rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/*UnitTests*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/*xunit*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/NuGet*
 rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/System.Runtime.InteropServices.RuntimeInformation.dll
-rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/System.Runtime.InteropServices.RuntimeInformation.dll
-rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/csc.exe*
+#rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/csc.exe*
 
 FILES="\
     Dependency.dll \
@@ -69,7 +71,7 @@ FILES="\
 
 for f in $FILES; do rm ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/$f ; done
 
-cp ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}/Roslyn/System.Reflection.Metadata.dll ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR}
+(cd ${DESTDIR}${MSBUILD_INSTALL_BIN_DIR} && rm System.Reflection.Metadata.dll && ln -s Roslyn/System.Reflection.Metadata.dll System.Reflection.Metadata.dll)
 
 # The directory might not exist on bockbuild when it runs this script.
 # Bockbuild will handle copying these files
@@ -77,10 +79,6 @@ test -d ${DESTDIR}${XBUILD_DIR}/14.0/Imports && cp -R ${DESTDIR}${XBUILD_DIR}/14
 
 cp -R nuget-support/tv/* ${DESTDIR}${XBUILD_DIR}/$MSBUILD_TOOLSVERSION
 cp -R nuget-support/tasks-targets/* ${DESTDIR}${XBUILD_DIR}/
-
-# The directory might not exist on bockbuild when it runs this script.
-# Bockbuild will handle copying these files
-test -d ${XBUILD_DIR}/Microsoft/NuGet && for f in ${XBUILD_DIR}/Microsoft/NuGet/*; do ln -f -s $f ${DESTDIR}${XBUILD_DIR} ; done
 
 # man page
 mkdir -p ${DESTDIR}${MONO_PREFIX}/share/man/man1
