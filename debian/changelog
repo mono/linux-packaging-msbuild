@@ -1,3 +1,9 @@
+msbuild (1:15.4+xamarinxplat.2017.09.14.16.14-0xamarin1) alpha; urgency=medium
+
+  * New release - msbuild-15.4+xamarinxplat.2017.09.14.16.14.tar.gz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 12 Oct 2017 16:59:37 +0000
+
 msbuild (1:15.3+xamarinxplat.2017.07.20.13.52-0xamarin1) alpha; urgency=medium
 
   * Attempt to trick package builder into considering epoch
