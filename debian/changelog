@@ -1,3 +1,9 @@
+msbuild (1:15.3+xamarinxplat.2017.07.20.13.52-0xamarin1) alpha; urgency=medium
+
+  * Attempt to trick package builder into considering epoch
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 23 Aug 2017 14:57:46 +0000
+
 msbuild (15.5+xamarinxplat.2017.08.16.12.03-0xamarin3) alpha; urgency=medium
 
   * Packaging bugfix:
