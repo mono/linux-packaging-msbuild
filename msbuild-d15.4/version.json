@@ -1,0 +1,12 @@
+{
+  "version": "15.4",
+  "assemblyVersion": "15.1",
+  "cloudBuild": {
+    "buildNumber": {
+      "enabled": true,
+      "includeCommitId": {
+        "where": "fourthVersionComponent"
+      }
+    }
+  }
+}
