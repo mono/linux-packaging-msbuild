@@ -108,14 +108,6 @@
             Creates an instance of CryptoHashProvider using the hashAlgorithm
             </summary>
         </member>
-        <member name="P:NuGet.Common.CryptoHashProvider.AllowOnlyFipsAlgorithms">
-            <summary>
-            Determines if we are to only allow Fips compliant algorithms.
-            </summary>
-            <remarks>
-            CryptoConfig.AllowOnlyFipsAlgorithm does not exist in Mono.
-            </remarks>
-        </member>
         <member name="M:NuGet.Common.CryptoHashProvider.CalculateHash(System.IO.Stream)">
             <summary>
             Calculates the hash for a given stream
@@ -130,6 +122,79 @@
             <summary>
             Verifies the hash for the given data and hash
             </summary>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ComputeHashAsBase64(System.Security.Cryptography.HashAlgorithm,System.IO.Stream)">
+            <summary>
+            Compute the hash as a base64 encoded string.
+            </summary>
+            <remarks>Closes the stream by default.</remarks>
+            <param name="hashAlgorithm">Algorithm to use for hashing.</param>
+            <param name="data">Stream to hash.</param>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ComputeHashAsBase64(System.Security.Cryptography.HashAlgorithm,System.IO.Stream,System.Boolean)">
+            <summary>
+            Compute the hash as a base64 encoded string.
+            </summary>
+            <param name="hashAlgorithm">Algorithm to use for hashing.</param>
+            <param name="data">Stream to hash.</param>
+            <param name="leaveStreamOpen">If false the stream will be closed.</param>
+            <returns>A base64 encoded hash string.</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ComputeHash(NuGet.Common.HashAlgorithmName,System.Byte[])">
+            <summary>
+            Compute the hash as a byte[].
+            </summary>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ComputeHash(System.Security.Cryptography.HashAlgorithm,System.IO.Stream)">
+            <summary>
+            Compute the hash as a byte[].
+            </summary>
+            <remarks>Closes the stream by default.</remarks>
+            <param name="hashAlgorithm">Algorithm to use for hashing.</param>
+            <param name="data">Stream to hash.</param>
+            <returns>A hash byte[].</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ComputeHash(System.Security.Cryptography.HashAlgorithm,System.IO.Stream,System.Boolean)">
+            <summary>
+            Compute the hash as a byte[].
+            </summary>
+            <param name="hashAlgorithm">Algorithm to use for hashing.</param>
+            <param name="data">Stream to hash.</param>
+            <param name="leaveStreamOpen">If false the stream will be closed.</param>
+            <returns>A hash byte[].</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ReadFipsConfigValue">
+            <summary>
+            Determines if we are to only allow Fips compliant algorithms.
+            </summary>
+            <remarks>
+            CryptoConfig.AllowOnlyFipsAlgorithm does not exist in Mono.
+            </remarks>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ConvertToSystemSecurityHashAlgorithmName(NuGet.Common.HashAlgorithmName)">
+            <summary>
+            Extension method to convert NuGet.Common.HashAlgorithmName to System.Security.Cryptography.HashAlgorithmName
+            </summary>
+            <returns>System.Security.Cryptography.HashAlgorithmName equivalent of the NuGet.Common.HashAlgorithmName</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ConvertToOidString(NuGet.Common.HashAlgorithmName)">
+            <summary>
+            Extension method to convert NuGet.Common.HashAlgorithmName to an Oid string
+            </summary>
+            <returns>Oid string equivalent of the NuGet.Common.HashAlgorithmName</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.ConvertToOid(NuGet.Common.HashAlgorithmName)">
+            <summary>
+            Extension method to convert NuGet.Common.HashAlgorithmName to an OID
+            </summary>
+            <returns>OID equivalent of the NuGet.Common.HashAlgorithmName</returns>
+        </member>
+        <member name="M:NuGet.Common.CryptoHashUtility.OidToHashAlgorithmName(System.String)">
+            <summary>
+            Helper method to convert an Oid string to NuGet.Common.HashAlgorithmName
+            </summary>
+            <param name="oid">An oid string.</param>
+            <returns>NuGet.Common.HashAlgorithmName equivalent of the oid string</returns>
         </member>
         <member name="T:NuGet.Common.DatetimeUtility">
             <summary>
@@ -230,32 +295,43 @@
             </summary>
         </member>
         <member name="T:NuGet.Common.NuGetLogCode">
-            <summary>
-            This enum is used to quantify NuGet error and wanring codes. 
-            Format - NUxyzw where NU is the profix indicating NuGet and xyzw is a 4 digit code
+             <summary>
+             This enum is used to quantify NuGet error and wanring codes. 
+             Format - NUxyzw where NU is the profix indicating NuGet and xyzw is a 4 digit code
+             
+             Numbers - xyzw
+                 x - 'x' is the largest digit and should be used to quantify a set of errors.
+                     For example 1yzw are set of restore related errors and no other code path should use the range 1000 to 1999 for errors or warnings.
+                     
+                 y - 'y' is the second largest digit and should be used for sub sections withing a broad category.
+                 
+                     For example 12zw cvould be http related errors.
+                     Further 'y' = 0-4 should be used for errors and 'y' = 5-9 should be warnings.
+                     
+                 zw - 'zw' are the least two digit.
+                     These could be used for different errors or warnings within the broad categories set by digits 'xy'.
+                     
+             Groups:
+             1000      - Restore
+             3000/3500 - Signing
+             
+             Sub groups for Restore:
+             error/warning - Reason
+             1000/1500     - Input
+             1100/1600     - Resolver
+             1200/1700     - Compat
+             1300/1800     - Feed
+             1400/1900     - Package
             
-            Numbers - xyzw
-                x - 'x' is the largest digit and should be used to quantify a set of errors.
-                    For example 1yzw are set of restore related errors and no other code path should use the range 1000 to 1999 for errors or warnings.
-                    
-                y - 'y' is the second largest digit and should be used for sub sections withing a broad category.
-                
-                    For example 12zw cvould be http related errors.
-                    Further 'y' = 0-4 shoudl be used for errors and 'y' = 5-9 should be warnings.
-                    
-                zw - 'zw' are the least two digit.
-                    These could be used for different errors or warnings within the broad categories set by digits 'xy'.
-                    
-            Groups:
-            1000 - Restore
-            
-            Sub groups:
-            1000/1500 Input
-            1100/1600 Resolver
-            1200/1700 Compat
-            1300/1800 Feed
-            1400/1900 Package
-            </summary>
+             Sub groups for Signing:
+             error/warning - Reason
+             3000/3500     - Input
+             3010/3510     - Package and package signature file
+             3020/3520     - Primary certificate
+             3030/3530     - Primary signature
+             3040/3540     - Timestamp certificate
+             3050/3550     - Timestamp signature
+             </summary>
         </member>
         <member name="F:NuGet.Common.NuGetLogCode.Undefined">
             <summary>
@@ -348,6 +424,11 @@
             Package MinClientVersion did not match.
             </summary>
         </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU1410">
+            <summary>
+            Package Signature is invalid
+            </summary>
+        </member>
         <member name="F:NuGet.Common.NuGetLogCode.NU1500">
             <summary>
             Undefined warning
@@ -407,6 +488,247 @@
             <summary>
             Feed error converted to a warning when ignoreFailedSources is true.
             </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3000">
+            <summary>
+            Undefined signature error
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3001">
+            <summary>
+            Invalid Input error
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3002">
+            <summary>
+            Invalid package error
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3003">
+            <summary>
+            Invalid number of certificates were found while signing package
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3005">
+            <summary>
+            Package signature is invalid
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3006">
+            <summary>
+            Package is not signed
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3011">
+            <summary>
+            ZIP entry is either not a regular file or is not stored (no compression)
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3012">
+            <summary>
+            Unsupported signature format version
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3013">
+            <summary>
+            Primary signature has an unsuported hash algorithm
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3014">
+            <summary>
+            Primary signature count not 1
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3015">
+            <summary>
+            Package integrity check failed
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3020">
+            <summary>
+            Primary signature does not have certificate
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3021">
+            <summary>
+            Chain building failed for primary signature
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3022">
+            <summary>
+            Unsupported signature algorithm
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3023">
+            <summary>
+            Unsupported public key length
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3024">
+            <summary>
+            Certificate not yet valid
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3030">
+            <summary>
+            Primary signature verification failed
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3040">
+            <summary>
+            Timestamp with no certificate
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3041">
+            <summary>
+            Chain building failed for timestamp
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3044">
+            <summary>
+            Timestamp certificate not yet effective
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3050">
+            <summary>
+            Invalid timestamp in signature
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3051">
+            <summary>
+            Timestamp nonce mismatch
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3052">
+            <summary>
+            Timestamp unsupported algorithm
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3053">
+            <summary>
+            Timestamp integrity check
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3500">
+            <summary>
+            Undefined signature warning
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3501">
+            <summary>
+            Untrusted root warning
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3502">
+            <summary>
+            Signature information unavailable warning
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3513">
+            <summary>
+            Primary signature has an unsuported hash algorithm
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3521">
+            <summary>
+            Timestamp url not passed to sign command
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3524">
+            <summary>
+            Certificate not yet valid
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3530">
+            <summary>
+            Primary signature verification failed
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3544">
+            <summary>
+            Timestamp not yet valid
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3550">
+            <summary>
+            Invalid timestamp in signature
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU3552">
+            <summary>
+            Timestamp unsupported algorithm
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5000">
+            <summary>
+            Undefined Package Error.
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5001">
+            <summary>
+            Error_WriteResolvedNuSpecOverwriteOriginal
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5002">
+            <summary>
+            Error_InputFileNotSpecified
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5003">
+            <summary>
+            Error_InvalidTargetFramework
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5004">
+            <summary>
+            Error_PackageCommandNoFilesForLibPackage
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5005">
+            <summary>
+            Error_PackageCommandNoFilesForSymbolsPackage
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5006">
+            <summary>
+            Error_PackFailed
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5007">
+            <summary>
+            Error_UnableToLocateBuildOutput
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5008">
+            <summary>
+            ErrorManifestFileNotFound
+            </summary>
+        </member>
+        <member name="F:NuGet.Common.NuGetLogCode.NU5500">
+            <summary>
+            Undefined package warning
+            </summary>
+        </member>
+        <member name="M:NuGet.Common.PackLogMessage.#ctor(NuGet.Common.LogLevel,NuGet.Common.NuGetLogCode,System.String)">
+            <summary>
+            Initializes a new instance of the PackLogMessage class
+            </summary>
+            <param name="logLevel">The log level</param>
+            <param name="logCode">The NuGet log code</param>
+            <param name="message">The log message</param>
+        </member>
+        <member name="M:NuGet.Common.PackLogMessage.CreateError(NuGet.Common.NuGetLogCode,System.String)">
+            <summary>
+            Create an error log message.
+            </summary>
+            <param name="code">The logging code</param>
+            <param name="message">The log message</param>
+        </member>
+        <member name="M:NuGet.Common.PackLogMessage.GetDefaultLogCode(NuGet.Common.LogLevel)">
+            <summary>
+            Get default LogCode based on the log level
+            </summary>
+            <param name="logLevel">The log level</param>
         </member>
         <member name="M:NuGet.Common.RestoreLogMessage.CreateWarning(NuGet.Common.NuGetLogCode,System.String,System.String,System.String[])">
             <summary>
@@ -664,6 +986,8 @@
         <member name="M:NuGet.Common.PathUtility.GetPathWithForwardSlashes(System.String)">
             <summary>
             Replace all back slashes with forward slashes.
+            If the path does not contain a back slash
+            the original string is returned.
             </summary>
         </member>
         <member name="M:NuGet.Common.PathUtility.GetRelativePath(System.String,System.String)">

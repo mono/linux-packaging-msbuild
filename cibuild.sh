@@ -350,8 +350,6 @@ if [ "$host" = "Mono" ]; then
 
     CSC_EXE="$PACKAGES_DIR/microsoft.net.compilers/2.3.1/tools/csc.exe"
     CSC_ARGS="/p:CscToolExe=csc.exe /p:CscToolPath=$MS_COMPILER_DIR /p:DebugType=portable"
-
-    BUILD_MSBUILD_ARGS="$BUILD_MSBUILD_ARGS /p:MSBuildExtensionsPath=$THIS_SCRIPT_PATH/bin/Bootstrap/MSBuild"
 fi
 
 # The set of warnings to suppress for now

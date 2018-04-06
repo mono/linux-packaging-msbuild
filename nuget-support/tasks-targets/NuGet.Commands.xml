@@ -74,6 +74,18 @@
             <param name="folderPath">Specified directory to be deleted</param>
             <returns><code>True</code> if the operation was successful; otherwise <code>false</code>.</returns>
         </member>
+        <member name="M:NuGet.Commands.PackCommandRunner.WriteResolvedNuSpecToPackageOutputDirectory(NuGet.Packaging.PackageBuilder)">
+            <summary>
+            Writes the resolved NuSpec file to the package output directory.
+            </summary>
+            <param name="builder">The package builder</param>
+        </member>
+        <member name="M:NuGet.Commands.PackCommandRunner.WriteSHA512PackageHash(NuGet.Packaging.PackageBuilder)">
+            <summary>
+            Writes the sha512 package hash file to the package output directory
+            </summary>
+            <param name="builder">The package builder</param>
+        </member>
         <member name="T:NuGet.Commands.PushRunner">
             <summary>
             Shared code to run the "push" command from the command line projects
@@ -717,6 +729,11 @@
             Combined conditions
             </summary>
         </member>
+        <member name="M:NuGet.Commands.ProjectRestoreCommand.GetRuntimeGraph(NuGet.Commands.RestoreTargetGraph,System.Collections.Generic.IReadOnlyList{NuGet.Repositories.NuGetv3LocalRepository})">
+            <summary>
+            Merge all runtime.json found in the flattened graph.
+            </summary>
+        </member>
         <member name="T:NuGet.Commands.DependencyGraphSpecRequestProvider">
             <summary>
             In Memory dg file provider.
@@ -865,7 +882,7 @@
             Feed providers
             </summary>
         </member>
-        <member name="M:NuGet.Commands.RestoreCommandProviders.#ctor(NuGet.Repositories.NuGetv3LocalRepository,System.Collections.Generic.IReadOnlyList{NuGet.Repositories.NuGetv3LocalRepository},System.Collections.Generic.IReadOnlyList{NuGet.DependencyResolver.IRemoteDependencyProvider},System.Collections.Generic.IReadOnlyList{NuGet.DependencyResolver.IRemoteDependencyProvider},NuGet.Protocol.LocalNuspecCache)">
+        <member name="M:NuGet.Commands.RestoreCommandProviders.#ctor(NuGet.Repositories.NuGetv3LocalRepository,System.Collections.Generic.IReadOnlyList{NuGet.Repositories.NuGetv3LocalRepository},System.Collections.Generic.IReadOnlyList{NuGet.DependencyResolver.IRemoteDependencyProvider},System.Collections.Generic.IReadOnlyList{NuGet.DependencyResolver.IRemoteDependencyProvider},NuGet.Protocol.LocalPackageFileCache)">
             <summary>
             Providers used by the restore command. These can be shared across restores.
             </summary>
@@ -873,7 +890,7 @@
             <param name="fallbackPackageFolders">Path to any fallback package folders.</param>
             <param name="localProviders">This is typically just a provider for the global packages folder.</param>
             <param name="remoteProviders">All dependency providers.</param>
-            <param name="nuspecCache">Nuspec cache.</param>
+            <param name="packageFileCache">Nuspec and package file cache.</param>
         </member>
         <member name="P:NuGet.Commands.RestoreCommandProviders.GlobalPackages">
             <summary>
@@ -987,6 +1004,11 @@
         <member name="P:NuGet.Commands.RestoreRequest.HideWarningsAndErrors">
             <summary>
             Display Errors and warnings as they occur
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.RestoreRequest.PackageSignatureVerifier">
+            <summary>
+            Package Signature verifier
             </summary>
         </member>
         <member name="P:NuGet.Commands.RestoreResult.LockFilePath">
@@ -1140,7 +1162,7 @@
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> is <c>null</c>.</exception>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> is <c>null</c>.</exception>
         </member>
-        <member name="M:NuGet.Commands.SourceRepositoryDependencyProvider.#ctor(NuGet.Protocol.Core.Types.SourceRepository,NuGet.Common.ILogger,NuGet.Protocol.Core.Types.SourceCacheContext,System.Boolean,System.Boolean,NuGet.Protocol.LocalNuspecCache)">
+        <member name="M:NuGet.Commands.SourceRepositoryDependencyProvider.#ctor(NuGet.Protocol.Core.Types.SourceRepository,NuGet.Common.ILogger,NuGet.Protocol.Core.Types.SourceCacheContext,System.Boolean,System.Boolean,NuGet.Protocol.LocalPackageFileCache)">
             <summary>
             Initializes a new <see cref="T:NuGet.Commands.SourceRepositoryDependencyProvider" /> class.
             </summary>
@@ -1149,7 +1171,7 @@
             <param name="cacheContext">A source cache context.</param>
             <param name="ignoreFailedSources"><c>true</c> to ignore failed sources; otherwise <c>false</c>.</param>
             <param name="ignoreWarning"><c>true</c> to ignore warnings; otherwise <c>false</c>.</param>
-            <param name="nuspecCache">Optional nuspec cache.</param>
+            <param name="fileCache">Optional nuspec/file cache.</param>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="sourceRepository" />
             is <c>null</c>.</exception>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> is <c>null</c>.</exception>
@@ -1733,21 +1755,6 @@
                Looks up a localized string similar to Transform file outside content folder..
             </summary>
         </member>
-        <member name="P:NuGet.Commands.Rules.AnalysisResources.MissingSummaryDescription">
-            <summary>
-               Looks up a localized string similar to The Description text is long but the Summary text is empty. This means the Description text will be truncated in the &apos;Manage NuGet Packages&apos; dialog..
-            </summary>
-        </member>
-        <member name="P:NuGet.Commands.Rules.AnalysisResources.MissingSummarySolution">
-            <summary>
-               Looks up a localized string similar to Provide a brief summary of the package in the Summary field..
-            </summary>
-        </member>
-        <member name="P:NuGet.Commands.Rules.AnalysisResources.MissingSummaryTitle">
-            <summary>
-               Looks up a localized string similar to Consider providing Summary text..
-            </summary>
-        </member>
         <member name="P:NuGet.Commands.Rules.AnalysisResources.PlaceholderFileInPackageDescription">
             <summary>
                Looks up a localized string similar to An empty folder placeholder file &apos;{0}&apos; is in a non-empty folder and should be removed..
@@ -1834,6 +1841,176 @@
             Folders that are expected to have .dll and .winmd files
             </summary>
         </member>
+        <member name="T:NuGet.Commands.CertificateSourceOptions">
+            <summary>
+            Source options for X.509 certificates.
+            <seealso cref="T:NuGet.Commands.CertificateProvider" />
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.CertificatePath">
+            <summary>
+            The certificate file path.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.CertificatePassword">
+            <summary>
+            The certificate password.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.StoreName">
+            <summary>
+            The certificate store name.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.StoreLocation">
+            <summary>
+            The certificate store location.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.SubjectName">
+            <summary>
+            The certificate subject name or a substring to be used to search for the certificate.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.Fingerprint">
+            <summary>
+            The SHA-1 fingerprint of the certificate.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.NonInteractive">
+            <summary>
+            bool used to indicate if the user can be prompted for password.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.PasswordProvider">
+            <summary>
+            Password provider to get the password from user for opening a pfx file.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.CertificateSourceOptions.Token">
+            <summary>
+            Cancellation token.
+            </summary>
+        </member>
+        <member name="M:NuGet.Commands.CertificateProvider.GetCertificatesAsync(NuGet.Commands.CertificateSourceOptions)">
+            <summary>
+            Looks for X509Certificates using the CertificateSourceOptions.
+            Throws an InvalidOperationException if the option specifies a CertificateFilePath with invalid password.
+            </summary>
+            <param name="options">CertificateSourceOptions to be used while searching for the certificates.</param>
+            <returns>An X509Certificate2Collection object containing matching certificates.
+            If no matching certificates are found then it returns an empty collection.</returns>
+        </member>
+        <member name="M:NuGet.Commands.CertificateProvider.OpenStore(System.Security.Cryptography.X509Certificates.X509Store)">
+            <summary>
+            Opens an X509Store with read only access.
+            Throws an InvalidOperationException if the store does not exist.
+            </summary>
+            <param name="store">X509Store to be opened.</param>
+        </member>
+        <member name="M:NuGet.Commands.SignCommand.IPasswordProvider.GetPassword(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Requests user to input password and returns it as a SecureString.
+            </summary>
+            <param name="filePath">Path to the file that needs a password to open.</param>
+            <param name="token">Cancellation token.</param>
+            <returns>SecureString containing the user input password. The SecureString should be disposed after use.</returns>
+        </member>
+        <member name="T:NuGet.Commands.SignArgs">
+            <summary>
+            Object to hold params passed to the sign command and pass to the sign command runner.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.PackagePath">
+            <summary>
+            Path to the package that has to be signed.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.OutputDirectory">
+            <summary>
+            Output directory where the signed package should be dropped.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificatePath">
+            <summary>
+            Path to a Certificate file.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificateStoreName">
+            <summary>
+            Name of the store to be used when searching for a certificate.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificateStoreLocation">
+            <summary>
+            Location of the store to be used when searching for a certificate.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificateSubjectName">
+            <summary>
+            Subject Name for the certificate that can be used to search the local certificate store.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificateFingerprint">
+            <summary>
+            Fingerprint for the certificate that can be used to search the local certificate store.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.SignatureHashAlgorithm">
+            <summary>
+            Hashing Algorithm to be used to digest the package files.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.Timestamper">
+            <summary>
+            URL to an RFC 3161 timestamp server.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.TimestampHashAlgorithm">
+            <summary>
+            Hashing Algorithm to be used by the RFC 3161 time stamp server.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.CertificatePassword">
+            <summary>
+            Password for a pfx file, if needed.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.Overwrite">
+            <summary>
+            Switch used to indicate if an existing signature should be overwritten.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.NonInteractive">
+            <summary>
+            Switch used to indicate that we should not prompt for user input or confirmations.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.Logger">
+            <summary>
+            Logger to be used to display the logs during the execution of sign command.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.PasswordProvider">
+            <summary>
+            Password provider to get the password from user for opening a pfx file.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.SignArgs.Token">
+            <summary>
+            Cancellation Token.
+            </summary>
+        </member>
+        <member name="T:NuGet.Commands.SignCommandException">
+            <summary>
+            Holds an <see cref="T:NuGet.Common.ILogMessage"/> and returns the message for the exception.
+            </summary>
+        </member>
+        <member name="T:NuGet.Commands.SignCommandRunner">
+            <summary>
+            Command Runner used to run the business logic for nuget sign command
+            </summary>
+        </member>
         <member name="T:NuGet.Commands.Strings">
             <summary>
               A strongly-typed resource class, for looking up localized strings, etc.
@@ -1883,6 +2060,11 @@
         <member name="P:NuGet.Commands.Strings.Error_EmptySourceFileProjectDirectory">
             <summary>
               Looks up a localized string similar to The project directory for the source file &apos;{0}&apos; could not be found..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.Error_InputFileNotSpecified">
+            <summary>
+              Looks up a localized string similar to Please specify a nuspec, project.json, or project file to use.
             </summary>
         </member>
         <member name="P:NuGet.Commands.Strings.Error_InvalidATF">
@@ -1980,6 +2162,11 @@
               Looks up a localized string similar to Package &apos;{0}&apos; specifies an invalid build action &apos;{1}&apos; for file &apos;{2}&apos;..
             </summary>
         </member>
+        <member name="P:NuGet.Commands.Strings.Error_WriteResolvedNuSpecOverwriteOriginal">
+            <summary>
+              Looks up a localized string similar to Unable to output resolved nuspec file because it would overwrite the original at &apos;{0}&apos;.
+            </summary>
+        </member>
         <member name="P:NuGet.Commands.Strings.Error_XPROJNotAllowed">
             <summary>
               Looks up a localized string similar to Invalid input &apos;{0}&apos;. XProj support has been removed. Support for XProj and standalone project.json files has been removed, to continue working with legacy projects use NuGet 3.5.x from https://nuget.org/downloads.
@@ -2003,11 +2190,6 @@
         <member name="P:NuGet.Commands.Strings.FoundVersionsInSourceWithoutMatch">
             <summary>
               Looks up a localized string similar to Found {0} version(s) in {1}.
-            </summary>
-        </member>
-        <member name="P:NuGet.Commands.Strings.InputFileNotSpecified">
-            <summary>
-              Looks up a localized string similar to Please specify a nuspec, project.json, or project file to use.
             </summary>
         </member>
         <member name="P:NuGet.Commands.Strings.InvalidRestoreInput">
@@ -2226,6 +2408,11 @@
               Looks up a localized string similar to Attempting to build symbols package for &apos;{0}&apos;..
             </summary>
         </member>
+        <member name="P:NuGet.Commands.Strings.Log_PackageCommandInstallPackageToOutputPath">
+            <summary>
+              Looks up a localized string similar to Install {0} to output path &apos;{1}&apos;.
+            </summary>
+        </member>
         <member name="P:NuGet.Commands.Strings.Log_PackageCommandSuccess">
             <summary>
               Looks up a localized string similar to Successfully created package &apos;{0}&apos;..
@@ -2436,6 +2623,11 @@
               Looks up a localized string similar to Packages containing MSBuild targets and props files cannot be fully installed in projects targeting multiple frameworks. The MSBuild targets and props files have been ignored..
             </summary>
         </member>
+        <member name="P:NuGet.Commands.Strings.NonMatchingProperties">
+            <summary>
+              Looks up a localized string similar to Properties &apos;{0}&apos;:&apos;{1}&apos; and &apos;{2}&apos;:&apos;{3}&apos; do not match..
+            </summary>
+        </member>
         <member name="P:NuGet.Commands.Strings.NuGetDocs">
             <summary>
               Looks up a localized string similar to http://docs.nuget.org/.
@@ -2474,6 +2666,66 @@
         <member name="P:NuGet.Commands.Strings.ResolverRequest_ToStringFormat">
             <summary>
               Looks up a localized string similar to {0} (via {1}).
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandDialogMessage">
+            <summary>
+              Looks up a localized string similar to Please select a valid certificate.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandDialogTitle">
+            <summary>
+              Looks up a localized string similar to NuGet Sign Certificate Selection.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandDisplayCertificate">
+            <summary>
+              Looks up a localized string similar to Signing package(s) with certificate:.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandDisplayTimestamper">
+            <summary>
+              Looks up a localized string similar to Timestamping package(s) with:.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandFileNotFound">
+            <summary>
+              Looks up a localized string similar to &apos;{0}&apos; file &apos;{1}&apos; not found. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandInvalidCertEku">
+            <summary>
+              Looks up a localized string similar to The following certificate cannot be used for signing a package as it does not have Code Signing enhanced key usage:.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandInvalidCertException">
+            <summary>
+              Looks up a localized string similar to Certificate file &apos;{0}&apos; is invalid. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandInvalidPasswordException">
+            <summary>
+              Looks up a localized string similar to Invalid password was provided for the certificate file &apos;{0}&apos;. Please provide a valid password using the &apos;-{1}&apos; option.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandMultipleCertException">
+            <summary>
+              Looks up a localized string similar to Multiple certificates were found that meet all the given criteria. Use the &apos;-{0}&apos; option with the hash of the desired certificate..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandNoCertException">
+            <summary>
+              Looks up a localized string similar to No certificates were found that meet all the given criteria. For a list of accepted ways to provide a certificate, please visit https://docs.nuget.org/docs/reference/command-line-reference.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandOutputPath">
+            <summary>
+              Looks up a localized string similar to Signed package(s) output path:.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.SignCommandSuccess">
+            <summary>
+              Looks up a localized string similar to Package(s) signed successfully..
             </summary>
         </member>
         <member name="P:NuGet.Commands.Strings.SpecValidationDuplicateFrameworks">
@@ -2534,6 +2786,36 @@
         <member name="P:NuGet.Commands.Strings.UsingPackagesConfigForDependencies">
             <summary>
               Looks up a localized string similar to Found packages.config. Using packages listed as dependencies.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_Failed">
+            <summary>
+              Looks up a localized string similar to Could not verify package(s) signature..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_FinishedWithErrors">
+            <summary>
+              Looks up a localized string similar to Finished with {0} errors and {1} warnings..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_PackageIsNotValid">
+            <summary>
+              Looks up a localized string similar to &apos;{0}&apos; is not a valid package file..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_Success">
+            <summary>
+              Looks up a localized string similar to Successfully verified package(s)..
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_VerificationTypeNotSupported">
+            <summary>
+              Looks up a localized string similar to Verification type not supported. Please use only one of the following supported types: -All, -Signatures.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.Strings.VerifyCommand_VerifyingPackage">
+            <summary>
+              Looks up a localized string similar to Verifying {0}.
             </summary>
         </member>
         <member name="P:NuGet.Commands.Strings.Warning_DuplicatePropertyKey">
@@ -2720,6 +3002,41 @@
         <member name="M:NuGet.Commands.RequestRuntimeUtility.GetDefaultRestoreRuntimes(System.String,System.String)">
             <summary>
             Infer the runtimes from the current environment.
+            </summary>
+        </member>
+        <member name="T:NuGet.Commands.VerifyArgs.Verification">
+            <summary>
+            Available types of verification.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.VerifyArgs.Verifications">
+            <summary>
+            Types of verifications to be performed.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.VerifyArgs.PackagePath">
+            <summary>
+            Path to the package that has to be signed.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.VerifyArgs.Logger">
+            <summary>
+            Logger to be used to display the logs during the execution of sign command.
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.VerifyArgs.LogLevel">
+            <summary>
+            Amount of detail the logger should receive
+            </summary>
+        </member>
+        <member name="P:NuGet.Commands.VerifyArgs.CertificateFingerprint">
+            <summary>
+            If not empty, signer certificate fingerprint must match one in this list
+            </summary>
+        </member>
+        <member name="T:NuGet.Commands.VerifyCommandRunner">
+            <summary>
+            Command Runner used to run the business logic for nuget verify command
             </summary>
         </member>
         <member name="M:NuGet.Shared.EqualityUtility.OrderedEquals``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Collections.Generic.IComparer{``1},System.Collections.Generic.IEqualityComparer{``0})">

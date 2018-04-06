@@ -30,6 +30,7 @@ using ILoggingService = Microsoft.Build.BackEnd.Logging.ILoggingService;
 using InvalidProjectFileException = Microsoft.Build.Exceptions.InvalidProjectFileException;
 using ProjectItemFactory = Microsoft.Build.Evaluation.ProjectItem.ProjectItemFactory;
 using System.Globalization;
+using Microsoft.Build.BackEnd.SdkResolution;
 using Microsoft.Build.Globbing;
 using Microsoft.Build.Utilities;
 using EvaluationItemSpec = Microsoft.Build.Evaluation.ItemSpec<Microsoft.Build.Evaluation.ProjectProperty, Microsoft.Build.Evaluation.ProjectItem>;
@@ -707,11 +708,6 @@ namespace Microsoft.Build.Evaluation
             [DebuggerStepThrough]
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(ConditionedProperties));
-                }
-
                 if (_data.ConditionedProperties == null)
                 {
                     return ReadOnlyEmptyDictionary<string, List<string>>.Instance;
@@ -868,11 +864,6 @@ namespace Microsoft.Build.Evaluation
         {
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(AllEvaluatedItemDefinitionMetadata));
-                }
-
                 ICollection<ProjectMetadata> allEvaluatedItemDefinitionMetadata = _data.AllEvaluatedItemDefinitionMetadata;
 
                 if (allEvaluatedItemDefinitionMetadata == null)
@@ -897,11 +888,6 @@ namespace Microsoft.Build.Evaluation
         {
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(AllEvaluatedItems));
-                }
-
                 ICollection<ProjectItem> allEvaluatedItems = _data.AllEvaluatedItems;
 
                 if (allEvaluatedItems == null)
@@ -2653,7 +2639,9 @@ namespace Microsoft.Build.Evaluation
 
         private void Reevaluate(ILoggingService loggingServiceForEvaluation, ProjectLoadSettings loadSettings)
         {
-            Evaluator<ProjectProperty, ProjectItem, ProjectMetadata, ProjectItemDefinition>.Evaluate(_data, _xml, loadSettings, ProjectCollection.MaxNodeCount, ProjectCollection.EnvironmentProperties, loggingServiceForEvaluation, new ProjectItemFactory(this), _projectCollection, _projectCollection.ProjectRootElementCache, s_buildEventContext, null /* no project instance for debugging */, _projectCollection.SdkResolution);
+            Evaluator<ProjectProperty, ProjectItem, ProjectMetadata, ProjectItemDefinition>.Evaluate(_data, _xml, loadSettings, ProjectCollection.MaxNodeCount, ProjectCollection.EnvironmentProperties, loggingServiceForEvaluation, new ProjectItemFactory(this), _projectCollection, _projectCollection.ProjectRootElementCache, s_buildEventContext, null /* no project instance for debugging */, SdkResolverService.Instance, BuildEventContext.InvalidSubmissionId);
+
+            ErrorUtilities.VerifyThrow(LastEvaluationId != BuildEventContext.InvalidEvaluationId, "Evaluation should produce an evaluation ID");
 
             // We have to do this after evaluation, because evaluation might have changed
             // the imports being pulled in.
