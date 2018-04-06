@@ -265,11 +265,6 @@
             Library entry cache.
             </summary>
         </member>
-        <member name="P:NuGet.DependencyResolver.RemoteWalkContext.PackageFileCache">
-            <summary>
-            Files contained in a package.
-            </summary>
-        </member>
         <member name="P:NuGet.DependencyResolver.RemoteWalkContext.IsMsBuildBased">
             <summary>
             True if this is a csproj or similar project. Xproj should be false.

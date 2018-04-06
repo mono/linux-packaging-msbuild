@@ -626,7 +626,7 @@
             A version comparer that follows SemVer 2.0.0 rules.
             </summary>
         </member>
-        <member name="M:NuGet.Versioning.VersionComparer.CompareReleaseLabels(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:NuGet.Versioning.VersionComparer.CompareReleaseLabels(System.String[],System.String[])">
             <summary>
             Compares sets of release labels.
             </summary>
@@ -635,6 +635,21 @@
             <summary>
             Release labels are compared as numbers if they are numeric, otherwise they will be compared
             as strings.
+            </summary>
+        </member>
+        <member name="M:NuGet.Versioning.VersionComparer.GetReleaseLabelsOrNull(NuGet.Versioning.SemanticVersion)">
+            <summary>
+            Returns an array of release labels from the version, or null.
+            </summary>
+        </member>
+        <member name="M:NuGet.Versioning.VersionComparer.AreReleaseLabelsEqual(NuGet.Versioning.SemanticVersion,NuGet.Versioning.SemanticVersion)">
+            <summary>
+            Compare release labels
+            </summary>
+        </member>
+        <member name="M:NuGet.Versioning.VersionComparer.GetRevisionOrZero(NuGet.Versioning.SemanticVersion)">
+            <summary>
+            Returns the fourth version number or zero.
             </summary>
         </member>
         <member name="T:NuGet.Versioning.VersionComparison">
