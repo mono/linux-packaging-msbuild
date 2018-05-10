@@ -1,0 +1,13 @@
+diff --git a/src/Tasks/Microsoft.VisualBasic.Mono.targets b/src/Tasks/Microsoft.VisualBasic.Mono.targets
+index 8602860..0cafafe 100644
+--- a/src/Tasks/Microsoft.VisualBasic.Mono.targets
++++ b/src/Tasks/Microsoft.VisualBasic.Mono.targets
+@@ -28,7 +28,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
+         <!-- Select a default VB compiler here, if unspecified, instead of in the Vbc task, so that we can also
+              decide on the debug extension to be used. Don't do this for the !mono case.
+              -->
+-        <VbcToolExe Condition="'$(VbcToolExe)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">vbnc.exe</VbcToolExe>
++        <VbcToolExe Condition="'$(VbcToolExe)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">vbnc</VbcToolExe>
+ 
+         <UseSharedCompilation Condition="'$(UseSharedCompilation)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">false</UseSharedCompilation>
+     </PropertyGroup>
