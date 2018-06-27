@@ -24,7 +24,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.gz
 Source1:	Microsoft.DotNet.MSBuildSdkResolver.dll
 Patch0:		centos_runtime.patch
-Patch1:		call-vbnc-correctly-for-vb.patch
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
@@ -59,7 +58,6 @@ contains components needed to build with .NET Core.
 %prep
 %setup -n msbuild-15.6
 %patch0 -p1
-%patch1 -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
