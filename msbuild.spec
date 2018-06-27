@@ -27,6 +27,7 @@ BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
 BuildRequires:  libcurl-devel
+BuildRequires:  openssl-devel
 BuildArch:      noarch
 Requires:       msbuild-libhostfxr
 
