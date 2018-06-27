@@ -21,7 +21,7 @@ License:        MIT
 Group:          Development/Libraries/Other
 Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Source0:        msbuild-%{version}.tar.gz
+Source0:        msbuild-%{version}.tar.xz
 Source1:	Microsoft.DotNet.MSBuildSdkResolver.dll
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
