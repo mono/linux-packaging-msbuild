@@ -69,11 +69,12 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
-./cibuild.sh --scope Compile --host Mono --target Mono --config Release
+./build.sh -hostType mono -configuration Release -skipTests
 
 %install
 %{?env_options}
-DESTDIR=%{buildroot} ./install-mono-prefix.sh %{_prefix}
+./artifacts/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=%{buildroot}/%_prefix /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
+sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
 rm %{buildroot}/%_prefix/lib/mono/msbuild/15.0/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/*
