@@ -58,7 +58,7 @@ contains components needed to build with .NET Core.
 
 %prep
 %setup -n msbuild-15.8
-%patch -p1
+%patch0 -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
