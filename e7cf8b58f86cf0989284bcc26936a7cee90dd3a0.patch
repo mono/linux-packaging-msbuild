@@ -1,0 +1,38 @@
+From e7cf8b58f86cf0989284bcc26936a7cee90dd3a0 Mon Sep 17 00:00:00 2001
+From: Rainer Sigwald <raines@microsoft.com>
+Date: Mon, 27 Aug 2018 11:36:54 -0500
+Subject: [PATCH] Nerdbank.GitVersioning 2.2.13 (#3657)
+
+This version has an updated copy of LibGit2Sharp that supports Ubuntu
+18.04 and other newer distros.
+---
+ build/Packages.props                | 2 +-
+ src/Samples/Directory.Build.targets | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build/Packages.props b/build/Packages.props
+index aa31176f3..c34f41cb3 100644
+--- a/build/Packages.props
++++ b/build/Packages.props
+@@ -50,7 +50,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
+-    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="2.1.23" Condition="'$(DisableNerdbankVersioning)' != 'true'" PrivateAssets="All" />
++    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" Condition="'$(DisableNerdbankVersioning)' != 'true'" PrivateAssets="All" />
+     <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-alpha-003" PrivateAssets="All"/>
+     <GlobalPackageReference Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.15" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+   </ItemGroup>
+diff --git a/src/Samples/Directory.Build.targets b/src/Samples/Directory.Build.targets
+index d566e7711..4d7c926c5 100644
+--- a/src/Samples/Directory.Build.targets
++++ b/src/Samples/Directory.Build.targets
+@@ -1,7 +1,7 @@
+ ﻿<Project>
+ 
+   <ItemGroup>
+-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.1.23" Condition="'$(DisableNerdbankVersioning)' != 'true'" />
++    <PackageReference Include="Nerdbank.GitVersioning" Version="2.2.13" Condition="'$(DisableNerdbankVersioning)' != 'true'" />
+     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-alpha-003" PrivateAssets="all"/>
+     <PackageReference Include="Microsoft.VisualStudio.SDK.EmbedInteropTypes" Version="15.0.15" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+   </ItemGroup>

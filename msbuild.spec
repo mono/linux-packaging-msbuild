@@ -23,6 +23,7 @@ Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Source1:	Microsoft.DotNet.MSBuildSdkResolver.dll
+Patch0:		e7cf8b58f86cf0989284bcc26936a7cee90dd3a0.patch
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
@@ -57,6 +58,7 @@ contains components needed to build with .NET Core.
 
 %prep
 %setup -n msbuild-15.8
+%patch -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
