@@ -72,7 +72,7 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
-./build.sh -hostType mono -configuration Release -skipTests -p:DisableNerdbankVersioning=true
+./build.sh -hostType mono -configuration Release -skipTests -p:DisableNerdbankVersioning=true -p:BUILD_SOURCEVERSION=8af44c5b9e727c096833a88fae05c3ddb76716d0
 
 %install
 %{?env_options}
