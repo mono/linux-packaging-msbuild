@@ -88,7 +88,17 @@ cp %{SOURCE1} %{buildroot}/%{_prefix}/lib/mono/msbuild/15.0/bin/SdkResolvers/Mic
 %_prefix/lib/mono/msbuild/15.0/bin/ru
 %_prefix/lib/mono/msbuild/15.0/bin/fr
 %_prefix/lib/mono/msbuild/15.0/bin/ja
+%_prefix/lib/mono/msbuild/15.0/bin/cs
 %_prefix/lib/mono/msbuild/15.0/bin/ko
+%_prefix/lib/mono/msbuild/15.0/bin/de
+%_prefix/lib/mono/msbuild/15.0/bin/en
+%_prefix/lib/mono/msbuild/15.0/bin/es
+%_prefix/lib/mono/msbuild/15.0/bin/it
+%_prefix/lib/mono/msbuild/15.0/bin/pl
+%_prefix/lib/mono/msbuild/15.0/bin/pt-BR
+%_prefix/lib/mono/msbuild/15.0/bin/tr
+%_prefix/lib/mono/msbuild/15.0/bin/zh-Hans
+%_prefix/lib/mono/msbuild/15.0/bin/zh-Hant
 %_prefix/lib/mono/msbuild/15.0/bin/Sdks
 %_prefix/lib/mono/msbuild/15.0/bin/*.config
 %_prefix/lib/mono/msbuild/15.0/bin/*.dll
