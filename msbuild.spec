@@ -23,7 +23,7 @@ Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Source1:	Microsoft.DotNet.MSBuildSdkResolver.dll
-Patch0:		e7cf8b58f86cf0989284bcc26936a7cee90dd3a0.patch
+Patch0:		fixed-build-version.diff
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
 BuildRequires:  libicu-devel
@@ -72,7 +72,7 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
-./build.sh -hostType mono -configuration Release -skipTests
+./build.sh -hostType mono -configuration Release -skipTests -p:DisableNerdbankVersioning=true
 
 %install
 %{?env_options}
