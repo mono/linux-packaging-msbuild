@@ -18,12 +18,10 @@ namespace Microsoft.Build.Utilities
         {
             get
             {
-#if DEBUG
                 if (BuildEnvironmentHelper.Instance.RunningTests && Environment.GetEnvironmentVariable("MSBUILDRELOADTRAITSONEACHACCESS") == "1")
                 {
                     return new Traits();
                 }
-#endif
                 return _instance;
             }
         }
@@ -121,6 +119,17 @@ namespace Microsoft.Build.Utilities
         /// Disable the NuGet-based SDK resolver.
         /// </summary>
         public readonly bool DisableNuGetSdkResolver = Environment.GetEnvironmentVariable("MSBUILDDISABLENUGETSDKRESOLVER") == "1";
+
+        /// <summary>
+        /// Enables the user of autorun functionality in CMD.exe on Windows which is disabled by default in MSBuild.
+        /// </summary>
+        public readonly bool UseAutoRunWhenLaunchingProcessUnderCmd = Environment.GetEnvironmentVariable("MSBUILDUSERAUTORUNINCMD") == "1";
+
+        /// <summary>
+        /// Workaround for https://github.com/Microsoft/vstest/issues/1503.
+        /// </summary>
+        public readonly bool EnsureStdOutForChildNodesIsPrimaryStdout = Environment.GetEnvironmentVariable("MSBUILDENSURESTDOUTFORTASKPROCESSES") == "1";
+
 
         private static bool? ParseNullableBoolFromEnvironmentVariable(string environmentVariable)
         {

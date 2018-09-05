@@ -823,14 +823,12 @@ namespace Microsoft.Build.UnitTests.BackEnd
         {
             //  If binary serialization is not available, then we use a simple serializer which relies on a default constructor.  So to test
             //  what happens for an event that's not serializable, don't include a default constructor.
-#if FEATURE_BINARY_SERIALIZATION
             /// <summary>
             /// Default constructor
             /// </summary>
             public MyCustomBuildEventArgsNotSerializable() : base()
             {
             }
-#endif
 
             /// <summary>
             /// Constructor which takes a message
@@ -1232,7 +1230,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             /// <summary>
             /// Mock of the Block on target in progress.
             /// </summary>
-            public Task BlockOnTargetInProgress(int blockingRequestId, string blockingTarget)
+            public Task BlockOnTargetInProgress(int blockingRequestId, string blockingTarget, BuildResult partialBuildResult)
             {
                 throw new NotImplementedException();
             }
@@ -1280,7 +1278,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             /// <summary>
             /// Not Implemented
             /// </summary>
-            private void MockIRequestBuilderCallback_OnBuildRequestBlocked(BuildRequestEntry sourceEntry, int blockingGlobalRequestId, string blockingTarget)
+            private void MockIRequestBuilderCallback_OnBuildRequestBlocked(BuildRequestEntry sourceEntry, int blockingGlobalRequestId, string blockingTarget, IBuildResults partialBuildResult = null)
             {
                 throw new NotImplementedException();
             }

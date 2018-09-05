@@ -10,11 +10,12 @@ using System.Linq;
 using System.Threading;
 
 using Microsoft.Build.CommandLine;
-using Microsoft.Build.Engine.UnitTests;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.UnitTests.Shared;
+using Microsoft.Build.UnitTests;
 using Xunit;
+using Xunit.Abstractions;
 using Shouldly;
 
 namespace Microsoft.Build.UnitTests
@@ -26,6 +27,13 @@ namespace Microsoft.Build.UnitTests
 #else
         private const string MSBuildExeName = "MSBuild.exe";
 #endif
+
+        private readonly ITestOutputHelper _output;
+
+        public XMakeAppTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
 
         private const string AutoResponseFileName = "MSBuild.rsp";
 
@@ -1947,6 +1955,74 @@ namespace Microsoft.Build.UnitTests
             logContents.ShouldContain(guid2);
         }
 
+        [Fact]
+        public void RestoreIgnoresMissingImports()
+        {
+            string guid1 = Guid.NewGuid().ToString("N");
+            string guid2 = Guid.NewGuid().ToString("N");
+            string restoreFirstProps = $"{Guid.NewGuid():N}.props";
+
+            string projectContents = ObjectModelHelpers.CleanupFileContents($@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+
+  <PropertyGroup>
+    <RestoreFirstProps>{restoreFirstProps}</RestoreFirstProps>
+  </PropertyGroup>
+  
+  <Import Project=""$(RestoreFirstProps)"" />
+
+  <Target Name=""Build"">
+    <Error Text=""PropertyA does not have a value defined"" Condition="" '$(PropertyA)' == '' "" />
+    <Message Text=""PropertyA's value is &quot;$(PropertyA)&quot;"" />
+  </Target>
+
+  <Target Name=""Restore"">
+    <Message Text=""PropertyA's value is &quot;$(PropertyA)&quot;"" />
+    <ItemGroup>
+      <Lines Include=""&lt;Project ToolsVersion=&quot;15.0&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;&lt;PropertyGroup&gt;&lt;PropertyA&gt;{guid2}&lt;/PropertyA&gt;&lt;/PropertyGroup&gt;&lt;/Project&gt;"" />
+    </ItemGroup>
+    
+    <WriteLinesToFile File=""$(RestoreFirstProps)"" Lines=""@(Lines)"" Overwrite=""true"" />
+  </Target>
+  
+</Project>");
+
+            IDictionary<string, string> preExistingProps = new Dictionary<string, string>
+            {
+                { restoreFirstProps, $@"<Project ToolsVersion=""15.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+  <PropertyGroup>
+    <PropertyA>{guid1}</PropertyA>
+  </PropertyGroup>
+</Project>"
+                }
+            };
+
+            string logContents = ExecuteMSBuildExeExpectSuccess(projectContents, preExistingProps, "/restore");
+
+            logContents.ShouldContain(guid1);
+            logContents.ShouldContain(guid2);
+        }
+
+        /// <summary>
+        /// We check if there is only one target name specified and this logic caused a regression: https://github.com/Microsoft/msbuild/issues/3317
+        /// </summary>
+        [Fact]
+        public void MultipleTargetsDoesNotCrash()
+        {
+            string projectContents = ObjectModelHelpers.CleanupFileContents($@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+  <Target Name=""Target1"">
+    <Message Text=""7514CB1641A948D0A3930C5EC2DC1940"" />
+  </Target>
+  <Target Name=""Target2"">
+    <Message Text=""E2C73B5843F94B63B067D9BEB2C4EC52"" />
+  </Target>
+</Project>");
+
+            string logContents = ExecuteMSBuildExeExpectSuccess(projectContents, arguments: "/t:Target1 /t:Target2");
+
+            logContents.ShouldContain("7514CB1641A948D0A3930C5EC2DC1940", () => logContents);
+            logContents.ShouldContain("E2C73B5843F94B63B067D9BEB2C4EC52", () => logContents);
+        }
+
         private string CopyMSBuild()
         {
             string dest = null;
@@ -1959,12 +2035,18 @@ namespace Microsoft.Build.UnitTests
 
                 // Copy MSBuild.exe & dependent files (they will not be in the GAC so they must exist next to msbuild.exe)
                 var filesToCopy = Directory
-                    .EnumerateFiles(source)
-                    .Where(f=> f.EndsWith(".dll") || f.EndsWith(".tasks") || f.EndsWith(".exe") || f.EndsWith(".exe.config") || f.EndsWith(".dll.config") || f.EndsWith(".runtimeconfig.json"));
+                    .EnumerateFiles(source);
 
                 var directoriesToCopy = Directory
                     .EnumerateDirectories(source)
-                    .Where(d => Directory.EnumerateFiles(d).Any(f => f.EndsWith("resources.dll")));  // Copy satellite assemblies
+                    .Where(d =>
+                    {
+                        if (Path.GetFileName(d).Equals("TestTemp", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            return false;
+                        }
+                        return true;
+                    });
 
                 foreach (var file in filesToCopy)
                 {
@@ -1973,15 +2055,9 @@ namespace Microsoft.Build.UnitTests
 
                 foreach (var directory in directoriesToCopy)
                 {
-                    foreach (var sourceFile in Directory.EnumerateFiles(directory, "*"))
-                    {
-                        var destinationFile = sourceFile.Replace(source, dest);
-
-                        var directoryName = Path.GetDirectoryName(destinationFile);
-                        Directory.CreateDirectory(directoryName);
-
-                        File.Copy(sourceFile, destinationFile);
-                    }
+                    string dirName = Path.GetFileName(directory);
+                    string destSubDir = Path.Combine(dest, dirName);
+                    FileUtilities.CopyDirectory(directory, destSubDir);
                 }
 
                 return dest;
@@ -1995,7 +2071,7 @@ namespace Microsoft.Build.UnitTests
 
         private string ExecuteMSBuildExeExpectSuccess(string projectContents, IDictionary<string, string> filesToCreate = null, params string[] arguments)
         {
-            using (TestEnvironment testEnvironment = Engine.UnitTests.TestEnvironment.Create())
+            using (TestEnvironment testEnvironment = UnitTests.TestEnvironment.Create())
             {
                 TransientTestProjectWithFiles testProject = testEnvironment.CreateTestProjectWithFiles(projectContents, new string[0]);
 
@@ -2009,9 +2085,9 @@ namespace Microsoft.Build.UnitTests
 
                 bool success;
 
-                string output = RunnerUtilities.ExecMSBuild($"\"{testProject.ProjectFile}\" {String.Join(" ", arguments)}", out success);
+                string output = RunnerUtilities.ExecMSBuild($"\"{testProject.ProjectFile}\" {String.Join(" ", arguments)}", out success, _output);
 
-                success.ShouldBeTrue();
+                success.ShouldBeTrue(() => output);
 
                 return output;
             }

@@ -11,12 +11,20 @@ namespace Microsoft.Build.BackEnd.SdkResolution
     /// <summary>
     /// An internal implementation of <see cref="Microsoft.Build.Framework.SdkResult"/>.
     /// </summary>
-    internal sealed class SdkResult : SdkResultBase
+    internal sealed class SdkResult : SdkResultBase, INodePacket
     {
+        private string _path;
+        private string _version;
+
+        public SdkResult(INodePacketTranslator translator)
+        {
+            Translate(translator);
+        }
+
         public SdkResult(SdkReference sdkReference, IEnumerable<string> errors, IEnumerable<string> warnings)
         {
             Success = false;
-            Sdk = sdkReference;
+            SdkReference = sdkReference;
             Errors = errors;
             Warnings = warnings;
         }
@@ -24,22 +32,38 @@ namespace Microsoft.Build.BackEnd.SdkResolution
         public SdkResult(SdkReference sdkReference, string path, string version, IEnumerable<string> warnings)
         {
             Success = true;
-            Sdk = sdkReference;
-            Path = path;
-            Version = version;
+            SdkReference = sdkReference;
+            _path = path;
+            _version = version;
             Warnings = warnings;
+        }
+
+        public SdkResult()
+        {
         }
 
         public Construction.ElementLocation ElementLocation { get; set; }
 
         public IEnumerable<string> Errors { get; }
 
-        public string Path { get; }
+        public override string Path => _path;
 
-        public SdkReference Sdk { get; }
+        public override SdkReference SdkReference { get; protected set; }
 
-        public string Version { get; }
+        public override string Version => _version;
 
         public IEnumerable<string> Warnings { get; }
+        public void Translate(INodePacketTranslator translator)
+        {
+            translator.Translate(ref _path);
+            translator.Translate(ref _version);
+        }
+
+        public NodePacketType Type => NodePacketType.ResolveSdkResponse;
+
+        public static INodePacket FactoryForDeserialization(INodePacketTranslator translator)
+        {
+            return new SdkResult(translator);
+        }
     }
 }

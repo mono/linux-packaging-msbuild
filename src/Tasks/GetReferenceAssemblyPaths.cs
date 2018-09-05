@@ -21,7 +21,6 @@ namespace Microsoft.Build.Tasks
     public class GetReferenceAssemblyPaths : TaskExtension
     {
         #region Data
-        /// <summary>
 #if FEATURE_GAC
         /// <summary>
         /// This is the sentinel assembly for .NET FX 3.5 SP1
@@ -34,6 +33,8 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         private static bool? s_net35SP1SentinelAssemblyFound;
 #endif
+
+        private static bool FallbackPathHackOnOSXEnabled = NativeMethodsShared.IsOSX && NativeMethodsShared.IsMono && String.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISABLE_FALLBACK_PATHS_HACK_IN_GRAP_OSX"));
 
         /// <summary>
         /// Hold the reference assembly paths based on the passed in targetframeworkmoniker.
@@ -54,6 +55,18 @@ namespace Microsoft.Build.Tasks
         /// The root path to use to generate the reference assemblyPaths
         /// </summary>
         private string _rootPath;
+
+        /// <summary>
+        /// Target frameworks are looked up in @RootPath. If it cannot be found
+        /// there, then paths in @TargetFrameworkFallbackSearchPaths
+        /// are used for the lookup, in order. This can have multiple paths, separated
+        /// by ';'
+        /// </summary>
+        public string TargetFrameworkFallbackSearchPaths
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// By default GetReferenceAssemblyPaths performs simple checks
@@ -163,6 +176,12 @@ namespace Microsoft.Build.Tasks
         }
 
         /// <summary>
+        /// If set to true, the task will not generate an error (or a warning) if the reference assemblies cannot be found.
+        /// This allows the task to be used to check whether reference assemblies for a framework are available.
+        /// </summary>
+        public bool SuppressNotFoundError { get; set; }
+
+        /// <summary>
         /// Gets the display name for the targetframeworkmoniker
         /// </summary>
         [Output]
@@ -232,7 +251,7 @@ namespace Microsoft.Build.Tasks
 
             try
             {
-                _tfmPaths = GetPaths(_rootPath, moniker);
+                _tfmPaths = GetPaths(_rootPath, TargetFrameworkFallbackSearchPaths, moniker);
 
                 if (_tfmPaths != null && _tfmPaths.Count > 0)
                 {
@@ -243,7 +262,7 @@ namespace Microsoft.Build.Tasks
                 // There is no point in generating the full framework paths if profile path could not be found.
                 if (targetingProfile && _tfmPaths != null)
                 {
-                    _tfmPathsNoProfile = GetPaths(_rootPath, monikerWithNoProfile);
+                    _tfmPathsNoProfile = GetPaths(_rootPath, TargetFrameworkFallbackSearchPaths, monikerWithNoProfile);
                 }
 
                 // The path with out the profile is just the reference assembly paths.
@@ -273,24 +292,29 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Generate the set of chained reference assembly paths
         /// </summary>
-        private IList<String> GetPaths(string rootPath, FrameworkNameVersioning frameworkmoniker)
+        /// FIXME: do we really need the new arg? or should we just use the property?
+        private IList<String> GetPaths(string rootPath, string targetFrameworkFallbackSearchPaths, FrameworkNameVersioning frameworkmoniker)
         {
-            IList<String> pathsToReturn = null;
+            string fallbackPathsToUse = (FallbackPathHackOnOSXEnabled && String.IsNullOrEmpty(targetFrameworkFallbackSearchPaths))
+                                            ? fallbackPathsToUse = "/Library/Frameworks/Mono.framework/External/xbuild-frameworks"
+                                            : targetFrameworkFallbackSearchPaths;
 
-            if (String.IsNullOrEmpty(rootPath))
-            {
-                pathsToReturn = ToolLocationHelper.GetPathToReferenceAssemblies(frameworkmoniker);
-            }
-            else
-            {
-                pathsToReturn = ToolLocationHelper.GetPathToReferenceAssemblies(rootPath, frameworkmoniker);
-            }
 
-            // No reference assembly paths could be found, log an error so an invalid build will not be produced.
-            // 1/26/16: Note this was changed from a warning to an error (see GitHub #173).
-            if (pathsToReturn.Count == 0)
+            IList<String> pathsToReturn = ToolLocationHelper.GetPathToReferenceAssemblies(
+                                                frameworkmoniker.Identifier,
+                                                frameworkmoniker.Version.ToString(),
+                                                frameworkmoniker.Profile,
+                                                rootPath,
+                                                fallbackPathsToUse);
+
+            if (!SuppressNotFoundError)
             {
-                Log.LogErrorWithCodeFromResources("GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound", frameworkmoniker.ToString());
+                // No reference assembly paths could be found, log an error so an invalid build will not be produced.
+                // 1/26/16: Note this was changed from a warning to an error (see GitHub #173).
+                if (pathsToReturn.Count == 0)
+                {
+                    Log.LogErrorWithCodeFromResources("GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound", frameworkmoniker.ToString());
+                }
             }
 
             return pathsToReturn;
