@@ -1,6 +1,8 @@
 ﻿using Microsoft.Build.Shared;
+using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
+using Xunit.Abstractions;
 
 namespace Microsoft.Build.UnitTests.Shared
 {
@@ -12,16 +14,16 @@ namespace Microsoft.Build.UnitTests.Shared
         /// Invoke the currently running msbuild and return the stdout, stderr, and process exit status.
         /// This method may invoke msbuild via other runtimes.
         /// </summary>
-        public static string ExecMSBuild(string msbuildParameters, out bool successfulExit)
+        public static string ExecMSBuild(string msbuildParameters, out bool successfulExit, ITestOutputHelper outputHelper = null)
         {
-            return ExecMSBuild(PathToCurrentlyRunningMsBuildExe, msbuildParameters, out successfulExit);
+            return ExecMSBuild(PathToCurrentlyRunningMsBuildExe, msbuildParameters, out successfulExit, false, outputHelper);
         }
 
         /// <summary>
         /// Invoke msbuild.exe with the given parameters and return the stdout, stderr, and process exit status.
         /// This method may invoke msbuild via other runtimes.
         /// </summary>
-        public static string ExecMSBuild(string pathToMsBuildExe, string msbuildParameters, out bool successfulExit, bool shellExecute = false)
+        public static string ExecMSBuild(string pathToMsBuildExe, string msbuildParameters, out bool successfulExit, bool shellExecute = false, ITestOutputHelper outputHelper = null)
         {
 #if FEATURE_RUN_EXE_IN_TESTS
             var pathToExecutable = pathToMsBuildExe;
@@ -30,7 +32,7 @@ namespace Microsoft.Build.UnitTests.Shared
             msbuildParameters = "\"" + pathToMsBuildExe + "\"" + " " + msbuildParameters;
 #endif
 
-            return RunProcessAndGetOutput(pathToExecutable, msbuildParameters, out successfulExit, shellExecute);
+            return RunProcessAndGetOutput(pathToExecutable, msbuildParameters, out successfulExit, shellExecute, outputHelper);
         }
 
         private static void AdjustForShellExecution(ref string pathToExecutable, ref string arguments)
@@ -39,7 +41,8 @@ namespace Microsoft.Build.UnitTests.Shared
             {
                 var comSpec = Environment.GetEnvironmentVariable("ComSpec");
 
-                arguments = $"/C \"{pathToExecutable} {arguments}\"";
+                // /D: Do not load AutoRun configuration from the registry (perf)
+                arguments = $"{(Traits.Instance.EscapeHatches.UseAutoRunWhenLaunchingProcessUnderCmd ? String.Empty : "/D ")}/C \"{pathToExecutable} {arguments}\"";
                 pathToExecutable = comSpec;
             }
             else
@@ -65,7 +68,7 @@ namespace Microsoft.Build.UnitTests.Shared
         /// <summary>
         /// Run the process and get stdout and stderr
         /// </summary>
-        public static string RunProcessAndGetOutput(string process, string parameters, out bool successfulExit, bool shellExecute = false)
+        public static string RunProcessAndGetOutput(string process, string parameters, out bool successfulExit, bool shellExecute = false, ITestOutputHelper outputHelper = null)
         {
             if (shellExecute)
             {
@@ -102,6 +105,7 @@ namespace Microsoft.Build.UnitTests.Shared
                     }
                 };
 
+                outputHelper?.WriteLine("Executing [{0} {1}]", process, parameters);
                 Console.WriteLine("Executing [{0} {1}]", process, parameters);
 
                 p.Start();

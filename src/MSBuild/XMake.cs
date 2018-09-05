@@ -550,7 +550,6 @@ namespace Microsoft.Build.CommandLine
                 bool enableNodeReuse = false;
 #endif
                 TextWriter preprocessWriter = null;
-                bool debugger = false;
                 bool detailedSummary = false;
                 ISet<string> warningsAsErrors = null;
                 ISet<string> warningsAsMessages = null;
@@ -579,7 +578,6 @@ namespace Microsoft.Build.CommandLine
                         ref cpuCount,
                         ref enableNodeReuse,
                         ref preprocessWriter,
-                        ref debugger,
                         ref detailedSummary,
                         ref warningsAsErrors,
                         ref warningsAsMessages,
@@ -598,7 +596,7 @@ namespace Microsoft.Build.CommandLine
                     {
                         Console.WriteLine(ResourceUtilities.GetResourceString("PossiblyOmittedMaxCPUSwitch"));
                     }
-                    if (preprocessWriter != null || debugger)
+                    if (preprocessWriter != null && !BuildEnvironmentHelper.Instance.RunningTests)
                     {
                         // Indicate to the engine that it can NOT toss extraneous file content: we want to 
                         // see that in preprocessing/debugging
@@ -624,7 +622,7 @@ namespace Microsoft.Build.CommandLine
 #if FEATURE_XML_SCHEMA_VALIDATION
                             needToValidateProject, schemaFile,
 #endif
-                            cpuCount, enableNodeReuse, preprocessWriter, debugger, detailedSummary, warningsAsErrors, warningsAsMessages, enableRestore, profilerLogger, enableProfiler))
+                            cpuCount, enableNodeReuse, preprocessWriter, detailedSummary, warningsAsErrors, warningsAsMessages, enableRestore, profilerLogger, enableProfiler))
                             {
                                 exitType = ExitType.BuildError;
                             }
@@ -918,7 +916,6 @@ namespace Microsoft.Build.CommandLine
             int cpuCount,
             bool enableNodeReuse,
             TextWriter preprocessWriter,
-            bool debugger,
             bool detailedSummary,
             ISet<string> warningsAsErrors,
             ISet<string> warningsAsMessages,
@@ -1020,14 +1017,6 @@ namespace Microsoft.Build.CommandLine
                     cpuCount,
                     onlyLogCriticalEvents
                 );
-
-                if (debugger)
-                {
-                    // Debugging is not currently fully supported so we don't want to open
-                    // public API for it. Also, we want to have a way to make it work when running inside VS.
-                    // So use an environment variable. The undocumented /debug switch is just an easy way to set it.
-                    Environment.SetEnvironmentVariable("MSBUILDDEBUGGING", "1");
-                }
 
 #if MONO
                 // FIXME: Remove toolsVersion added from xbuild and then remove this too
@@ -1138,7 +1127,10 @@ namespace Microsoft.Build.CommandLine
                     {
                         try
                         {
-                            if (enableRestore)
+                            // Determine if the user specified /Target:Restore which means we should only execute a restore in the fancy way that /restore is executed
+                            bool restoreOnly = request.TargetNames.Count == 1 && String.Equals(request.TargetNames.First(), MSBuildConstants.RestoreTargetName, StringComparison.OrdinalIgnoreCase);
+
+                            if (enableRestore || restoreOnly)
                             {
                                 results = ExecuteRestore(projectFile, toolsVersion, buildManager, restoreProperties.Count > 0 ? restoreProperties : globalProperties);
 
@@ -1148,7 +1140,10 @@ namespace Microsoft.Build.CommandLine
                                 }
                             }
 
-                            results = ExecuteBuild(buildManager, request);
+                            if (!restoreOnly)
+                            {
+                                results = ExecuteBuild(buildManager, request);
+                            }
                         }
                         finally
                         {
@@ -1255,15 +1250,18 @@ namespace Microsoft.Build.CommandLine
             // The initializer syntax can't be used just in case a user set this property to a value
             restoreGlobalProperties["MSBuildRestoreSessionId"] = Guid.NewGuid().ToString("D");
 
-            // Create a new request with a Restore target only and specify the ClearProjectRootElementCacheAfterBuild flag to ensure the projects will
-            // be reloaded from disk for subsequent builds
+            // Create a new request with a Restore target only and specify:
+            //  - BuildRequestDataFlags.ClearCachesAfterBuild to ensure the projects will be reloaded from disk for subsequent builds
+            //  - BuildRequestDataFlags.SkipNonexistentTargets to ignore missing targets since Restore does not require that all targets exist
+            //  - BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports to ignore imports that don't exist, are empty, or are invalid because restore might
+            //     make available an import that doesn't exist yet and the <Import /> might be missing a condition.
             BuildRequestData restoreRequest = new BuildRequestData(
                 projectFile,
                 restoreGlobalProperties,
                 toolsVersion,
                 targetsToBuild: new[] { MSBuildConstants.RestoreTargetName },
                 hostServices: null,
-                flags: BuildRequestDataFlags.ClearCachesAfterBuild | BuildRequestDataFlags.SkipNonexistentTargets);
+                flags: BuildRequestDataFlags.ClearCachesAfterBuild | BuildRequestDataFlags.SkipNonexistentTargets | BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports);
 
             return ExecuteBuild(buildManager, restoreRequest);
         }
@@ -1911,7 +1909,6 @@ namespace Microsoft.Build.CommandLine
             ref int cpuCount,
             ref bool enableNodeReuse,
             ref TextWriter preprocessWriter,
-            ref bool debugger,
             ref bool detailedSummary,
             ref ISet<string> warningsAsErrors,
             ref ISet<string> warningsAsMessages,
@@ -2022,7 +2019,6 @@ namespace Microsoft.Build.CommandLine
                                                                ref cpuCount,
                                                                ref enableNodeReuse,
                                                                ref preprocessWriter,
-                                                               ref debugger,
                                                                ref detailedSummary,
                                                                ref warningsAsErrors,
                                                                ref warningsAsMessages,
@@ -2061,9 +2057,6 @@ namespace Microsoft.Build.CommandLine
                         preprocessWriter = ProcessPreprocessSwitch(commandLineSwitches[CommandLineSwitches.ParameterizedSwitch.Preprocess]);
                     }
 
-#if FEATURE_MSBUILD_DEBUGGER
-                    debugger = commandLineSwitches.IsParameterlessSwitchSet(CommandLineSwitches.ParameterlessSwitch.Debugger);
-#endif
                     detailedSummary = commandLineSwitches.IsParameterlessSwitchSet(CommandLineSwitches.ParameterlessSwitch.DetailedSummary);
 
                     warningsAsErrors = ProcessWarnAsErrorSwitch(commandLineSwitches);
@@ -3548,12 +3541,6 @@ namespace Microsoft.Build.CommandLine
             Console.WriteLine(AssemblyResources.GetString("HelpMessage_25_PreprocessSwitch"));
 
             Console.WriteLine(AssemblyResources.GetString("HelpMessage_26_DetailedSummarySwitch"));
-#if FEATURE_MSBUILD_DEBUGGER
-            if (CommandLineSwitches.IsParameterlessSwitch("debug"))
-            {
-                Console.WriteLine(AssemblyResources.GetString("HelpMessage_27_DebuggerSwitch"));
-            }
-#endif
             Console.WriteLine(AssemblyResources.GetString("HelpMessage_31_RestoreSwitch"));
             Console.WriteLine(AssemblyResources.GetString("HelpMessage_33_RestorePropertySwitch"));
             Console.WriteLine(AssemblyResources.GetString("HelpMessage_32_ProfilerSwitch"));
