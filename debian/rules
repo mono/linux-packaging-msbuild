@@ -1,7 +1,8 @@
 #!/usr/bin/make -f
 MAKEFILE = $(firstword $(MAKEFILE_LIST))
 DEBIAN_DIR = $(dir $(MAKEFILE))
-TEMP_HOME = $(abspath $(DEBIAN_DIR))/homedir/
+DEBIAN_DIR_ABS = $(abspath $(DEBIAN_DIR))
+TEMP_HOME = $(DEBIAN_DIR_ABS)/homedir/
 
 override_dh_clean:
 	rm -rf $(TEMP_HOME)
@@ -9,10 +10,10 @@ override_dh_clean:
 
 override_dh_auto_build:
 	mkdir -p $(TEMP_HOME)
-	HOME=$(TEMP_HOME) ./cibuild.sh --scope Compile --host Mono --target Mono --config Release
+	HOME=$(TEMP_HOME) ./build.sh -hostType mono -configuration Release -skipTests -p:DisableNerdbankVersioning=true -p:BUILD_SOURCEVERSION=8af44c5b9e727c096833a88fae05c3ddb76716d0
 
 override_dh_auto_install:
-	DESTDIR=debian/tmp ./install-mono-prefix.sh /usr
+	./artifacts/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=$(DEBIAN_DIR_ABS)/tmp/usr /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
 	find debian/tmp/usr/lib/mono/ -name Microsoft.DiaSymReader.Native.*dll -delete
 	find debian/tmp/usr/lib/mono/ -name *.dylib -delete
 
