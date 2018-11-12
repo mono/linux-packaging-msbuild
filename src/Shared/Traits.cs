@@ -18,12 +18,10 @@ namespace Microsoft.Build.Utilities
         {
             get
             {
-#if DEBUG
                 if (BuildEnvironmentHelper.Instance.RunningTests && Environment.GetEnvironmentVariable("MSBUILDRELOADTRAITSONEACHACCESS") == "1")
                 {
                     return new Traits();
                 }
-#endif
                 return _instance;
             }
         }
@@ -111,6 +109,27 @@ namespace Microsoft.Build.Utilities
         // be removed (permanently set to false) after establishing that
         // it's unneeded (at least by the 16.0 timeframe).
         public readonly bool UseCaseSensitiveItemNames = Environment.GetEnvironmentVariable("MSBUILDUSECASESENSITIVEITEMNAMES") == "1";
+
+        /// <summary>
+        /// Disable the use of any caching when resolving SDKs.
+        /// </summary>
+        public readonly bool DisableSdkResolutionCache = Environment.GetEnvironmentVariable("MSBUILDDISABLESDKCACHE") == "1";
+
+        /// <summary>
+        /// Disable the NuGet-based SDK resolver.
+        /// </summary>
+        public readonly bool DisableNuGetSdkResolver = Environment.GetEnvironmentVariable("MSBUILDDISABLENUGETSDKRESOLVER") == "1";
+
+        /// <summary>
+        /// Enables the user of autorun functionality in CMD.exe on Windows which is disabled by default in MSBuild.
+        /// </summary>
+        public readonly bool UseAutoRunWhenLaunchingProcessUnderCmd = Environment.GetEnvironmentVariable("MSBUILDUSERAUTORUNINCMD") == "1";
+
+        /// <summary>
+        /// Workaround for https://github.com/Microsoft/vstest/issues/1503.
+        /// </summary>
+        public readonly bool EnsureStdOutForChildNodesIsPrimaryStdout = Environment.GetEnvironmentVariable("MSBUILDENSURESTDOUTFORTASKPROCESSES") == "1";
+
 
         private static bool? ParseNullableBoolFromEnvironmentVariable(string environmentVariable)
         {

@@ -998,12 +998,12 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         /// <remarks>
         /// Called by the RequestBuilder (implicitly through an event).  Non-overlapping with other RequestBuilders.</remarks>
-        private void Builder_OnBlockedRequest(BuildRequestEntry sourceEntry, int blockingGlobalRequestId, string blockingTarget)
+        private void Builder_OnBlockedRequest(BuildRequestEntry sourceEntry, int blockingGlobalRequestId, string blockingTarget, BuildResult partialBuildResult = null)
         {
             QueueAction(
                 () =>
                 {
-                    _unsubmittedRequests.Enqueue(new PendingUnsubmittedBuildRequests(sourceEntry, blockingGlobalRequestId, blockingTarget));
+                    _unsubmittedRequests.Enqueue(new PendingUnsubmittedBuildRequests(sourceEntry, blockingGlobalRequestId, blockingTarget, partialBuildResult));
                     IssueUnsubmittedRequests();
                     EvaluateRequestStates();
                 },
@@ -1072,7 +1072,7 @@ namespace Microsoft.Build.BackEnd
                         sourceEntry.WaitForBlockingRequest(unsubmittedRequest.BlockingGlobalRequestId);
                     }
 
-                    IssueBuildRequest(new BuildRequestBlocker(sourceEntry.Request.GlobalRequestId, sourceEntry.GetActiveTargets(), unsubmittedRequest.BlockingGlobalRequestId, unsubmittedRequest.BlockingTarget));
+                    IssueBuildRequest(new BuildRequestBlocker(sourceEntry.Request.GlobalRequestId, sourceEntry.GetActiveTargets(), unsubmittedRequest.BlockingGlobalRequestId, unsubmittedRequest.BlockingTarget, unsubmittedRequest.PartialBuildResult));
                 }
 
                 countToSubmit--;
@@ -1126,6 +1126,15 @@ namespace Microsoft.Build.BackEnd
                     // Do we have a matching configuration?
                     BuildRequestConfiguration matchingConfig = globalConfigCache.GetMatchingConfiguration(request.Config);
                     BuildRequest newRequest = null;
+
+                    BuildRequestDataFlags buildRequestDataFlags = request.BuildRequestDataFlags;
+
+                    if (issuingEntry.Request.BuildRequestDataFlags.HasFlag(BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports))
+                    {
+                        // If the issuing build requested to ignore missing, empty, and invalid imports, this entry should also
+                        buildRequestDataFlags |= BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports;
+                    }
+
                     if (matchingConfig == null)
                     {
                         // No configuration locally, are we already waiting for it?
@@ -1151,7 +1160,7 @@ namespace Microsoft.Build.BackEnd
                         newRequest = new BuildRequest(issuingEntry.Request.SubmissionId, GetNextBuildRequestId(),
                             request.Config.ConfigurationId, request.Targets, issuingEntry.Request.HostServices,
                             issuingEntry.Request.BuildEventContext, issuingEntry.Request,
-                            request.BuildRequestDataFlags);
+                            buildRequestDataFlags);
 
                         issuingEntry.WaitForResult(newRequest);
 
@@ -1168,7 +1177,7 @@ namespace Microsoft.Build.BackEnd
                         newRequest = new BuildRequest(issuingEntry.Request.SubmissionId, GetNextBuildRequestId(),
                             matchingConfig.ConfigurationId, request.Targets, issuingEntry.Request.HostServices,
                             issuingEntry.Request.BuildEventContext, issuingEntry.Request,
-                            request.BuildRequestDataFlags);
+                            buildRequestDataFlags);
 
                         IResultsCache resultsCache = (IResultsCache)_componentHost.GetComponent(BuildComponentType.ResultsCache);
                         ResultsCacheResponse response = resultsCache.SatisfyRequest(newRequest, matchingConfig.ProjectInitialTargets, matchingConfig.ProjectDefaultTargets, matchingConfig.GetAfterTargetsForDefaultTargets(newRequest), skippedResultsAreOK: false);
@@ -1393,6 +1402,8 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private struct PendingUnsubmittedBuildRequests
         {
+            public BuildResult PartialBuildResult { get; }
+
             /// <summary>
             /// The global request id on which we are blocking
             /// </summary>
@@ -1424,6 +1435,7 @@ namespace Microsoft.Build.BackEnd
                 this.NewRequests = newRequests;
                 this.BlockingGlobalRequestId = BuildRequest.InvalidGlobalRequestId;
                 this.BlockingTarget = null;
+                this.PartialBuildResult = null;
             }
 
             /// <summary>
@@ -1438,6 +1450,13 @@ namespace Microsoft.Build.BackEnd
                 this.NewRequests = null;
                 this.BlockingGlobalRequestId = blockingGlobalRequestId;
                 this.BlockingTarget = blockingTarget;
+                this.PartialBuildResult = null;
+            }
+
+            public PendingUnsubmittedBuildRequests(BuildRequestEntry sourceEntry, int blockingGlobalRequestId, string blockingTarget, BuildResult partialBuildResult)
+            : this(sourceEntry, blockingGlobalRequestId, blockingTarget)
+            {
+                PartialBuildResult = partialBuildResult;
             }
         }
     }

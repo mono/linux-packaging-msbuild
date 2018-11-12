@@ -172,6 +172,11 @@ namespace Microsoft.Build.BackEnd.Logging
         private Lazy<IConfigCache> _configCache;
 
         /// <summary>
+        /// The next project ID to assign when a project evaluation started event is received.
+        /// </summary>
+        private int _nextEvaluationId = 1;
+
+        /// <summary>
         /// The next project ID to assign when a project started event is received.
         /// </summary>
         private int _nextProjectId = 1;
@@ -253,6 +258,7 @@ namespace Microsoft.Build.BackEnd.Logging
 
             // Start the project context id count at the nodeId
             _nextProjectId = nodeId;
+            _nextEvaluationId = nodeId;
 
             string queueCapacityEnvironment = Environment.GetEnvironmentVariable("MSBUILDLOGGINGQUEUECAPACITY");
             if (!String.IsNullOrEmpty(queueCapacityEnvironment))
@@ -325,6 +331,22 @@ namespace Microsoft.Build.BackEnd.Logging
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Gets the next project evaluation id.
+        /// </summary>
+        /// <remarks>This property is thread-safe</remarks>
+        public int NextEvaluationId
+        {
+            get
+            {
+                lock (_lockObject)
+                {
+                    _nextEvaluationId += MaxCPUCount + 2 /* We can create one node more than the maxCPU count (this can happen if either the inproc or out of proc node has not been created yet and the project collection needs to be counted also)*/;
+                    return _nextEvaluationId;
+                }
+            }
         }
 
         /// <summary>
@@ -1215,13 +1237,8 @@ namespace Microsoft.Build.BackEnd.Logging
                 {
                     originalCultureInfo = CultureInfo.CurrentCulture;
                     originalUICultureInfo = CultureInfo.CurrentUICulture;
-#if FEATURE_CULTUREINFO_SETTERS
                     CultureInfo.CurrentCulture = _componentHost.BuildParameters.Culture;
                     CultureInfo.CurrentUICulture = _componentHost.BuildParameters.UICulture;
-#else
-                    Thread.CurrentThread.CurrentCulture = _componentHost.BuildParameters.Culture;
-                    Thread.CurrentThread.CurrentUICulture = _componentHost.BuildParameters.UICulture;
-#endif
                     cultureSet = true;
                 }
 
@@ -1248,13 +1265,8 @@ namespace Microsoft.Build.BackEnd.Logging
                 if (cultureSet)
                 {
                     // Set the culture back to the original one so that if something else reuses this thread then it will not have a culture which it was not expecting.
-#if FEATURE_CULTUREINFO_SETTERS
                     CultureInfo.CurrentCulture = originalCultureInfo;
                     CultureInfo.CurrentUICulture = originalUICultureInfo;
-#else
-                    Thread.CurrentThread.CurrentCulture = originalCultureInfo;
-                    Thread.CurrentThread.CurrentUICulture = originalUICultureInfo;
-#endif
                 }
             }
         }

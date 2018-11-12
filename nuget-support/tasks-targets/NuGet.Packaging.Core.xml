@@ -572,6 +572,10 @@
             PackageIdentity.ToString returns packageId.packageVersion"
             </summary>
         </member>
+        <member name="T:NuGet.Packaging.Core.PackageType">
+             It is important that this type remains immutable due to the cloning of package specs
+            
+        </member>
         <member name="F:NuGet.Packaging.Core.PackagingCoreConstants.EmptyFolder">
             <summary>
             _._ denotes an empty folder since OPC does not allow an
@@ -581,11 +585,6 @@
         <member name="F:NuGet.Packaging.Core.PackagingCoreConstants.ForwardSlashEmptyFolder">
             <summary>
             /_._ can be used to check empty folders from package readers where the / is normalized.
-            </summary>
-        </member>
-        <member name="T:NuGet.Packaging.Core.PackagingException">
-            <summary>
-            Generic packaging exception.
             </summary>
         </member>
         <member name="T:NuGet.Packaging.Core.Strings">

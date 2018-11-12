@@ -110,7 +110,7 @@
             <param name="value">A value to serialize.</param>
             <param name="serializer">A serializer.</param>
         </member>
-        <member name="M:NuGet.Protocol.ResolverMetadataClient.GetDependencies(NuGet.Protocol.HttpSource,System.Uri,NuGet.Versioning.VersionRange,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.ResolverMetadataClient.GetDependencies(NuGet.Protocol.HttpSource,System.Uri,System.String,NuGet.Versioning.VersionRange,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve the <see cref="T:NuGet.Protocol.Core.Types.RemoteSourceDependencyInfo" /> for a registration.
             </summary>
@@ -124,7 +124,7 @@
             <param name="version"></param>
             <returns>Returns the RemoteSourceDependencyInfo object corresponding to this package version</returns>
         </member>
-        <member name="M:NuGet.Protocol.ResolverMetadataClient.GetRegistrationInfo(NuGet.Protocol.HttpSource,System.Uri,NuGet.Versioning.VersionRange,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.ResolverMetadataClient.GetRegistrationInfo(NuGet.Protocol.HttpSource,System.Uri,System.String,NuGet.Versioning.VersionRange,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve a registration blob
             </summary>
@@ -157,13 +157,6 @@
             <param name="source">A package source.</param>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="stream" /> is <c>null</c>.</exception>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.DownloadResourceResult.#ctor(System.IO.Stream)">
-            <summary>
-            Initializes a new <see cref="T:NuGet.Protocol.Core.Types.DownloadResourceResult" /> class.
-            </summary>
-            <param name="stream">A package stream.</param>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="stream" /> is <c>null</c>.</exception>
-        </member>
         <member name="M:NuGet.Protocol.Core.Types.DownloadResourceResult.#ctor(System.IO.Stream,NuGet.Packaging.PackageReaderBase,System.String)">
             <summary>
             Initializes a new <see cref="T:NuGet.Protocol.Core.Types.DownloadResourceResult" /> class.
@@ -171,14 +164,6 @@
             <param name="stream">A package stream.</param>
             <param name="packageReader">A package reader.</param>
             <param name="source">A package source.</param>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="stream" /> is <c>null</c>.</exception>
-        </member>
-        <member name="M:NuGet.Protocol.Core.Types.DownloadResourceResult.#ctor(System.IO.Stream,NuGet.Packaging.PackageReaderBase)">
-            <summary>
-            Initializes a new <see cref="T:NuGet.Protocol.Core.Types.DownloadResourceResult" /> class.
-            </summary>
-            <param name="stream">A package stream.</param>
-            <param name="packageReader">A package reader.</param>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="stream" /> is <c>null</c>.</exception>
         </member>
         <member name="M:NuGet.Protocol.Core.Types.DownloadResourceResult.#ctor(NuGet.Packaging.PackageReaderBase,System.String)">
@@ -244,7 +229,12 @@
         <member name="P:NuGet.Protocol.Core.Types.HttpSourceCacheContext.RootTempFolder">
             <summary>
             A suggested root folder to drop temporary files under, it will get cleared by the
-            disposal of the <see cref="T:NuGet.Protocol.Core.Types.SourceCacheContext"/> that was used to create this instance.
+            disposal of the <see cref="P:NuGet.Protocol.Core.Types.HttpSourceCacheContext.SourceCacheContext"/> that was used to create this instance.
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Core.Types.HttpSourceCacheContext.SourceCacheContext">
+            <summary>
+            Inner cache context.
             </summary>
         </member>
         <member name="T:NuGet.Protocol.Core.Types.INuGetResource">
@@ -426,7 +416,7 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken"/>
             is cancelled.</exception>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.Reinitialize(NuGet.Common.IEnvironmentVariableReader,System.Lazy{NuGet.Protocol.Plugins.IPluginDiscoverer},NuGet.Protocol.Plugins.IPluginFactory)">
+        <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.Reinitialize(NuGet.Common.IEnvironmentVariableReader,System.Lazy{NuGet.Protocol.Plugins.IPluginDiscoverer},System.Func{System.TimeSpan,NuGet.Protocol.Plugins.IPluginFactory})">
             <summary>
             Reinitializes static state.
             </summary>
@@ -434,11 +424,11 @@
             This should not be called by product code.</remarks>
             <param name="reader">An environment variable reader.</param>
             <param name="pluginDiscoverer">A lazy plugin discoverer.</param>
-            <param name="pluginFactory">A plugin factory.</param>
+            <param name="pluginFactoryCreator">A plugin factory creator.</param>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="reader" /> is <c>null</c>.</exception>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginDiscoverer" />
             is <c>null</c>.</exception>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginFactory" />
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginFactoryCreator" />
             is <c>null</c>.</exception>
         </member>
         <member name="T:NuGet.Protocol.Core.Types.PluginFindPackageByIdResource">
@@ -607,7 +597,7 @@
             dependency resolver.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve dependency info for a single package.
             </summary>
@@ -619,7 +609,7 @@
             returned.
             </returns>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve the available packages and their dependencies.
             </summary>
@@ -629,7 +619,7 @@
             <param name="token">cancellation token</param>
             <returns>available packages and their dependencies</returns>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackages(System.String,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.DependencyInfoResource.ResolvePackages(System.String,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve the available packages and their dependencies.
             </summary>
@@ -764,33 +754,33 @@
             Basic metadata
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.GetVersions(System.String,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.GetVersions(System.String,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Get all versions of a package
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.GetVersions(System.String,System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.GetVersions(System.String,System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Get all versions of a package
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.Exists(NuGet.Packaging.Core.PackageIdentity,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.Exists(NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             True if the package exists in the source
             Includes unlisted.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.Exists(NuGet.Packaging.Core.PackageIdentity,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.MetadataResource.Exists(NuGet.Packaging.Core.PackageIdentity,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             True if the package exists in the source
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.PackageMetadataResource.GetMetadataAsync(System.String,System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.PackageMetadataResource.GetMetadataAsync(System.String,System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Returns all versions of a package
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.PackageMetadataResource.GetMetadataAsync(NuGet.Packaging.Core.PackageIdentity,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.Core.Types.PackageMetadataResource.GetMetadataAsync(NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Return package metadata for the input PackageIdentity
             </summary>
@@ -979,6 +969,12 @@
             Force the in-memory cache to reload. This avoids allowing other calls to populate
             the memory cache again from cached files on disk using a different source context.
             This should only be used for retries.
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Core.Types.SourceCacheContext.SessionId">
+            <summary>
+            X-NUGET-SESSION
+            This should be unique for each package operation.
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Core.Types.SourceCacheContext.MaxAgeTimeSpan">
@@ -1352,6 +1348,11 @@
         <member name="P:NuGet.Protocol.HttpRetryHandlerRequest.DownloadTimeout">
             <summary>The timeout to apply to <see cref="T:NuGet.Protocol.DownloadTimeoutStream"/> instances.</summary>
         </member>
+        <member name="P:NuGet.Protocol.HttpRetryHandlerRequest.AddHeaders">
+            <summary>
+            Additional headers to add to the request.
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.HttpSource.RetryHandler">
             <summary>The retry handler to use for all HTTP requests.</summary>
             <summary>This API is intended only for testing purposes and should not be used in product code.</summary>
@@ -1528,6 +1529,11 @@
             with missing credentials.
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.SemaphoreSlimThrottle.CurrentCount">
+            <summary>
+            The number of remaining threads that can enter the semaphore.
+            </summary>
+        </member>
         <member name="F:NuGet.Protocol.StsAuthenticationHandler.STSEndPointHeader">
             <summary>
             Response header that specifies the WSTrust13 Windows Transport endpoint.
@@ -1619,17 +1625,17 @@
             <param name="baseAddress">base address for all services from this OData service</param>
             <param name="source">PackageSource useful for reporting meaningful errors that relate back to the configuration</param>
         </member>
-        <member name="M:NuGet.Protocol.V2FeedParser.GetPackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.V2FeedParser.GetPackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Get an exact package
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.V2FeedParser.FindPackagesByIdAsync(System.String,System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.V2FeedParser.FindPackagesByIdAsync(System.String,System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieves all packages with the given Id from a V2 feed.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.V2FeedParser.FindPackagesByIdAsync(System.String,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.V2FeedParser.FindPackagesByIdAsync(System.String,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieves all packages with the given Id from a V2 feed.
             </summary>
@@ -1690,7 +1696,7 @@
             Retrieve packages from a local folder or UNC share that uses the V3 folder structure.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.LocalDependencyInfoResource.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.LocalDependencyInfoResource.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve dependency info for a single package.
             </summary>
@@ -1698,7 +1704,7 @@
             <param name="projectFramework">project target framework. This is used for finding the dependency group</param>
             <param name="token">cancellation token</param>
         </member>
-        <member name="M:NuGet.Protocol.LocalDependencyInfoResource.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.LocalDependencyInfoResource.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve dependency info for a single package.
             </summary>
@@ -1857,7 +1863,7 @@
             A resource capable of fetching packages, package versions and package dependency information.
             </summary>
         </member>
-        <member name="P:NuGet.Protocol.LocalV3FindPackageByIdResource.NuspecCache">
+        <member name="P:NuGet.Protocol.LocalV3FindPackageByIdResource.PackageFileCache">
             <summary>
             Nuspec files read from disk.
             This is exposed to allow sharing the cache with other components
@@ -1989,24 +1995,63 @@
             Client version
             </summary>
         </member>
-        <member name="T:NuGet.Protocol.LocalNuspecCache">
+        <member name="T:NuGet.Protocol.LocalPackageFileCache">
             <summary>
             Allow .nuspec files on disk to be cached across v3 folder readers.
+            Allow the list of files in a package to be cached across all projects.
             </summary>
-            <remarks>Nuspecs that do not exist are returned as null. It is expected that the caller has already verified
-            the that folder and paths are valid.</remarks>
+            <remarks>It is expected that the caller has already verified the that folder and paths are valid.</remarks>
         </member>
-        <member name="M:NuGet.Protocol.LocalNuspecCache.GetOrAdd(System.String,System.String)">
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetOrAddNuspec(System.String,System.String)">
             <summary>
             Read a nuspec file from disk. The nuspec is expected to exist.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.LocalNuspecCache.GetNuspec(System.String,System.String)">
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetOrAddFiles(System.String)">
+            <summary>
+            Read a the package files from disk.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetOrAddSha512(System.String)">
+            <summary>
+            Read the .sha512 file from disk.
+            </summary>
+            <remarks>Throws if the file is not found.</remarks>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.Sha512Exists(System.String)">
+            <summary>
+            True if the path exists on disk. This also uses
+            the SHA512 cache for already read files.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetOrAddRuntimeGraph(System.String)">
+            <summary>
+            Read runtime.json from a package.
+            Returns null if runtime.json does not exist.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetFiles(System.String)">
+            <summary>
+            Read files from a package folder.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.IsAllowedLibraryFile(System.String)">
+            <summary>
+            True if the file should be added to the lock file library
+            Fale if it is an OPC file or empty directory
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetNuspec(System.String,System.String)">
             <summary>
             Search for a nuspec using the given path, or by the expanded folder path.
             The manifest path here is a shortcut to use the already constructed well
             known location, if this doesn't exist the folder reader will find the nuspec
             if it exists.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.LocalPackageFileCache.GetRuntimeGraph(System.String)">
+            <summary>
+            Return runtime.json from a package.
             </summary>
         </member>
         <member name="T:NuGet.Protocol.Plugins.AutomaticProgressReporter">
@@ -2192,10 +2237,11 @@
             is either less than <see cref="F:NuGet.Protocol.Plugins.ProtocolConstants.MinTimeout" /> or greater than
             <see cref="F:NuGet.Protocol.Plugins.ProtocolConstants.MaxTimeout" />.</exception>
         </member>
-        <member name="M:NuGet.Protocol.Plugins.ConnectionOptions.CreateDefault">
+        <member name="M:NuGet.Protocol.Plugins.ConnectionOptions.CreateDefault(NuGet.Common.IEnvironmentVariableReader)">
             <summary>
             Instantiates a <see cref="T:NuGet.Protocol.Plugins.ConnectionOptions" /> class with default values.
             </summary>
+            <param name="reader">An environment variable reader.</param>
             <returns>A <see cref="T:NuGet.Protocol.Plugins.ConnectionOptions" />.</returns>
         </member>
         <member name="T:NuGet.Protocol.Plugins.ConnectionState">
@@ -4093,6 +4139,11 @@
             Context for an outbound request.
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.Plugins.OutboundRequestContext.CancellationToken">
+            <summary>
+            Gets the <see cref="P:NuGet.Protocol.Plugins.OutboundRequestContext.CancellationToken" />.
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.Plugins.OutboundRequestContext.RequestId">
             <summary>
             Gets the request ID.
@@ -5668,6 +5719,16 @@
             Timeout utilities.
             </summary>
         </member>
+        <member name="M:NuGet.Protocol.Plugins.TimeoutUtilities.GetTimeout(System.String,System.TimeSpan)">
+            <summary>
+            Attempts to parse a legal timeout and returns a default timeout as a fallback.
+            </summary>
+            <param name="timeoutInSeconds">The requested timeout in seconds.</param>
+            <param name="fallbackTimeout">A fallback timeout.</param>
+            <returns>A <see cref="T:System.TimeSpan" /> object that represents a timeout interval.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if <paramref name="fallbackTimeout" /> is an invalid
+            timeout.</exception>
+        </member>
         <member name="M:NuGet.Protocol.Plugins.TimeoutUtilities.IsValid(System.TimeSpan)">
             <summary>
             Determines if a timeout is valid.
@@ -5744,10 +5805,11 @@
             </summary>
             <exception cref="T:System.ObjectDisposedException">Thrown if this object is disposed.</exception>
         </member>
-        <member name="M:NuGet.Protocol.RemotePackageArchiveDownloader.#ctor(NuGet.Protocol.Core.Types.FindPackageByIdResource,NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger)">
+        <member name="M:NuGet.Protocol.RemotePackageArchiveDownloader.#ctor(System.String,NuGet.Protocol.Core.Types.FindPackageByIdResource,NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger)">
             <summary>
             Initializes a new <see cref="T:NuGet.Protocol.RemotePackageArchiveDownloader" /> class.
             </summary>
+            <param name="source">A package source.</param>
             <param name="resource">A <see cref="T:NuGet.Protocol.Core.Types.FindPackageByIdResource" /> resource.</param>
             <param name="packageIdentity">A package identity.</param>
             <param name="cacheContext">A source cache context.</param>
@@ -6148,7 +6210,7 @@
             <param name="client">Http client</param>
             <param name="regResource">Registration blob resource</param>
         </member>
-        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackage(NuGet.Packaging.Core.PackageIdentity,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve dependency info for a single package.
             </summary>
@@ -6160,7 +6222,7 @@
             returned.
             </returns>
         </member>
-        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackages(System.String,NuGet.Frameworks.NuGetFramework,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve the available packages and their dependencies.
             </summary>
@@ -6170,7 +6232,7 @@
             <param name="token">cancellation token</param>
             <returns>available packages and their dependencies</returns>
         </member>
-        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackages(System.String,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.DependencyInfoResourceV3.ResolvePackages(System.String,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Retrieve the available packages and their dependencies.
             </summary>
@@ -6250,7 +6312,7 @@
             Returns the full package metadata
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.MetadataResourceV3.GetLatestVersions(System.Collections.Generic.IEnumerable{System.String},System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.MetadataResourceV3.GetLatestVersions(System.Collections.Generic.IEnumerable{System.String},System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Find the latest version of the package
             </summary>
@@ -6282,25 +6344,25 @@
             Constructs the URI of a registration blob with a specific version
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(NuGet.Packaging.Core.PackageIdentity,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(NuGet.Packaging.Core.PackageIdentity,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Returns the registration blob for the id and version
             </summary>
             <remarks>The inlined entries are potentially going away soon</remarks>
         </member>
-        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(System.String,System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(System.String,System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Returns inlined catalog entry items for each registration blob
             </summary>
             <remarks>The inlined entries are potentially going away soon</remarks>
         </member>
-        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(System.String,NuGet.Versioning.VersionRange,System.Boolean,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageMetadata(System.String,NuGet.Versioning.VersionRange,System.Boolean,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Returns inlined catalog entry items for each registration blob
             </summary>
             <remarks>The inlined entries are potentially going away soon</remarks>
         </member>
-        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageEntries(System.String,System.Boolean,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+        <member name="M:NuGet.Protocol.RegistrationResourceV3.GetPackageEntries(System.String,System.Boolean,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Returns all index entries of type Package within the given range and filters
             </summary>
@@ -6520,9 +6582,24 @@
               Looks up a localized string similar to The V2 feed at &apos;{0}&apos; returned an unexpected status code &apos;{1} {2}&apos;..
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.Strings.Log_FailedToFetchV2FeedHttp">
+            <summary>
+              Looks up a localized string similar to Failed to fetch results from V2 feed at &apos;{0}&apos; with following message : {1}.
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.Strings.Log_FailedToGetNuspecStream">
             <summary>
               Looks up a localized string similar to Unable to load nuspec from package &apos;{0}&apos;..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Log_FailedToParseRepoSignInfor">
+            <summary>
+              Looks up a localized string similar to Unable to parse {0} information from {1}. .
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Log_FailedToReadRepositorySignature">
+            <summary>
+              Looks up a localized string similar to Unable to get repository signature information for source {0}..
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_FailedToReadServiceIndex">
@@ -6573,6 +6650,11 @@
         <member name="P:NuGet.Protocol.Strings.Log_RetryingHttp">
             <summary>
               Looks up a localized string similar to An error was encountered when fetching &apos;{0} {1}&apos;. The request will now be retried..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Log_RetryingRepositorySignature">
+            <summary>
+              Looks up a localized string similar to Retrying repository signature request for source &apos;{0}&apos;..
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Strings.Log_RetryingServiceIndex">
@@ -6939,6 +7021,21 @@
             </summary>
             <param name="downloadContext">The download context.</param>
         </member>
+        <member name="F:NuGet.Protocol.JsonUtility.DefaultLoadSettings">
+            <summary>
+            JsonLoadSettings with line info and comments ignored.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.JsonUtility.LoadJson(System.IO.TextReader)">
+            <summary>
+            Load json from a file to a JObject using the default load settings.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.JsonUtility.LoadJson(Newtonsoft.Json.JsonReader)">
+            <summary>
+            Load json from a file to a JObject using the default load settings.
+            </summary>
+        </member>
         <member name="M:NuGet.Protocol.LocalFolderUtility.GetPackage(System.Uri,NuGet.Common.ILogger)">
             <summary>
             Retrieve a nupkg using the path.
@@ -7095,6 +7192,21 @@
             <param name="root">Folder root.</param>
             <param name="id">Package id or package id prefix.</param>
         </member>
+        <member name="M:NuGet.Protocol.LocalFolderUtility.ResolvePackageFromPath(System.String)">
+            <summary>
+            Resolves a package path into a list of paths.
+            If the path contains wildcards then the path is expanded to all matching entries.
+            </summary>
+            <param name="packagePath">Package path</param>
+            <returns>A list of package paths that match the input path.</returns>
+        </member>
+        <member name="M:NuGet.Protocol.LocalFolderUtility.EnsurePackageFileExists(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            This method checks of a given list of package paths exist on disk.
+            </summary>
+            <param name="packagePath">A package path to be used while creating logs.</param>
+            <param name="matchingPackagePaths">A list of matching package paths that need to be checked.</param>
+        </member>
         <member name="M:NuGet.Protocol.LocalFolderUtility.GetDistinctPackages(System.Collections.Generic.IEnumerable{NuGet.Protocol.LocalPackageInfo})">
             <summary>
             Remove duplicate packages which can occur in directories.
@@ -7187,6 +7299,12 @@
             with no message will be thrown.
             </summary>
         </member>
+        <member name="T:NuGet.Repositories.LocalPackageInfo">
+            <summary>
+            Represents a package installed to the user global folder, or a fallback folder.
+            Components of the package are cached and across all restores.
+            </summary>
+        </member>
         <member name="P:NuGet.Repositories.LocalPackageInfo.Nuspec">
             <summary>
             Caches the nuspec reader.
@@ -7199,21 +7317,26 @@
             Cached to avoid reading the same files multiple times.
             </summary>
         </member>
-        <member name="M:NuGet.Repositories.LocalPackageInfo.GetFiles">
+        <member name="P:NuGet.Repositories.LocalPackageInfo.Sha512">
             <summary>
-            Read files from a package folder.
+            SHA512 of the package.
             </summary>
         </member>
-        <member name="M:NuGet.Repositories.LocalPackageInfo.IsAllowedLibraryFile(System.String)">
+        <member name="P:NuGet.Repositories.LocalPackageInfo.RuntimeGraph">
             <summary>
-            True if the file should be added to the lock file library
-            Fale if it is an OPC file or empty directory
+            runtime.json
             </summary>
+            <remarks>Returns null if runtime.json does not exist in the package.</remarks>
         </member>
         <member name="T:NuGet.Repositories.NuGetv3LocalRepository">
             <summary>
             Caches package info from the global packages folder in memory.
             Packages not yet in the cache will be retrieved from disk.
+            </summary>
+        </member>
+        <member name="M:NuGet.Repositories.NuGetv3LocalRepository.Exists(System.String,NuGet.Versioning.NuGetVersion)">
+            <summary>
+            True if the package exists.
             </summary>
         </member>
         <member name="M:NuGet.Repositories.NuGetv3LocalRepository.ClearCacheForIds(System.Collections.Generic.IEnumerable{System.String})">

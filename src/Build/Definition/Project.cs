@@ -6,8 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -15,7 +13,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
@@ -30,10 +27,14 @@ using ILoggingService = Microsoft.Build.BackEnd.Logging.ILoggingService;
 using InvalidProjectFileException = Microsoft.Build.Exceptions.InvalidProjectFileException;
 using ProjectItemFactory = Microsoft.Build.Evaluation.ProjectItem.ProjectItemFactory;
 using System.Globalization;
+using Microsoft.Build.BackEnd.SdkResolution;
+using Microsoft.Build.Definition;
+using Microsoft.Build.Evaluation.Context;
 using Microsoft.Build.Globbing;
 using Microsoft.Build.Utilities;
 using EvaluationItemSpec = Microsoft.Build.Evaluation.ItemSpec<Microsoft.Build.Evaluation.ProjectProperty, Microsoft.Build.Evaluation.ProjectItem>;
 using EvaluationItemExpressionFragment = Microsoft.Build.Evaluation.ItemExpressionFragment<Microsoft.Build.Evaluation.ProjectProperty, Microsoft.Build.Evaluation.ProjectItem>;
+using SdkResult = Microsoft.Build.BackEnd.SdkResolution.SdkResult;
 
 namespace Microsoft.Build.Evaluation
 {
@@ -122,9 +123,40 @@ namespace Microsoft.Build.Evaluation
         private RenameHandlerDelegate _renameHandler;
 
         /// <summary>
+        /// Needed because the Project may trigger reevalutions under the covers on some of its operations, which, ideally,
+        /// should use the same context as the initial evaluation.
+        /// 
+        /// Examples of operations which may trigger reevaluations:
+        /// - <see cref="CreateProjectInstance()"/>
+        /// - <see cref="GetAllGlobs()"/>
+        /// - <see cref="GetItemProvenance(string)"/>
+        /// </summary>
+        private EvaluationContext _lastEvaluationContext;
+
+        /// <summary>
         /// Default project template options (include all features).
         /// </summary>
         internal const NewProjectFileOptions DefaultNewProjectTemplateOptions = NewProjectFileOptions.IncludeAllOptions;
+
+        /// <summary>
+        /// Certain item operations split the item element in multiple elements if the include
+        /// contains globs, references to items or properties, or multiple item values.
+        ///
+        /// The items operations that may expand item elements are:
+        /// - <see cref="RemoveItem"/>
+        /// - <see cref="RemoveItems"/>
+        /// - <see cref="AddItem(string,string, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt;)"/>
+        /// - <see cref="AddItemFast(string,string, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt;)"/>
+        /// - <see cref="ProjectItem.ChangeItemType"/>
+        /// - <see cref="ProjectItem.Rename"/>
+        /// - <see cref="ProjectItem.RemoveMetadata"/>
+        /// - <see cref="ProjectItem.SetMetadataValue(string,string)"/>
+        /// - <see cref="ProjectItem.SetMetadataValue(string,string, bool)"/>
+        /// 
+        /// When this property is set to true, the previous item operations throw an <exception cref="InvalidOperationException"></exception>
+        /// instead of expanding the item element. 
+        /// </summary>
+        public bool ThrowInsteadOfSplittingItemElement { get; set; }
 
         /// <summary>
         /// Construct an empty project, evaluating with the global project collection's
@@ -155,26 +187,6 @@ namespace Microsoft.Build.Evaluation
             : this(ProjectRootElement.Create(projectCollection), null, null, projectCollection)
         {
         }
-
-        /// <summary>
-        /// Certain item operations split the item element in multiple elements if the include
-        /// contains globs, references to items or properties, or multiple item values.
-        ///
-        /// The items operations that may expand item elements are:
-        /// - <see cref="RemoveItem"/>
-        /// - <see cref="RemoveItems"/>
-        /// - <see cref="AddItem(string,string, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt;)"/>
-        /// - <see cref="AddItemFast(string,string, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt;)"/>
-        /// - <see cref="ProjectItem.ChangeItemType"/>
-        /// - <see cref="ProjectItem.Rename"/>
-        /// - <see cref="ProjectItem.RemoveMetadata"/>
-        /// - <see cref="ProjectItem.SetMetadataValue(string,string)"/>
-        /// - <see cref="ProjectItem.SetMetadataValue(string,string, bool)"/>
-        /// 
-        /// When this property is set to true, the previous item operations throw an <exception cref="InvalidOperationException"></exception>
-        /// instead of expanding the item element. 
-        /// </summary>
-        public bool ThrowInsteadOfSplittingItemElement { get; set; }
 
         /// <summary>
         /// Construct an empty project, evaluating with the specified project collection's
@@ -288,6 +300,11 @@ namespace Microsoft.Build.Evaluation
         /// <param name="projectCollection">The <see cref="ProjectCollection"/> the project is added to.</param>
         /// <param name="loadSettings">The <see cref="ProjectLoadSettings"/> to use for evaluation.</param>
         public Project(ProjectRootElement xml, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings)
+            : this(xml, globalProperties,toolsVersion, subToolsetVersion, projectCollection, loadSettings, null)
+        {
+        }
+
+        private Project(ProjectRootElement xml, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings, EvaluationContext evaluationContext)
         {
             ErrorUtilities.VerifyThrowArgumentNull(xml, "xml");
             ErrorUtilities.VerifyThrowArgumentLengthIfNotNull(toolsVersion, "toolsVersion");
@@ -296,7 +313,7 @@ namespace Microsoft.Build.Evaluation
             _xml = xml;
             _projectCollection = projectCollection;
 
-            Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings);
+            Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings, evaluationContext);
         }
 
         /// <summary>
@@ -374,6 +391,11 @@ namespace Microsoft.Build.Evaluation
         /// <param name="projectCollection">The collection with which this project should be associated. May not be null.</param>
         /// <param name="loadSettings">The load settings for this project.</param>
         public Project(XmlReader xmlReader, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings)
+            : this(xmlReader, globalProperties, toolsVersion, subToolsetVersion, projectCollection, loadSettings, null)
+        {
+        }
+
+        private Project(XmlReader xmlReader, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings, EvaluationContext evaluationContext)
         {
             ErrorUtilities.VerifyThrowArgumentNull(xmlReader, "xmlReader");
             ErrorUtilities.VerifyThrowArgumentLengthIfNotNull(toolsVersion, "toolsVersion");
@@ -392,7 +414,7 @@ namespace Microsoft.Build.Evaluation
                 throw;
             }
 
-            Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings);
+            Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings, evaluationContext);
         }
 
         /// <summary>
@@ -472,6 +494,11 @@ namespace Microsoft.Build.Evaluation
         /// <param name="projectCollection">The collection with which this project should be associated. May not be null.</param>
         /// <param name="loadSettings">The load settings for this project.</param>
         public Project(string projectFile, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings)
+            : this(projectFile, globalProperties, toolsVersion, subToolsetVersion, projectCollection, loadSettings, null)
+        {
+        }
+
+        private Project(string projectFile, IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectCollection projectCollection, ProjectLoadSettings loadSettings, EvaluationContext evaluationContext)
         {
             ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
             ErrorUtilities.VerifyThrowArgumentLengthIfNotNull(toolsVersion, "toolsVersion");
@@ -485,7 +512,12 @@ namespace Microsoft.Build.Evaluation
 
             try
             {
-                _xml = ProjectRootElement.OpenProjectOrSolution(projectFile, globalProperties, toolsVersion, projectCollection.ProjectRootElementCache, true /*Explicitly loaded*/);
+                _xml = ProjectRootElement.OpenProjectOrSolution(
+                    projectFile,
+                    globalProperties,
+                    toolsVersion,
+                    projectCollection.ProjectRootElementCache,
+                    true /*Explicitly loaded*/);
             }
             catch (InvalidProjectFileException ex)
             {
@@ -495,7 +527,7 @@ namespace Microsoft.Build.Evaluation
 
             try
             {
-                Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings);
+                Initialize(globalProperties, toolsVersion, subToolsetVersion, loadSettings, evaluationContext);
             }
             catch (Exception ex)
             {
@@ -511,6 +543,60 @@ namespace Microsoft.Build.Evaluation
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Create a file based project.
+        /// </summary>
+        /// <param name="file">The file to evaluate the project from.</param>
+        /// <param name="options">The <see cref="ProjectOptions"/> to use.</param>
+        /// <returns></returns>
+        public static Project FromFile(string file, ProjectOptions options)
+        {
+            return new Project(
+                file,
+                options.GlobalProperties,
+                options.ToolsVersion,
+                options.SubToolsetVersion,
+                options.ProjectCollection ?? ProjectCollection.GlobalProjectCollection,
+                options.LoadSettings,
+                options.EvaluationContext);
+        }
+
+        /// <summary>
+        /// Create a <see cref="ProjectRootElement"/> based project.
+        /// </summary>
+        /// <param name="rootElement">The <see cref="ProjectRootElement"/> to evaluate the project from.</param>
+        /// <param name="options">The <see cref="ProjectOptions"/> to use.</param>
+        /// <returns></returns>
+        public static Project FromProjectRootElement(ProjectRootElement rootElement, ProjectOptions options)
+        {
+            return new Project(
+                rootElement,
+                options.GlobalProperties,
+                options.ToolsVersion,
+                options.SubToolsetVersion,
+                options.ProjectCollection ?? ProjectCollection.GlobalProjectCollection,
+                options.LoadSettings,
+                options.EvaluationContext);
+        }
+
+        /// <summary>
+        /// Create a <see cref="XmlReader"/> based project.
+        /// </summary>
+        /// <param name="rootElement">The <see cref="XmlReader"/> to evaluate the project from.</param>
+        /// <param name="options">The <see cref="ProjectOptions"/> to use.</param>
+        /// <returns></returns>
+        public static Project FromXmlReader(XmlReader reader, ProjectOptions options)
+        {
+            return new Project(
+                reader,
+                options.GlobalProperties,
+                options.ToolsVersion,
+                options.SubToolsetVersion,
+                options.ProjectCollection ?? ProjectCollection.GlobalProjectCollection,
+                options.LoadSettings,
+                options.EvaluationContext);
         }
 
         /// <summary>
@@ -607,17 +693,17 @@ namespace Microsoft.Build.Evaluation
                     return true;
                 }
 
-                foreach (Triple<ProjectImportElement, ProjectRootElement, int> triple in _data.ImportClosure)
+                foreach (var import in _data.ImportClosure)
                 {
-                    if (triple.Second.Version != triple.Third || _evaluatedVersion < triple.Third)
+                    if (import.ImportedProject.Version != import.VersionEvaluated || _evaluatedVersion < import.VersionEvaluated)
                     {
                         if (s_debugEvaluation)
                         {
-                            string reason = triple.Second.LastDirtyReason;
+                            string reason = import.ImportedProject.LastDirtyReason;
 
                             if (reason != null)
                             {
-                                Trace.WriteLine(String.Format(CultureInfo.InvariantCulture, "MSBUILD: Is dirty because {0} [{1} - {2}] [PC Hash {3}]", reason, FullPath, (triple.Second.FullPath == FullPath ? String.Empty : triple.Second.FullPath), _projectCollection.GetHashCode()));
+                                Trace.WriteLine(String.Format(CultureInfo.InvariantCulture, "MSBUILD: Is dirty because {0} [{1} - {2}] [PC Hash {3}]", reason, FullPath, (import.ImportedProject.FullPath == FullPath ? String.Empty : import.ImportedProject.FullPath), _projectCollection.GetHashCode()));
                             }
                         }
 
@@ -707,11 +793,6 @@ namespace Microsoft.Build.Evaluation
             [DebuggerStepThrough]
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(ConditionedProperties));
-                }
-
                 if (_data.ConditionedProperties == null)
                 {
                     return ReadOnlyEmptyDictionary<string, List<string>>.Instance;
@@ -781,11 +862,11 @@ namespace Microsoft.Build.Evaluation
             {
                 List<ResolvedImport> imports = new List<ResolvedImport>(_data.ImportClosure.Count - 1 /* outer project */);
 
-                foreach (Triple<ProjectImportElement, ProjectRootElement, int> import in _data.ImportClosure)
+                foreach (var import in _data.ImportClosure)
                 {
-                    if (import.First != null) // Exclude outer project itself
+                    if (import.ImportingElement != null) // Exclude outer project itself
                     {
-                        imports.Add(new ResolvedImport(this, import.First, import.Second));
+                        imports.Add(import);
                     }
                 }
 
@@ -804,11 +885,11 @@ namespace Microsoft.Build.Evaluation
 
                 List<ResolvedImport> imports = new List<ResolvedImport>(_data.ImportClosureWithDuplicates.Count - 1 /* outer project */);
 
-                foreach (Triple<ProjectImportElement, ProjectRootElement, int> import in _data.ImportClosureWithDuplicates)
+                foreach (var import in _data.ImportClosureWithDuplicates)
                 {
-                    if (import.First != null) // Exclude outer project itself
+                    if (import.ImportingElement != null) // Exclude outer project itself
                     {
-                        imports.Add(new ResolvedImport(this, import.First, import.Second));
+                        imports.Add(import);
                     }
                 }
 
@@ -868,11 +949,6 @@ namespace Microsoft.Build.Evaluation
         {
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(AllEvaluatedItemDefinitionMetadata));
-                }
-
                 ICollection<ProjectMetadata> allEvaluatedItemDefinitionMetadata = _data.AllEvaluatedItemDefinitionMetadata;
 
                 if (allEvaluatedItemDefinitionMetadata == null)
@@ -897,11 +973,6 @@ namespace Microsoft.Build.Evaluation
         {
             get
             {
-                if (!_data.ShouldEvaluateForDesignTime)
-                {
-                    ErrorUtilities.ThrowInvalidOperation("OM_NotEvaluatedBecauseShouldEvaluateForDesignTimeIsFalse", nameof(AllEvaluatedItems));
-                }
-
                 ICollection<ProjectItem> allEvaluatedItems = _data.AllEvaluatedItems;
 
                 if (allEvaluatedItems == null)
@@ -1328,11 +1399,11 @@ namespace Microsoft.Build.Evaluation
         /// <example>
         /// The following snippet shows what <c>GetItemProvenance("a.cs")</c> returns for various item elements
         /// <code>
-        /// <A Include="a.cs;*.cs"/> // Occurences:2; Operation: Include; Provenance: StringLiteral | Glob
-        /// <B Include="*.cs" Exclude="a.cs"/> // Occurences: 1; Operation: Exclude; Provenance: StringLiteral
+        /// <A Include="a.cs;*.cs"/> // Occurrences:2; Operation: Include; Provenance: StringLiteral | Glob
+        /// <B Include="*.cs" Exclude="a.cs"/> // Occurrences: 1; Operation: Exclude; Provenance: StringLiteral
         /// <C Include="b.cs"/> // NA
-        /// <D Include="@(A)"/> // Occurences: 2; Operation: Include; Provenance: Inconclusive (it is an indirect occurence from a referenced item)
-        /// <E Include="$(P)"/> // Occurences: 4; Operation: Include; Provenance: FromLiteral (direct reference in $P) | Glob (direct reference in $P) | Inconclusive (it is an indirect occurence from referenced properties and items)
+        /// <D Include="@(A)"/> // Occurrences: 2; Operation: Include; Provenance: Inconclusive (it is an indirect occurence from a referenced item)
+        /// <E Include="$(P)"/> // Occurrences: 4; Operation: Include; Provenance: FromLiteral (direct reference in $P) | Glob (direct reference in $P) | Inconclusive (it is an indirect occurrence from referenced properties and items)
         /// <PropertyGroup>
         ///     <P>a.cs;*.cs;@(A)</P>
         /// </PropertyGroup>
@@ -1350,7 +1421,7 @@ namespace Microsoft.Build.Evaluation
         /// Literal string matching tries to first match the strings. If the check fails, it then tries to match
         /// the strings as if they represented files: it normalizes both strings as files relative to the current project directory
         ///
-        /// GetItemProvenance suffers from some sources of innacuracy:
+        /// GetItemProvenance suffers from some sources of inaccuracy:
         /// - it is performed after evaluation, thus is insensitive to item data flow when item references are present
         /// (it sees items as they are at the end of evaluation)
         /// 
@@ -1609,7 +1680,7 @@ namespace Microsoft.Build.Evaluation
         {
             // Implicit imports exist in the import closure but not in the project XML so the ImplicitImportLocation.Top
             // imports need to be returned before walking the project XML
-            foreach (ProjectRootElement import in _data.ImportClosure.Where(i => i.First?.ImplicitImportLocation == ImplicitImportLocation.Top).Select(i => i.Second))
+            foreach (ProjectRootElement import in _data.ImportClosure.Where(i => i.ImportingElement?.ImplicitImportLocation == ImplicitImportLocation.Top).Select(i => i.ImportedProject))
             {
                 foreach (ProjectElement child in GetLogicalProject(import.AllChildren))
                 {
@@ -1624,7 +1695,7 @@ namespace Microsoft.Build.Evaluation
 
             // Implicit imports exist in the import closure but not in the project XML so the ImplicitImportLocation.Bottom
             // imports need to be returned before walking the project XML
-            foreach (ProjectRootElement import in _data.ImportClosure.Where(i => i.First?.ImplicitImportLocation == ImplicitImportLocation.Bottom).Select(i => i.Second))
+            foreach (ProjectRootElement import in _data.ImportClosure.Where(i => i.ImportingElement?.ImplicitImportLocation == ImplicitImportLocation.Bottom).Select(i => i.ImportedProject))
             {
                 foreach (ProjectElement child in GetLogicalProject(import.AllChildren))
                 {
@@ -2103,6 +2174,16 @@ namespace Microsoft.Build.Evaluation
         }
 
         /// <summary>
+        /// See <see cref="ReevaluateIfNecessary()"/>
+        /// </summary>
+        /// <param name="evaluationContext">The <see cref="EvaluationContext"/> to use. See <see cref="EvaluationContext"/></param>
+        public void ReevaluateIfNecessary(EvaluationContext evaluationContext)
+        {
+            _lastEvaluationContext = evaluationContext?.ContextForNewProject() ?? EvaluationContext.Create(EvaluationContext.SharingPolicy.Isolated); ;
+            ReevaluateIfNecessary(LoggingService);
+        }
+
+        /// <summary>
         /// Save the project to the file system, if dirty.
         /// Uses the default encoding.
         /// </summary>
@@ -2313,12 +2394,12 @@ namespace Microsoft.Build.Evaluation
         /// <returns>True if this project is or imports the xml file; false otherwise.</returns>
         internal bool UsesProjectRootElement(ProjectRootElement xmlRootElement)
         {
-            if (Object.ReferenceEquals(this.Xml, xmlRootElement))
+            if (object.ReferenceEquals(this.Xml, xmlRootElement))
             {
                 return true;
             }
 
-            if (_data.ImportClosure.Any(triple => Object.ReferenceEquals(triple.Second, xmlRootElement)))
+            if (_data.ImportClosure.Any(import => object.ReferenceEquals(import.ImportedProject, xmlRootElement)))
             {
                 return true;
             }
@@ -2613,16 +2694,6 @@ namespace Microsoft.Build.Evaluation
         }
 
         /// <summary>
-        /// Creates a project instance based on this project using the specified logging service.
-        /// </summary>  
-        private ProjectInstance CreateProjectInstance(ILoggingService loggingServiceForEvaluation, ProjectInstanceSettings settings)
-        {
-            ReevaluateIfNecessary(loggingServiceForEvaluation);
-
-            return new ProjectInstance(_data, DirectoryPath, FullPath, ProjectCollection.HostServices, _projectCollection.EnvironmentProperties, settings);
-        }
-
-        /// <summary>
         /// Re-evaluates the project using the specified logging service.
         /// </summary>
         private void ReevaluateIfNecessary(ILoggingService loggingServiceForEvaluation)
@@ -2651,9 +2722,35 @@ namespace Microsoft.Build.Evaluation
             }
         }
 
+        /// <summary>
+        /// Creates a project instance based on this project using the specified logging service.
+        /// </summary>  
+        private ProjectInstance CreateProjectInstance(ILoggingService loggingServiceForEvaluation, ProjectInstanceSettings settings)
+        {
+            ReevaluateIfNecessary(loggingServiceForEvaluation);
+
+            return new ProjectInstance(_data, DirectoryPath, FullPath, ProjectCollection.HostServices, _projectCollection.EnvironmentProperties, settings);
+        }
+
         private void Reevaluate(ILoggingService loggingServiceForEvaluation, ProjectLoadSettings loadSettings)
         {
-            Evaluator<ProjectProperty, ProjectItem, ProjectMetadata, ProjectItemDefinition>.Evaluate(_data, _xml, loadSettings, ProjectCollection.MaxNodeCount, ProjectCollection.EnvironmentProperties, loggingServiceForEvaluation, new ProjectItemFactory(this), _projectCollection, _projectCollection.ProjectRootElementCache, s_buildEventContext, null /* no project instance for debugging */, _projectCollection.SdkResolution);
+            Evaluator<ProjectProperty, ProjectItem, ProjectMetadata, ProjectItemDefinition>.Evaluate(
+                _data,
+                _xml,
+                loadSettings,
+                ProjectCollection.MaxNodeCount,
+                ProjectCollection.EnvironmentProperties,
+                loggingServiceForEvaluation,
+                new ProjectItemFactory(this),
+                _projectCollection,
+                _projectCollection.ProjectRootElementCache,
+                s_buildEventContext,
+                null /* no project instance for debugging */,
+                _lastEvaluationContext.SdkResolverService,
+                BuildEventContext.InvalidSubmissionId,
+                _lastEvaluationContext);
+
+            ErrorUtilities.VerifyThrow(LastEvaluationId != BuildEventContext.InvalidEvaluationId, "Evaluation should produce an evaluation ID");
 
             // We have to do this after evaluation, because evaluation might have changed
             // the imports being pulled in.
@@ -2661,9 +2758,11 @@ namespace Microsoft.Build.Evaluation
 
             if (_data.ImportClosure != null)
             {
-                foreach (Triple<ProjectImportElement, ProjectRootElement, int> triple in _data.ImportClosure)
+                foreach (var import in _data.ImportClosure)
                 {
-                    highestXmlVersion = (highestXmlVersion < triple.Third) ? triple.Third : highestXmlVersion;
+                    highestXmlVersion = (highestXmlVersion < import.VersionEvaluated)
+                        ? import.VersionEvaluated
+                        : highestXmlVersion;
                 }
             }
 
@@ -2682,7 +2781,7 @@ namespace Microsoft.Build.Evaluation
         /// Global properties may be null.
         /// Tools version may be null.
         /// </summary>
-        private void Initialize(IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectLoadSettings loadSettings)
+        private void Initialize(IDictionary<string, string> globalProperties, string toolsVersion, string subToolsetVersion, ProjectLoadSettings loadSettings, EvaluationContext evaluationContext)
         {
             _xml.MarkAsExplicitlyLoaded();
 
@@ -2721,7 +2820,7 @@ namespace Microsoft.Build.Evaluation
 
             ErrorUtilities.VerifyThrow(LastEvaluationId == BuildEventContext.InvalidEvaluationId, "This is the first evaluation therefore the last evaluation id is invalid");
 
-            ReevaluateIfNecessary();
+            ReevaluateIfNecessary(evaluationContext);
 
             ErrorUtilities.VerifyThrow(LastEvaluationId != BuildEventContext.InvalidEvaluationId, "Last evaluation ID must be valid after the first evaluation");
 
@@ -2848,7 +2947,7 @@ namespace Microsoft.Build.Evaluation
                 else
                 {
                     // Get the project root elements of all the imports resulting from this import statement (there could be multiple if there is a wild card).
-                    IEnumerable<ProjectRootElement> children = _data.ImportClosure.Where(triple => Object.ReferenceEquals(triple.First, import)).Select(triple => triple.Second);
+                    IEnumerable<ProjectRootElement> children = _data.ImportClosure.Where(resolvedImport => object.ReferenceEquals(resolvedImport.ImportingElement, import)).Select(triple => triple.ImportedProject);
 
                     foreach (ProjectRootElement child in children)
                     {
@@ -3263,7 +3362,7 @@ namespace Microsoft.Build.Evaluation
             /// Complete list of all imports pulled in during evaluation.
             /// This includes the outer project itself.
             /// </summary>
-            internal List<Triple<ProjectImportElement, ProjectRootElement, int>> ImportClosure
+            internal List<ResolvedImport> ImportClosure
             {
                 get;
                 private set;
@@ -3273,7 +3372,7 @@ namespace Microsoft.Build.Evaluation
             /// Complete list of all imports pulled in during evaluation including duplicate imports.
             /// This includes the outer project itself.
             /// </summary>
-            internal List<Triple<ProjectImportElement, ProjectRootElement, int>> ImportClosureWithDuplicates
+            internal List<ResolvedImport> ImportClosureWithDuplicates
             {
                 get;
                 private set;
@@ -3320,8 +3419,8 @@ namespace Microsoft.Build.Evaluation
                 this.Expander = new Expander<ProjectProperty, ProjectItem>(this.Properties, _items);
                 this.ItemDefinitions = new RetrievableEntryHashSet<ProjectItemDefinition>(MSBuildNameIgnoreCaseComparer.Default);
                 this.Targets = new RetrievableEntryHashSet<ProjectTargetInstance>(StringComparer.OrdinalIgnoreCase);
-                this.ImportClosure = new List<Triple<ProjectImportElement, ProjectRootElement, int>>();
-                this.ImportClosureWithDuplicates = new List<Triple<ProjectImportElement, ProjectRootElement, int>>();
+                this.ImportClosure = new List<ResolvedImport>();
+                this.ImportClosureWithDuplicates = new List<ResolvedImport>();
                 this.AllEvaluatedProperties = new List<ProjectProperty>();
                 this.AllEvaluatedItemDefinitionMetadata = new List<ProjectMetadata>();
                 this.AllEvaluatedItems = new List<ProjectItem>();
@@ -3335,7 +3434,7 @@ namespace Microsoft.Build.Evaluation
 
                 // Include the main project in the list of imports, as this list is 
                 // used to figure out if any of them have changed.
-                RecordImport(null, _project._xml, _project._xml.Version);
+                RecordImport(null, _project._xml, _project._xml.Version, null);
 
                 string toolsVersionToUse = ExplicitToolsVersion;
                 ElementLocation toolsVersionLocation = _project._xml.ProjectFileLocation;
@@ -3352,16 +3451,11 @@ namespace Microsoft.Build.Evaluation
                         ExplicitToolsVersion,
                         _project._xml.ToolsVersion,
                         Project.ProjectCollection.GetToolset,
-                        Project.ProjectCollection.DefaultToolsVersion
+                        Project.ProjectCollection.DefaultToolsVersion,
+                        out var usingDifferentToolsVersionFromProjectFile
                     );
 
-                // Don't log the message if the toolsversion is different because an explicit toolsversion was specified -- 
-                // in that case the user already knows what they're doing; the point of this warning is to give them a heads
-                // up if we're doing this ourselves for our own reasons. 
-                if (!explicitToolsVersionSpecified && !String.Equals(_originalProjectToolsVersion, toolsVersionToUse, StringComparison.OrdinalIgnoreCase))
-                {
-                    _usingDifferentToolsVersionFromProjectFile = true;
-                }
+                _usingDifferentToolsVersionFromProjectFile = usingDifferentToolsVersionFromProjectFile;
 
                 Toolset = toolsetProvider.GetToolset(toolsVersionToUse);
 
@@ -3557,9 +3651,9 @@ namespace Microsoft.Build.Evaluation
             /// If they are dirtied, though, they might affect the evaluated project; and that's why we record them. 
             /// Mostly these will be common imports, so they'll be shared anyway.
             /// </remarks>
-            public void RecordImport(ProjectImportElement importElement, ProjectRootElement import, int versionEvaluated)
+            public void RecordImport(ProjectImportElement importElement, ProjectRootElement import, int versionEvaluated, SdkResult sdkResult)
             {
-                ImportClosure.Add(new Triple<ProjectImportElement, ProjectRootElement, int>(importElement, import, versionEvaluated));
+                ImportClosure.Add(new ResolvedImport(Project, importElement, import, versionEvaluated, sdkResult));
                 RecordImportWithDuplicates(importElement, import, versionEvaluated);
             }
 
@@ -3568,7 +3662,7 @@ namespace Microsoft.Build.Evaluation
             /// </summary>
             public void RecordImportWithDuplicates(ProjectImportElement importElement, ProjectRootElement import, int versionEvaluated)
             {
-                ImportClosureWithDuplicates.Add(new Triple<ProjectImportElement, ProjectRootElement, int>(importElement, import, versionEvaluated));
+                ImportClosureWithDuplicates.Add(new ResolvedImport(Project, importElement, import, versionEvaluated, null));
             }
 
             /// <summary>

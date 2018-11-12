@@ -124,10 +124,22 @@ namespace Microsoft.Build.BackEnd
         void Translate(ref int value);
 
         /// <summary>
+        /// Translates a long.
+        /// </summary>
+        /// <param name="value">The value to be translated.</param>
+        void Translate(ref long value);
+
+        /// <summary>
         /// Translates a string.
         /// </summary>
         /// <param name="value">The value to be translated.</param>
         void Translate(ref string value);
+
+        /// <summary>
+        /// Translates a double.
+        /// </summary>
+        /// <param name="value">The value to be translated.</param>
+        void Translate(ref double value);
 
         /// <summary>
         /// Translates a string array.
@@ -171,6 +183,12 @@ namespace Microsoft.Build.BackEnd
         /// <param name="value">The value to be translated.</param>
         void Translate(ref DateTime value);
 
+        /// <summary>
+        /// Translates a TimeSpan.
+        /// </summary>
+        /// <param name="value">The value to be translated.</param>
+        void Translate(ref TimeSpan value);
+
         // MSBuildTaskHost is based on CLR 3.5, which does not have the 6-parameter constructor for BuildEventContext, 
         // which is what current implementations of this method use.  However, it also does not ever need to translate 
         // BuildEventContexts, so it should be perfectly safe to compile this method out of that assembly. I am compiling
@@ -204,7 +222,6 @@ namespace Microsoft.Build.BackEnd
         /// works in all of our current cases, but certainly isn't perfectly generic.</remarks>
         void TranslateEnum<T>(ref T value, int numericValue);
 
-#if FEATURE_BINARY_SERIALIZATION
         /// <summary>
         /// Translates a value using the .Net binary formatter.
         /// </summary>
@@ -216,10 +233,6 @@ namespace Microsoft.Build.BackEnd
         /// methods.
         /// </remarks>
         void TranslateDotNet<T>(ref T value);
-#else
-        //  BuildEventArgs can't implement INodePacketTranslatable because it's in Microsoft.Build.Framework, which doesn't have that interface
-        void TranslateBuildEventArgs(ref BuildEventArgs value);
-#endif
 
         void TranslateException(ref Exception value);
 

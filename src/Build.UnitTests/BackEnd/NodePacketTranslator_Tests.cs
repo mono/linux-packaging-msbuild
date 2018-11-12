@@ -75,6 +75,39 @@ namespace Microsoft.Build.UnitTests.BackEnd
         }
 
         /// <summary>
+        /// Tests serializing longs.
+        /// </summary>
+        [Fact]
+        public void TestSerializeLong()
+        {
+            long val = 0x55AABBCCDDEE;
+            HelperTestSimpleType((long)0, val);
+            HelperTestSimpleType(val, (long)0);
+        }
+
+        /// <summary>
+        /// Tests serializing doubles.
+        /// </summary>
+        [Fact]
+        public void TestSerializeDouble()
+        {
+            double val = 3.1416;
+            HelperTestSimpleType((double)0, val);
+            HelperTestSimpleType(val, (double)0);
+        }
+
+        /// <summary>
+        /// Tests serializing TimeSpan.
+        /// </summary>
+        [Fact]
+        public void TestSerializeTimeSpan()
+        {
+            TimeSpan val = TimeSpan.FromMilliseconds(123);
+            HelperTestSimpleType(TimeSpan.Zero, val);
+            HelperTestSimpleType(val, TimeSpan.Zero);
+        }
+
+        /// <summary>
         /// Tests serializing ints.
         /// </summary>
         [Fact]
@@ -145,7 +178,6 @@ namespace Microsoft.Build.UnitTests.BackEnd
             Assert.Equal(value, deserializedValue);
         }
 
-#if FEATURE_BINARY_SERIALIZATION
         /// <summary>
         /// Tests serializing using the DotNet serializer.
         /// </summary>
@@ -175,7 +207,6 @@ namespace Microsoft.Build.UnitTests.BackEnd
 
             Assert.True(TranslationHelpers.CompareExceptions(value, deserializedValue));
         }
-#endif
 
         /// <summary>
         /// Tests serializing an object with a default constructor.
@@ -422,6 +453,48 @@ namespace Microsoft.Build.UnitTests.BackEnd
             TranslationHelpers.GetWriteTranslator().Translate(ref value);
 
             bool deserializedValue = deserializedInitialValue;
+            TranslationHelpers.GetReadTranslator().Translate(ref deserializedValue);
+
+            Assert.Equal(value, deserializedValue);
+        }
+
+        /// <summary>
+        /// Helper for long serialization.
+        /// </summary>
+        private void HelperTestSimpleType(long initialValue, long deserializedInitialValue)
+        {
+            long value = initialValue;
+            TranslationHelpers.GetWriteTranslator().Translate(ref value);
+
+            long deserializedValue = deserializedInitialValue;
+            TranslationHelpers.GetReadTranslator().Translate(ref deserializedValue);
+
+            Assert.Equal(value, deserializedValue);
+        }
+
+        /// <summary>
+        /// Helper for double serialization.
+        /// </summary>
+        private void HelperTestSimpleType(double initialValue, double deserializedInitialValue)
+        {
+            double value = initialValue;
+            TranslationHelpers.GetWriteTranslator().Translate(ref value);
+
+            double deserializedValue = deserializedInitialValue;
+            TranslationHelpers.GetReadTranslator().Translate(ref deserializedValue);
+
+            Assert.Equal(value, deserializedValue);
+        }
+
+        /// <summary>
+        /// Helper for TimeSpan serialization.
+        /// </summary>
+        private void HelperTestSimpleType(TimeSpan initialValue, TimeSpan deserializedInitialValue)
+        {
+            TimeSpan value = initialValue;
+            TranslationHelpers.GetWriteTranslator().Translate(ref value);
+
+            TimeSpan deserializedValue = deserializedInitialValue;
             TranslationHelpers.GetReadTranslator().Translate(ref deserializedValue);
 
             Assert.Equal(value, deserializedValue);

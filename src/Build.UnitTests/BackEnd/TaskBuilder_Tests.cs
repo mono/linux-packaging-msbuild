@@ -11,7 +11,9 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Build.BackEnd;
+using Microsoft.Build.BackEnd.SdkResolution;
 using Microsoft.Build.Collections;
+using Microsoft.Build.Engine.UnitTests.BackEnd;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
@@ -873,7 +875,7 @@ namespace ItemCreationTask
         /// <summary>
         /// Not implemented.
         /// </summary>
-        Task IRequestBuilderCallback.BlockOnTargetInProgress(int blockingRequestId, string blockingTarget)
+        Task IRequestBuilderCallback.BlockOnTargetInProgress(int blockingRequestId, string blockingTarget, BuildResult partialBuildResult)
         {
             throw new NotImplementedException();
         }
@@ -1214,6 +1216,8 @@ namespace ClassLibrary2
             /// </summary>
             private LegacyThreadingData _legacyThreadingData;
 
+            private ISdkResolverService _sdkResolverService;
+
             /// <summary>
             /// Constructor
             /// 
@@ -1238,6 +1242,9 @@ namespace ClassLibrary2
 
                 _targetBuilder = new TargetBuilder();
                 ((IBuildComponent)_targetBuilder).InitializeComponent(this);
+
+                _sdkResolverService = new MockSdkResolverService();
+                ((IBuildComponent)_sdkResolverService).InitializeComponent(this);
             }
 
             /// <summary>
@@ -1307,6 +1314,9 @@ namespace ClassLibrary2
 
                     case BuildComponentType.TargetBuilder:
                         return (IBuildComponent)_targetBuilder;
+
+                    case BuildComponentType.SdkResolverService:
+                        return (IBuildComponent)_sdkResolverService;
 
                     default:
                         throw new ArgumentException("Unexpected type " + type);

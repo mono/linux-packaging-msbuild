@@ -7,6 +7,8 @@ using System.Collections;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Framework
 {
@@ -21,9 +23,7 @@ namespace Microsoft.Build.Framework
     /// without following certain special FX guidelines, can break both
     /// forward and backward compatibility
     /// </remarks>
-#if FEATURE_BINARY_SERIALIZATION
     [Serializable]
-#endif
     public class ProjectStartedEventArgs : BuildStatusEventArgs
     {
         #region Constants
@@ -149,16 +149,7 @@ namespace Microsoft.Build.Framework
             : base(message, helpKeyword, "MSBuild", eventTimestamp)
         {
             this.projectFile = projectFile;
-
-            if (targetNames == null)
-            {
-                this.targetNames = String.Empty;
-            }
-            else
-            {
-                this.targetNames = targetNames;
-            }
-
+            this.targetNames = targetNames ?? String.Empty;
             this.properties = properties;
             this.items = items;
         }
@@ -198,9 +189,7 @@ namespace Microsoft.Build.Framework
         // This number indicated the instance id of the project and can be
         // used when debugging to determine if two projects with the same name
         // are the same project instance or different instances
-#if FEATURE_BINARY_SERIALIZATION
         [OptionalField(VersionAdded = 2)]
-#endif
         private int projectId;
 
         /// <summary>
@@ -214,9 +203,7 @@ namespace Microsoft.Build.Framework
             }
         }
 
-#if FEATURE_BINARY_SERIALIZATION
         [OptionalField(VersionAdded = 2)]
-#endif
         private BuildEventContext parentProjectBuildEventContext;
 
         /// <summary>
@@ -265,9 +252,7 @@ namespace Microsoft.Build.Framework
         /// <summary>
         /// Gets the set of global properties used to evaluate this project.
         /// </summary>
-#if FEATURE_BINARY_SERIALIZATION
         [OptionalField(VersionAdded = 2)]
-#endif
         private IDictionary<string, string> globalProperties;
 
         /// <summary>
@@ -286,9 +271,7 @@ namespace Microsoft.Build.Framework
             }
         }
 
-#if FEATURE_BINARY_SERIALIZATION
         [OptionalField(VersionAdded = 2)]
-#endif
         private string toolsVersion;
 
         /// <summary>
@@ -310,9 +293,7 @@ namespace Microsoft.Build.Framework
         // IEnumerable is not a serializable type. That is okay because
         // (a) this event will not be thrown by tasks, so it should not generally cross AppDomain boundaries
         // (b) this event still makes sense when this field is "null"
-#if FEATURE_BINARY_SERIALIZATION
         [NonSerialized]
-#endif
         private IEnumerable properties;
 
         /// <summary>
@@ -337,9 +318,7 @@ namespace Microsoft.Build.Framework
         // IEnumerable is not a serializable type. That is okay because
         // (a) this event will not be thrown by tasks, so it should not generally cross AppDomain boundaries
         // (b) this event still makes sense when this field is "null"
-#if FEATURE_BINARY_SERIALIZATION
         [NonSerialized]
-#endif
         private IEnumerable items;
 
         /// <summary>
@@ -360,7 +339,6 @@ namespace Microsoft.Build.Framework
             }
         }
 
-#if FEATURE_BINARY_SERIALIZATION
         #region CustomSerializationToStream
 
         /// <summary>
@@ -371,7 +349,7 @@ namespace Microsoft.Build.Framework
         {
             base.WriteToStream(writer);
             writer.Write((Int32)projectId);
-            #region ParentProjectBuildEventContext
+
             if (parentProjectBuildEventContext == null)
             {
                 writer.Write((byte)0);
@@ -386,83 +364,37 @@ namespace Microsoft.Build.Framework
                 writer.Write((Int32)parentProjectBuildEventContext.SubmissionId);
                 writer.Write((Int32)parentProjectBuildEventContext.ProjectInstanceId);
             }
-            #endregion
-            #region ProjectFile
-            if (projectFile == null)
-            {
-                writer.Write((byte)0);
-            }
-            else
-            {
-                writer.Write((byte)1);
-                writer.Write(projectFile);
-            }
-            #endregion
 
-            #region TargetNames
-            // TargetNames cannot be null as per line 61 in the constructor
+            writer.WriteOptionalString(projectFile);
+
+            // TargetNames cannot be null as per the constructor
             writer.Write(targetNames);
-            #endregion
-
-            #region Properties
-
-            Dictionary<string, string> propertyList = GeneratePropertyList();
 
             // If no properties were added to the property list 
             // then we have nothing to create when it is deserialized
             // This can happen if properties is null or if none of the 
             // five properties were found in the property object.
-            if ((propertyList == null || propertyList.Count == 0))
+            if (properties == null)
             {
                 writer.Write((byte)0);
             }
             else
             {
-                writer.Write((byte)1);
+                var validProperties = properties.Cast<DictionaryEntry>().Where(entry => entry.Key != null && entry.Value != null);
+                // ReSharper disable once PossibleMultipleEnumeration - We need to get the count of non-null first
+                var propertyCount = validProperties.Count();
 
-                // Write how many properties we are going to write into the stream
-                writer.Write((Int32)propertyList.Count);
+                writer.Write((byte)1);
+                writer.Write(propertyCount);
 
                 // Write the actual property name value pairs into the stream
-                foreach (KeyValuePair<string, string> propertyPair in propertyList)
+                // ReSharper disable once PossibleMultipleEnumeration
+                foreach (var propertyPair in validProperties)
                 {
-                    writer.Write(propertyPair.Key);
-                    writer.Write(propertyPair.Value);
+                    writer.Write((string)propertyPair.Key);
+                    writer.Write((string)propertyPair.Value);
                 }
             }
-
-            #endregion
-        }
-
-        /// <summary>
-        /// Generates a list of KeyValuePairs from the properties enumerator.
-        /// For each of these properties add them to a list to return to the caller.
-        /// </summary>
-        /// <returns>Null if properties is null, or a list containing one or more of the  properties in the properties enumerator</returns>
-        private Dictionary<string, string> GeneratePropertyList()
-        {
-            if (properties == null)
-            {
-                return null;
-            }
-
-            Dictionary<string, string> propertyList = new Dictionary<string, string>();
-
-            // Loop through the properties and add them to the keyvalue pair list
-            foreach (DictionaryEntry property in properties)
-            {
-                object propertyKey = property.Key;
-                object propertyValue = property.Value;
-
-                // Make sure property keys and values are not null before casting.
-                // property key and value will always be a string, if this is not the case
-                // the a cast exception is the correct course of action. 
-                if (property.Key != null && property.Value != null)
-                {
-                    propertyList.Add((string)property.Key, (string)property.Value);
-                }
-            }
-            return propertyList;
         }
 
         /// <summary>
@@ -474,7 +406,7 @@ namespace Microsoft.Build.Framework
         {
             base.CreateFromStream(reader, version);
             projectId = reader.ReadInt32();
-            #region ParentProjectBuildEventContext
+
             if (reader.ReadByte() == 0)
             {
                 parentProjectBuildEventContext = null;
@@ -497,22 +429,11 @@ namespace Microsoft.Build.Framework
                     parentProjectBuildEventContext = new BuildEventContext(nodeId, targetId, projectContextId, taskId);
                 }
             }
-            #endregion
-            #region ProjectFile
-            if (reader.ReadByte() == 0)
-            {
-                projectFile = null;
-            }
-            else
-            {
-                projectFile = reader.ReadString();
-            }
-            #endregion
-            #region TargetNames
-            // TargetNames cannot be null as per line 61 in the constructor
+
+            projectFile = reader.ReadByte() == 0 ? null : reader.ReadString();
+
+            // TargetNames cannot be null as per the constructor
             targetNames = reader.ReadString();
-            #endregion
-            #region Properties
 
             // Check to see if properties was null
             if (reader.ReadByte() == 0)
@@ -542,13 +463,9 @@ namespace Microsoft.Build.Framework
 
                 properties = dictionaryList;
             }
-
-            #endregion
         }
         #endregion
-#endif
 
-#if FEATURE_BINARY_SERIALIZATION
         #region SerializationSection
         [OnDeserializing] // Will happen before the object is deserialized
         private void SetDefaultsBeforeSerialization(StreamingContext sc)
@@ -574,6 +491,5 @@ namespace Microsoft.Build.Framework
             }
         }
         #endregion
-#endif
     }
 }

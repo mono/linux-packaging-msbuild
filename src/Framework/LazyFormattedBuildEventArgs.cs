@@ -15,9 +15,7 @@ namespace Microsoft.Build.Framework
     /// <summary>
     /// Stores strings for parts of a message delaying the formatting until it needs to be shown
     /// </summary>
-#if FEATURE_BINARY_SERIALIZATION
     [Serializable]
-#endif
     public class LazyFormattedBuildEventArgs : BuildEventArgs
     {
         /// <summary>
@@ -28,14 +26,18 @@ namespace Microsoft.Build.Framework
         /// <summary>
         /// Stores the original culture for String.Format.
         /// </summary>
-        private CultureInfo originalCulture;
+        private string originalCultureName;
+
+        /// <summary>
+        /// Non-serializable CultureInfo object
+        /// </summary>
+        [NonSerialized]
+        private CultureInfo originalCultureInfo;
 
         /// <summary>
         /// Lock object.
         /// </summary>
-#if FEATURE_BINARY_SERIALIZATION
         [NonSerialized]
-#endif
         private Object locker;
 
         /// <summary>
@@ -73,7 +75,8 @@ namespace Microsoft.Build.Framework
             : base(message, helpKeyword, senderName, eventTimestamp)
         {
             arguments = messageArgs;
-            originalCulture = CultureInfo.CurrentCulture;
+            originalCultureName = CultureInfo.CurrentCulture.Name;
+            originalCultureInfo = CultureInfo.CurrentCulture;
             locker = new Object();
         }
 
@@ -97,7 +100,12 @@ namespace Microsoft.Build.Framework
                 {
                     if (arguments != null && arguments.Length > 0)
                     {
-                        base.Message = FormatString(originalCulture, base.Message, arguments);
+                        if (originalCultureInfo == null)
+                        {
+                            originalCultureInfo = new CultureInfo(originalCultureName);
+                        }
+
+                        base.Message = FormatString(originalCultureInfo, base.Message, arguments);
                         arguments = null;
                     }
                 }
@@ -106,7 +114,6 @@ namespace Microsoft.Build.Framework
             }
         }
 
-#if FEATURE_BINARY_SERIALIZATION
         /// <summary>
         /// Serializes to a stream through a binary writer.
         /// </summary>
@@ -139,10 +146,10 @@ namespace Microsoft.Build.Framework
                 }
                 else
                 {
-                    writer.Write((Int32)(-1));
+                    writer.Write(-1);
                 }
 
-                writer.Write(originalCulture != null ? originalCulture.LCID : 0);
+                writer.Write(originalCultureName);
             }
         }
 
@@ -172,21 +179,9 @@ namespace Microsoft.Build.Framework
 
                 arguments = messageArgs;
 
-                int originalCultureId = reader.ReadInt32();
-                if (originalCultureId != 0)
-                {
-                    if (originalCultureId == CultureInfo.CurrentCulture.LCID)
-                    {
-                        originalCulture = CultureInfo.CurrentCulture;
-                    }
-                    else
-                    {
-                        originalCulture = new CultureInfo(originalCultureId);
-                    }
-                }
+                originalCultureName = reader.ReadString();
             }
         }
-#endif
 
         /// <summary>
         /// Formats the given string using the variable arguments passed in.
@@ -287,7 +282,7 @@ namespace Microsoft.Build.Framework
 
             return formatted;
         }
-#if FEATURE_BINARY_SERIALIZATION
+
         /// <summary>
         /// Deserialization does not call any constructors, not even
         /// the parameterless constructor. Therefore since we do not serialize
@@ -298,6 +293,5 @@ namespace Microsoft.Build.Framework
         {
             locker = new Object();
         }
-#endif
     }
 }

@@ -188,6 +188,16 @@
             Returns true if the property is set to true. Otherwise false.
             </summary>
         </member>
+        <member name="F:NuGet.ProjectModel.JsonUtility.DefaultLoadSettings">
+            <summary>
+            JsonLoadSettings with line info and comments ignored.
+            </summary>
+        </member>
+        <member name="M:NuGet.ProjectModel.JsonUtility.LoadJson(System.IO.TextReader)">
+            <summary>
+            Load json from a file to a JObject using the default load settings.
+            </summary>
+        </member>
         <member name="P:NuGet.ProjectModel.IAssetsLogMessage.Level">
             <summary>
             Level to indicate if this is an error or wanring.
@@ -304,7 +314,9 @@
         <member name="P:NuGet.ProjectModel.PackageSpec.RestoreSettings">
             <summary>
             Project Settings is used to pass settings like HideWarningsAndErrors down to lower levels.
+            Currently they do not include any settings that affect the final result of restore.
             This should not be part of the Equals and GetHashCode.
+            Don't write this to the package spec
             </summary>
         </member>
         <member name="P:NuGet.ProjectModel.PackageSpec.RestoreMetadata">
@@ -315,7 +327,7 @@
         </member>
         <member name="M:NuGet.ProjectModel.PackageSpec.Clone">
             <summary>
-            Clone a PackageSpec and underlying JObject.
+            Clone a PackageSpec
             </summary>
         </member>
         <member name="M:NuGet.ProjectModel.PackageSpecExtensions.GetTargetFramework(NuGet.ProjectModel.PackageSpec,NuGet.Frameworks.NuGetFramework)">
@@ -522,12 +534,6 @@
             Target framework
             </summary>
         </member>
-        <member name="P:NuGet.ProjectModel.ProjectRestoreMetadataFrameworkInfo.OriginalFrameworkName">
-            <summary>
-            The original string before parsing the framework name. In some cases, it is important to keep this around
-            because MSBuild framework conditions require the framework name to be the original string (non-normalized).
-            </summary>
-        </member>
         <member name="P:NuGet.ProjectModel.ProjectRestoreMetadataFrameworkInfo.ProjectReferences">
             <summary>
             Project references
@@ -571,7 +577,7 @@
         </member>
         <member name="F:NuGet.ProjectModel.ProjectStyle.DotnetCliTool">
             <summary>
-            Tool
+            DotnetCliToolReference "project"
             </summary>
         </member>
         <member name="F:NuGet.ProjectModel.ProjectStyle.Standalone">
@@ -582,6 +588,11 @@
         <member name="F:NuGet.ProjectModel.ProjectStyle.PackagesConfig">
             <summary>
             Packages.config project
+            </summary>
+        </member>
+        <member name="F:NuGet.ProjectModel.ProjectStyle.DotnetToolReference">
+            <summary>
+            DotnetToolReference project
             </summary>
         </member>
         <member name="T:NuGet.ProjectModel.Sha512HashFunction">
@@ -727,6 +738,11 @@
         <member name="P:NuGet.ProjectModel.WarningProperties.AllWarningsAsErrors">
             <summary>
             Indicates if all warnings should be ignored.
+            </summary>
+        </member>
+        <member name="M:NuGet.ProjectModel.WarningProperties.GetWarningProperties(System.String,System.String,System.String)">
+            <summary>
+            Create warning properties from the msbuild property strings.
             </summary>
         </member>
         <member name="M:NuGet.Shared.EqualityUtility.OrderedEquals``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Func{``0,``1},System.Collections.Generic.IComparer{``1},System.Collections.Generic.IEqualityComparer{``0})">

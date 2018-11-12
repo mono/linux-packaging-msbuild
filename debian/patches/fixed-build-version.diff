@@ -1,0 +1,40 @@
+diff --git a/src/Build.OM.UnitTests/Definition/ProjectCollection_Tests.cs b/src/Build.OM.UnitTests/Definition/ProjectCollection_Tests.cs
+index 9795378d..9f21f144 100644
+--- a/src/Build.OM.UnitTests/Definition/ProjectCollection_Tests.cs
++++ b/src/Build.OM.UnitTests/Definition/ProjectCollection_Tests.cs
+@@ -1437,10 +1437,14 @@ namespace Microsoft.Build.UnitTests.OM.Definition
+         [Fact]
+         public void ProjectCollectionVersionIsCorrect()
+         {
++            ProjectCollection.Version.ShouldNotBe(new Version(0, 0, 0, 0));
++
++#if THISASSEMBLY
+             Version expectedVersion = new Version(ThisAssembly.AssemblyFileVersion);
+
+             ProjectCollection.Version.Major.ShouldBe(expectedVersion.Major);
+             ProjectCollection.Version.Minor.ShouldBe(expectedVersion.Minor);
++#endif
+         }
+
+         /// <summary>
+diff --git a/src/Directory.Build.targets b/src/Directory.Build.targets
+index 9e925132..606972ec 100644
+--- a/src/Directory.Build.targets
++++ b/src/Directory.Build.targets
+@@ -111,6 +111,16 @@
+
+   <Import Project="$([System.IO.Path]::Combine('$(RepoRoot)', 'build', 'GetBuildVersionStub.proj'))" Condition="'$(DisableNerdbankVersioning)' == 'true'" />
+
++  <Target Name="OverrideRepoToolsetVersions"
++          AfterTargets="_InitializeAssemblyVersion"
++          Condition="'$(DisableNerdbankVersioning)' == 'true'">
++    <PropertyGroup>
++      <AssemblyVersion>15.1.0.0</AssemblyVersion>
++      <FileVersion>15.8.0.0</FileVersion>
++      <InformationalVersion>$(FileVersion)-mono</InformationalVersion>
++    </PropertyGroup>
++  </Target>
++
+   <Target Name="GetNuGetPackageVersionEx"
+     BeforeTargets="GenerateNuspec"
+     DependsOnTargets="GetBuildVersion"

@@ -46,6 +46,10 @@ namespace Microsoft.Build.Shared
         /// </summary>
         internal const string WarningsAsMessages = "MSBuildWarningsAsMessages";
 
+        /// <summary>
+        /// The name of the environment variable that users can specify to override where NuGet assemblies are loaded from in the NuGetSdkResolver.
+        /// </summary>
+        internal const string NuGetAssemblyPathEnvironmentVariableName = "MSBUILD_NUGET_PATH";
 
         /// <summary>
         /// The name of the target to run when a user specifies the /restore command-line argument.
@@ -54,11 +58,7 @@ namespace Microsoft.Build.Shared
         /// <summary>
         /// The most current Visual Studio Version known to this version of MSBuild.
         /// </summary>
-#if STANDALONEBUILD
         internal const string CurrentVisualStudioVersion = "15.0";
-#else
-        internal const string CurrentVisualStudioVersion = Microsoft.VisualStudio.Internal.BrandNames.VSGeneralVersion;
-#endif
 
         /// <summary>
         /// The most current ToolsVersion known to this version of MSBuild.
@@ -77,13 +77,7 @@ namespace Microsoft.Build.Shared
         /// <summary>
         /// The most current VSGeneralAssemblyVersion known to this version of MSBuild.
         /// </summary>
-#if STANDALONEBUILD
         internal const string CurrentAssemblyVersion = "15.1.0.0";
-#else
-        internal const string CurrentAssemblyVersion = Microsoft.VisualStudio.Internal.BrandNames.VSGeneralAssemblyVersion;
-#endif
-
-        internal const string CurrentAssemblyFileVersion = "15.4.0.0";
 
         /// <summary>
         /// Current version of this MSBuild Engine assembly in the form, e.g, "12.0"
@@ -92,13 +86,7 @@ namespace Microsoft.Build.Shared
         {
             get
             {
-#if STANDALONEBUILD
                 return "15.0";
-#else
-                Version thisAssemblyVersion = new Version(ThisAssembly.Version);
-                // "12.0.0.0" --> "12.0"
-                return thisAssemblyVersion.Major + "." + thisAssemblyVersion.Minor;
-#endif
             }
         }
     }

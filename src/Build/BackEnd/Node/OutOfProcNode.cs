@@ -25,6 +25,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Internal;
 using Microsoft.Build.BackEnd.Components.Caching;
+using Microsoft.Build.BackEnd.SdkResolution;
+using SdkResult = Microsoft.Build.BackEnd.SdkResolution.SdkResult;
 
 namespace Microsoft.Build.Execution
 {
@@ -135,6 +137,11 @@ namespace Microsoft.Build.Execution
         /// </summary>
         private LegacyThreadingData _legacyThreadingData;
 
+        /// <summary>
+        /// The current <see cref="ISdkResolverService"/> instance.
+        /// </summary>
+        private ISdkResolverService _sdkResolverService;
+
 #if !FEATURE_NAMED_PIPES_FULL_DUPLEX
         private string _clientToServerPipeHandle;
         private string _serverToClientPipeHandle;
@@ -176,6 +183,13 @@ namespace Microsoft.Build.Execution
             _globalConfigCache = (this as IBuildComponentHost).GetComponent(BuildComponentType.ConfigCache) as IConfigCache;
             _taskHostNodeManager = (this as IBuildComponentHost).GetComponent(BuildComponentType.TaskHostNodeManager) as INodeManager;
 
+            // Create a factory for the out-of-proc SDK resolver service which can pass our SendPacket delegate to be used for sending packets to the main node
+            OutOfProcNodeSdkResolverServiceFactory sdkResolverServiceFactory = new OutOfProcNodeSdkResolverServiceFactory(SendPacket);
+
+            ((IBuildComponentHost) this).RegisterFactory(BuildComponentType.SdkResolverService, sdkResolverServiceFactory.CreateInstance);
+
+            _sdkResolverService = (this as IBuildComponentHost).GetComponent(BuildComponentType.SdkResolverService) as ISdkResolverService;
+            
             if (s_projectRootElementCache == null)
             {
                 s_projectRootElementCache = new ProjectRootElementCache(true /* automatically reload any changes from disk */);
@@ -192,6 +206,7 @@ namespace Microsoft.Build.Execution
             (this as INodePacketFactory).RegisterPacketHandler(NodePacketType.BuildRequestUnblocker, BuildRequestUnblocker.FactoryForDeserialization, this);
             (this as INodePacketFactory).RegisterPacketHandler(NodePacketType.NodeConfiguration, NodeConfiguration.FactoryForDeserialization, this);
             (this as INodePacketFactory).RegisterPacketHandler(NodePacketType.NodeBuildComplete, NodeBuildComplete.FactoryForDeserialization, this);
+            (this as INodePacketFactory).RegisterPacketHandler(NodePacketType.ResolveSdkResponse, SdkResult.FactoryForDeserialization, _sdkResolverService as INodePacketHandler);
         }
 
         /// <summary>
@@ -472,6 +487,9 @@ namespace Microsoft.Build.Execution
                 }
             }
 
+            // Signal the SDK resolver service to shutdown
+            ((IBuildComponent)_sdkResolverService).ShutdownComponent();
+
             // Dispose of any build registered objects
             IRegisteredTaskObjectCache objectCache = (IRegisteredTaskObjectCache)(_componentFactories.GetComponent(BuildComponentType.RegisteredTaskObjectCache));
             objectCache.DisposeCacheObjects(RegisteredTaskObjectLifetime.Build);
@@ -485,10 +503,9 @@ namespace Microsoft.Build.Execution
             // Shutdown any Out Of Proc Nodes Created
             _taskHostNodeManager.ShutdownConnectedNodes(_shutdownReason == NodeEngineShutdownReason.BuildCompleteReuse);
 
-#if FEATURE_ENVIRONMENT_SYSTEMDIRECTORY
-            // Restore the original current directory.
-            NativeMethodsShared.SetCurrentDirectory(Environment.SystemDirectory);
-#endif
+            // On Windows, a process holds a handle to the current directory,
+            // so reset it away from a user-requested folder that may get deleted.
+            NativeMethodsShared.SetCurrentDirectory(BuildEnvironmentHelper.Instance.CurrentMSBuildToolsDirectory);
 
             // Restore the original environment.
             // If the node was never configured, this will be null.
@@ -598,7 +615,7 @@ namespace Microsoft.Build.Execution
         /// <summary>
         /// Callback for logging packets to be sent.
         /// </summary>
-        private void SendLoggingPacket(INodePacket packet)
+        private void SendPacket(INodePacket packet)
         {
             if (_nodeEndpoint.LinkStatus == LinkStatus.Active)
             {
@@ -692,10 +709,8 @@ namespace Microsoft.Build.Execution
             }
             catch (DirectoryNotFoundException)
             {
-#if FEATURE_ENVIRONMENT_SYSTEMDIRECTORY
                 // Somehow the startup directory vanished. This can happen if build was started from a USB Key and it was removed.
-                NativeMethodsShared.SetCurrentDirectory(Environment.SystemDirectory);
-#endif
+                NativeMethodsShared.SetCurrentDirectory(BuildEnvironmentHelper.Instance.CurrentMSBuildToolsDirectory);
             }
 
             // Replicate the environment.  First, unset any environment variables set by the previous configuration.
@@ -728,13 +743,8 @@ namespace Microsoft.Build.Execution
             }
 
             // Set the culture.
-#if FEATURE_CULTUREINFO_SETTERS
             CultureInfo.CurrentCulture = _buildParameters.Culture;
             CultureInfo.CurrentUICulture = _buildParameters.UICulture;
-#else
-            Thread.CurrentThread.CurrentCulture = _buildParameters.Culture;
-            Thread.CurrentThread.CurrentUICulture = _buildParameters.UICulture;
-#endif
 
             // Get the node ID.
             _buildParameters.NodeId = configuration.NodeId;
@@ -751,7 +761,7 @@ namespace Microsoft.Build.Execution
 
             _loggingService = _componentFactories.GetComponent(BuildComponentType.LoggingService) as ILoggingService;
 
-            BuildEventArgTransportSink sink = new BuildEventArgTransportSink(SendLoggingPacket);
+            BuildEventArgTransportSink sink = new BuildEventArgTransportSink(SendPacket);
 
             _shutdownException = null;
 

@@ -1,17 +1,16 @@
 all-mono:
-	./cibuild.sh --scope Compile --host Mono --target Mono --config Release
+	./build.sh -hostType mono -configuration Release -skipTests
 
 test-mono:
-	./cibuild.sh --scope Test --host Mono --target Mono --config Release
+	./build.sh -hostType mono -configuration Release
 
 all-coreclr:
-	./cibuild.sh --scope Compile
+	./build.sh -hostType core -skipTests
 
 test-coreclr:
-	./cibuild.sh --scope Test
+	./build.sh -hostType core
 
 clean-%: clean
 
 clean:
-	rm -Rf bin/ Tools/ packages/
-	find . -name project.lock.json -exec rm {} \;
+	rm -Rf artifacts
