@@ -1,7 +1,7 @@
 /usr/bin/
 /usr/lib/mono/xbuild/
 /usr/lib/mono/msbuild/15.0/bin/Sdks/
-/usr/lib/mono/msbuild/15.0/bin/SdkResolvers/NuGet.MSBuildSdkResolver
+/usr/lib/mono/msbuild/15.0/bin/SdkResolvers/Microsoft.Build.NuGetSdkResolver
 /usr/lib/mono/msbuild/15.0/bin/*.config
 /usr/lib/mono/msbuild/15.0/bin/*.dll
 /usr/lib/mono/msbuild/15.0/bin/*.overridetasks
