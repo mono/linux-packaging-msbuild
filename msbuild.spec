@@ -22,7 +22,6 @@ Group:          Development/Libraries/Other
 Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
-Source1:	Microsoft.DotNet.MSBuildSdkResolver.dll
 Patch0:		fixed-build-version.diff
 BuildRequires:  mono-devel
 BuildRequires:  libunwind-devel
@@ -80,8 +79,6 @@ contains components needed to build with .NET Core.
 sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
-rm %{buildroot}/%_prefix/lib/mono/msbuild/15.0/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/*
-cp %{SOURCE1} %{buildroot}/%{_prefix}/lib/mono/msbuild/15.0/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
 
 %files
 %defattr(-,root,root)
