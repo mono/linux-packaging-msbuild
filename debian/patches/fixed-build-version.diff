@@ -30,7 +30,7 @@ index 9e925132..606972ec 100644
 +          Condition="'$(DisableNerdbankVersioning)' == 'true'">
 +    <PropertyGroup>
 +      <AssemblyVersion>15.1.0.0</AssemblyVersion>
-+      <FileVersion>15.8.0.0</FileVersion>
++      <FileVersion>16.0.0.0</FileVersion>
 +      <InformationalVersion>$(FileVersion)-mono</InformationalVersion>
 +    </PropertyGroup>
 +  </Target>
