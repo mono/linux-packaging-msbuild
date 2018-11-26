@@ -1,9 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-//-----------------------------------------------------------------------
-// </copyright>
-// <summary>The build request builder component.</summary>
-//-----------------------------------------------------------------------
 
 using System;
 using System.Collections;
@@ -1304,7 +1300,7 @@ namespace Microsoft.Build.BackEnd
                 {
                     // If <MSBuildTreatWarningsAsErrors was specified then an empty ISet<string> signals the IEventSourceSink to treat all warnings as errors
                     //
-                    loggingService.AddWarningsAsErrors(buildEventContext.ProjectInstanceId, new HashSet<string>());
+                    loggingService.AddWarningsAsErrors(buildEventContext, new HashSet<string>());
                 }
                 else
                 {
@@ -1312,7 +1308,7 @@ namespace Microsoft.Build.BackEnd
 
                     if (warningsAsErrors?.Count > 0)
                     {
-                        loggingService.AddWarningsAsErrors(buildEventContext.ProjectInstanceId, warningsAsErrors);
+                        loggingService.AddWarningsAsErrors(buildEventContext, warningsAsErrors);
                     }
                 }
 
@@ -1320,7 +1316,7 @@ namespace Microsoft.Build.BackEnd
 
                 if (warningsAsMessages?.Count > 0)
                 {
-                    loggingService.AddWarningsAsMessages(buildEventContext.ProjectInstanceId, warningsAsMessages);
+                    loggingService.AddWarningsAsMessages(buildEventContext, warningsAsMessages);
                 }
             }
         }

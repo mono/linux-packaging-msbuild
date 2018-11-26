@@ -23,7 +23,7 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Shared;
-
+using Microsoft.Build.Shared.FileSystem;
 using Microsoft.Build.Utilities;
 #if (!STANDALONEBUILD)
 using Microsoft.Internal.Performance;
@@ -109,10 +109,9 @@ namespace Microsoft.Build.CommandLine
         private static ManualResetEvent s_cancelComplete = new ManualResetEvent(true);
 
         /// <summary>
-        /// Set to 1 when the cancel method has been invoked.
-        /// Never reset to false: subsequent hits of Ctrl-C should do nothing
+        /// Cancel when handling Ctrl-C
         /// </summary>
-        private static int s_receivedCancel;
+        private static CancellationTokenSource s_buildCancellationSource = new CancellationTokenSource();
 
         /// <summary>
         /// Static constructor
@@ -252,7 +251,7 @@ namespace Microsoft.Build.CommandLine
         /// </comments>
         static private void AppendOutputFile(string path, Int64 elapsedTime)
         {
-            if (!File.Exists(path))
+            if (!FileSystems.Default.FileExists(path))
             {
                 using (StreamWriter sw = File.CreateText(path))
                 {
@@ -817,12 +816,12 @@ namespace Microsoft.Build.CommandLine
 
             e.Cancel = true; // do not terminate rudely
 
-            bool alreadyCalled = (Interlocked.CompareExchange(ref s_receivedCancel, 1, 0) == 1);
-
-            if (alreadyCalled)
+            if (s_buildCancellationSource.IsCancellationRequested)
             {
                 return;
             }
+
+            s_buildCancellationSource.Cancel();
 
             Console.WriteLine(ResourceUtilities.GetResourceString("AbortingBuild"));
 
@@ -1231,7 +1230,7 @@ namespace Microsoft.Build.CommandLine
 
                 // Even if Ctrl-C was already hit, we still pend the build request and then cancel.
                 // That's so the build does not appear to have completed successfully.
-                if (s_receivedCancel == 1)
+                if (s_buildCancellationSource.IsCancellationRequested)
                 {
                     buildManager.CancelAllSubmissions();
                 }
@@ -1660,7 +1659,7 @@ namespace Microsoft.Build.CommandLine
                 {
                     commandLineSwitches.SetSwitchError("MissingResponseFileError", unquotedCommandLineArg);
                 }
-                else if (!File.Exists(responseFile))
+                else if (!FileSystems.Default.FileExists(responseFile))
                 {
                     commandLineSwitches.SetParameterError("ResponseFileNotFoundError", unquotedCommandLineArg);
                 }
@@ -1861,7 +1860,7 @@ namespace Microsoft.Build.CommandLine
             bool found = false;
 
             // if the auto-response file does not exist, only use the switches on the command line
-            if (File.Exists(autoResponseFile))
+            if (FileSystems.Default.FileExists(autoResponseFile))
             {
                 found = true;
                 GatherResponseFileSwitch("@" + autoResponseFile, switchesFromAutoResponseFile);
@@ -2502,7 +2501,7 @@ namespace Microsoft.Build.CommandLine
             {
                 projectFile = FileUtilities.FixFilePath(parameters[0]);
 
-                if (Directory.Exists(projectFile))
+                if (FileSystems.Default.DirectoryExists(projectFile))
                 {
                     // If the project file is actually a directory then change the directory to be searched
                     // and null out the project file
@@ -2511,7 +2510,7 @@ namespace Microsoft.Build.CommandLine
                 }
                 else
                 {
-                    InitializationException.VerifyThrow(File.Exists(projectFile), "ProjectNotFoundError", projectFile);
+                    InitializationException.VerifyThrow(FileSystems.Default.FileExists(projectFile), "ProjectNotFoundError", projectFile);
                 }
             }
 
@@ -3298,7 +3297,7 @@ namespace Microsoft.Build.CommandLine
 
             // figure out whether the assembly's identity (strong/weak name), or its filename/path is provided
             string testFile = FileUtilities.FixFilePath(loggerAssemblySpec);
-            if (File.Exists(testFile))
+            if (FileSystems.Default.FileExists(testFile))
             {
                 loggerAssemblyFile = testFile;
             }
@@ -3387,12 +3386,11 @@ namespace Microsoft.Build.CommandLine
             IEnumerable<DistributedLoggerRecord> distributedLoggerRecords,
             int cpuCount)
         {
-            var replayEventSource = new Logging.BinaryLogReplayEventSource();
+            var replayEventSource = new BinaryLogReplayEventSource();
 
             foreach (var distributedLoggerRecord in distributedLoggerRecords)
             {
-                var nodeLogger = distributedLoggerRecord.CentralLogger as INodeLogger;
-                if (nodeLogger != null)
+                if (distributedLoggerRecord.CentralLogger is INodeLogger nodeLogger)
                 {
                     nodeLogger.Initialize(replayEventSource, cpuCount);
                 }
@@ -3404,8 +3402,7 @@ namespace Microsoft.Build.CommandLine
 
             foreach (var logger in loggers)
             {
-                var nodeLogger = logger as INodeLogger;
-                if (nodeLogger != null)
+                if (logger is INodeLogger nodeLogger)
                 {
                     nodeLogger.Initialize(replayEventSource, cpuCount);
                 }
@@ -3417,7 +3414,7 @@ namespace Microsoft.Build.CommandLine
 
             try
             {
-                replayEventSource.Replay(binaryLogFilePath);
+                replayEventSource.Replay(binaryLogFilePath, s_buildCancellationSource.Token);
             }
             catch (Exception ex)
             {
@@ -3449,7 +3446,7 @@ namespace Microsoft.Build.CommandLine
             {
                 InitializationException.VerifyThrow(schemaFile == null, "MultipleSchemasError", parameter);
                 string fileName = FileUtilities.FixFilePath(parameter);
-                InitializationException.VerifyThrow(File.Exists(fileName), "SchemaNotFoundError", fileName);
+                InitializationException.VerifyThrow(FileSystems.Default.FileExists(fileName), "SchemaNotFoundError", fileName);
 
                 schemaFile = Path.Combine(Directory.GetCurrentDirectory(), fileName);
             }
@@ -3502,7 +3499,11 @@ namespace Microsoft.Build.CommandLine
             const string frameworkName = ".NET Framework";
 #endif
 
-            Console.WriteLine(ResourceUtilities.FormatResourceString("CopyrightMessage", msg, frameworkName));
+#if THISASSEMBLY
+            Console.WriteLine(ResourceUtilities.FormatResourceString("CopyrightMessage", ThisAssembly.AssemblyInformationalVersion, frameworkName));
+#else
+            Console.WriteLine(ResourceUtilities.FormatResourceString("CopyrightMessage", ProjectCollection.Version.ToString(), frameworkName));
+#endif
         }
 
         /// <summary>

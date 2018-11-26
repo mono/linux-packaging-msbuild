@@ -48,7 +48,7 @@ namespace Microsoft.Build.Engine.UnitTests.BackEnd
 
             var resolvers = loader.LoadResolvers(_loggingContext, new MockElementLocation("file"));
 
-            resolvers.Select(i => i.GetType().FullName).ShouldBe(new [] { "NuGet.MSBuildSdkResolver.NuGetSdkResolver", typeof(DefaultSdkResolver).FullName });
+            resolvers.Select(i => i.GetType().FullName).ShouldBe(new [] { typeof(DefaultSdkResolver).FullName });
             
             _logger.ErrorCount.ShouldBe(0);
             _logger.WarningCount.ShouldBe(0);
@@ -187,7 +187,7 @@ namespace Microsoft.Build.Engine.UnitTests.BackEnd
         {
             using (var env = TestEnvironment.Create(_output))
             {
-                var root = env.CreateFolder().FolderPath;
+                var root = env.CreateFolder().Path;
                 var resolverPath = Path.Combine(root, "MyTestResolver");
                 var resolverManifest = Path.Combine(resolverPath, "MyTestResolver.xml");
 
@@ -212,7 +212,7 @@ namespace Microsoft.Build.Engine.UnitTests.BackEnd
         {
             using (var env = TestEnvironment.Create(_output))
             {
-                var root = env.CreateFolder().FolderPath;
+                var root = env.CreateFolder().Path;
                 var resolverPath = Path.Combine(root, "MyTestResolver");
                 var resolverManifest = Path.Combine(resolverPath, "MyTestResolver.xml");
 
@@ -236,7 +236,7 @@ namespace Microsoft.Build.Engine.UnitTests.BackEnd
         {
             using (var env = TestEnvironment.Create(_output))
             {
-                var root = env.CreateFolder().FolderPath;
+                var root = env.CreateFolder().Path;
                 var resolverPath = Path.Combine(root, "MyTestResolver");
 
                 Directory.CreateDirectory(resolverPath);
@@ -252,7 +252,7 @@ namespace Microsoft.Build.Engine.UnitTests.BackEnd
         {
             using (var env = TestEnvironment.Create(_output))
             {
-                var root = env.CreateFolder().FolderPath;
+                var root = env.CreateFolder().Path;
                 var resolverPath = Path.Combine(root, "MyTestResolver");
                 var resolverManifest = Path.Combine(resolverPath, "MyTestResolver.xml");
 

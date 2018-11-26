@@ -1,9 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-//-----------------------------------------------------------------------
-// </copyright>
-// <summary>Definition of ProjectImportElement class.</summary>
-//-----------------------------------------------------------------------
 
 using System.Diagnostics;
 using Microsoft.Build.Framework;
@@ -25,7 +21,7 @@ namespace Microsoft.Build.Construction
         internal ProjectImportElement(XmlElementWithLocation xmlElement, ProjectElementContainer parent, ProjectRootElement containingProject, SdkReference sdkReference = null)
             : base(xmlElement, parent, containingProject)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(parent, "parent");
+            ErrorUtilities.VerifyThrowArgumentNull(parent, nameof(parent));
             ParsedSdkReference = sdkReference;
         }
 
@@ -169,7 +165,7 @@ namespace Microsoft.Build.Construction
         /// <inheritdoc />
         protected override ProjectElement CreateNewInstance(ProjectRootElement owner)
         {
-            return owner.CreateImportElement(this.Project);
+            return owner.CreateImportElement(Project);
         }
 
         /// <summary>
@@ -179,8 +175,7 @@ namespace Microsoft.Build.Construction
         /// <returns>True if the ParsedSdkReference was updated, otherwise false (no update necessary).</returns>
         private bool CheckUpdatedSdk()
         {
-
-            SdkReference sdk = new SdkReference(
+            var sdk = new SdkReference(
                 ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdk, true),
                 ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkVersion, true),
                 ProjectXmlUtilities.GetAttributeValue(XmlElement, XMakeAttributes.sdkMinimumVersion, true));

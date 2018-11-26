@@ -30,11 +30,12 @@
   <PropertyGroup>
     <UsingToolMicrosoftNetCompilers>false</UsingToolMicrosoftNetCompilers>
     <UsingToolVSSDK>true</UsingToolVSSDK>
+    <MicroBuildPluginsSwixBuildVersion>1.0.422</MicroBuildPluginsSwixBuildVersion>
   </PropertyGroup>
 
   <!-- Toolset Dependencies -->
   <PropertyGroup>
-    <DotNetCliVersion>2.1.300-preview2-008530</DotNetCliVersion>
+    <DotNetCliVersion>2.1.300</DotNetCliVersion>
     <!-- We are pretty much always on a preview SDK. No need to warn about it. -->
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <VSWhereVersion>2.2.7</VSWhereVersion>
@@ -46,21 +47,25 @@
 
   <!-- Production Dependencies -->
   <PropertyGroup>
+    <MicrosoftWin32RegistryVersion>4.3.0</MicrosoftWin32RegistryVersion>
     <VisualStudioSetupInteropVersion>1.16.30</VisualStudioSetupInteropVersion>
 
     <!-- MSBuild custom overall switch -->
-    <NuGetPackageVersion>4.8.0-preview1.5158</NuGetPackageVersion>
+    <NuGetPackageVersion>4.8.0-preview1.5196</NuGetPackageVersion>
 
     <!-- Prodcon-overrideable, using repo-toolset naming convention -->
     <NuGetBuildTasksVersion>$(NuGetPackageVersion)</NuGetBuildTasksVersion>
     <NuGetCommandsVersion>$(NuGetPackageVersion)</NuGetCommandsVersion>
     <NuGetProtocolVersion>$(NuGetPackageVersion)</NuGetProtocolVersion>
+
+    <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
+    <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
 </PropertyGroup>
 
   <!-- Test Dependencies -->
   <PropertyGroup>
     <MicrosoftCodeAnalysisBuildTasksVersion>3.0.0-beta1-61516-01</MicrosoftCodeAnalysisBuildTasksVersion>
-    <MicrosoftExtensionsDependencyModelVersion>2.0.0</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <ShouldlyVersion>3.0.0</ShouldlyVersion>
   </PropertyGroup>
 
