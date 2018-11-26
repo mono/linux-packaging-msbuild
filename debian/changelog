@@ -1,3 +1,9 @@
+msbuild (1:16.0+xamarinxplat.2018.09.26.17.53-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.0+xamarinxplat.2018.09.26.17.53.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 26 Nov 2018 19:14:17 +0000
+
 msbuild (1:15.8+xamarinxplat.2018.07.31.22.43-0xamarin6) preview; urgency=medium
 
   * Packaging bugfix:
