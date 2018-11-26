@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-//-----------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
@@ -76,7 +75,7 @@ namespace Microsoft.Build.UnitTests.OM.Construction
         {
             _env = TestEnvironment.Create();
 
-            _testSdkRoot = _env.CreateFolder().FolderPath;
+            _testSdkRoot = _env.CreateFolder().Path;
             _testSdkDirectory = Path.Combine(_testSdkRoot, SdkName, "Sdk");
             _sdkPropsPath = Path.Combine(_testSdkDirectory, "Sdk.props");
             _sdkTargetsPath = Path.Combine(_testSdkDirectory, "Sdk.targets");
@@ -338,7 +337,7 @@ namespace Microsoft.Build.UnitTests.OM.Construction
             var projectOptions = SdkUtilities.CreateProjectOptionsWithResolver(new SdkUtilities.FileBasedMockSdkResolver(mapping));
 
             // Create a normal project (p1) which imports an SDK style project (p2).
-            var projectFolder = _env.CreateFolder().FolderPath;
+            var projectFolder = _env.CreateFolder().Path;
 
             var p1 = @"<Project> <Import Project=""p2.proj"" /> </Project>";
             var p2 = string.Format(projectFormatString, SdkName, projectInnerContents);

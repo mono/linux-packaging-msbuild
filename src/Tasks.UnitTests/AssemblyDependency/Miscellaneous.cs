@@ -3289,12 +3289,11 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void ParentAssemblyResolvedFromAForGac()
         {
-            Hashtable parentReferenceFolderHash = new Hashtable();
-            List<string> parentReferenceFolders = new List<string>();
-            List<Reference> referenceList = new List<Reference>();
+            var parentReferenceFolders = new List<string>();
+            var referenceList = new List<Reference>();
 
-            TaskItem taskItem = new TaskItem("Microsoft.VisualStudio.Interopt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
-            Reference reference = new Reference(isWinMDFile, fileExists, getRuntimeVersion);
+            var taskItem = new TaskItem("Microsoft.VisualStudio.Interopt, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+            var reference = new Reference(isWinMDFile, fileExists, getRuntimeVersion);
             reference.MakePrimaryAssemblyReference(taskItem, false, ".dll");
             reference.FullPath = "c:\\AssemblyFolders\\Microsoft.VisualStudio.Interopt.dll";
             reference.ResolvedSearchPath = "{AssemblyFolders}";
@@ -3315,14 +3314,13 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 
             foreach (Reference parentReference in referenceList)
             {
-                ReferenceTable.CalculateParentAssemblyDirectories(parentReferenceFolderHash, parentReferenceFolders, parentReference);
+                ReferenceTable.CalculateParentAssemblyDirectories(parentReferenceFolders, parentReference);
             }
 
             Assert.Equal(1, parentReferenceFolders.Count);
             Assert.True(parentReferenceFolders[0].Equals(reference2.ResolvedSearchPath, StringComparison.OrdinalIgnoreCase));
         }
-
-
+        
         /// <summary>
         /// Generate a fake reference which has been resolved from the gac. We will use it to verify the creation of the exclusion list.
         /// </summary>
@@ -8560,8 +8558,8 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                 AssemblyTableInfo tableInfo = new AssemblyTableInfo(redistFile, "DoesNotExist");
                 RedistList redist = RedistList.GetRedistList(new AssemblyTableInfo[] { tableInfo });
 
-                AssemblyEntry[] entryArray = redist.FindAssemblyNameFromSimpleName("System");
-                Assert.Equal(6, entryArray.Length);
+                List<AssemblyEntry> entryArray = redist.FindAssemblyNameFromSimpleName("System").ToList();
+                Assert.Equal(6, entryArray.Count);
                 AssemblyNameExtension a1 = new AssemblyNameExtension(entryArray[0].FullName);
                 AssemblyNameExtension a2 = new AssemblyNameExtension(entryArray[1].FullName);
                 AssemblyNameExtension a3 = new AssemblyNameExtension(entryArray[2].FullName);

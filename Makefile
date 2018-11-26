@@ -14,3 +14,4 @@ clean-%: clean
 
 clean:
 	rm -Rf artifacts
+	rm -Rf build/obj

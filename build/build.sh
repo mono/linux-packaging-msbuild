@@ -356,11 +356,7 @@ function Build {
   if $prepareMachine
   then
     CreateDirectory "$NuGetPackageRoot"
-    if [ "$hostType" != "mono" ]; then
-        eval "$(QQ $DOTNET_HOST_PATH) nuget locals all --clear"
-    else
-        eval "nuget locals all -clear"
-    fi
+    eval "$(QQ $DOTNET_HOST_PATH) nuget locals all --clear"
 
     ExitIfError $? "Failed to clear NuGet cache"
   fi
@@ -412,10 +408,10 @@ function Build {
       msbuildToUse=$(QQ "$bootstrapRoot/netcoreapp2.1/MSBuild/MSBuild.dll")
     elif [ "$hostType" = "mono" ]
     then
-      msbuildToUse="$bootstrapRoot/net461/MSBuild/15.0/Bin/MSBuild.dll"
+      msbuildToUse="$bootstrapRoot/net471/MSBuild/15.0/Bin/MSBuild.dll"
       msbuildHost="mono"
 
-      properties="$properties /p:MSBuildExtensionsPath=$bootstrapRoot/net461/MSBuild/"
+      properties="$properties /p:MSBuildExtensionsPath=$bootstrapRoot/net471/MSBuild/"
     else
       ErrorHostType
     fi
@@ -438,6 +434,7 @@ function Build {
 function AssertNugetPackages {
   if $pack || $dotnetBuildFromSource
   then
+
     packageCount=$(find $PackagesDir -type f | wc -l)
     if [ $packageCount -ne 5 ]
     then
