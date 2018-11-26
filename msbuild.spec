@@ -14,7 +14,7 @@
 
 Name:           msbuild
 Version:	16.0+xamarinxplat.2018.09.26.17.53
-Release:	0.xamarin.1
+Release:	0.xamarin.2
 Summary:        Build system for .NET projects
 Epoch:		1
 License:        MIT
