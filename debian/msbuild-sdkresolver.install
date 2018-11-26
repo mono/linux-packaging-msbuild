@@ -1,1 +1,1 @@
-debian/Microsoft.DotNet.MSBuildSdkResolver.dll	/usr/lib/mono/msbuild/15.0/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
+/usr/lib/mono/msbuild/15.0/bin/SdkResolvers/
