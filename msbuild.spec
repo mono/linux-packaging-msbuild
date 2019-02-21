@@ -24,8 +24,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Patch0:		fixed-build-version.diff
 BuildRequires:  mono-devel
-BuildRequires:  libunwind-devel
-BuildRequires:  libicu-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openssl-devel
 BuildArch:      noarch
