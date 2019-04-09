@@ -377,6 +377,91 @@
             True at 100% completion
             </summary>
         </member>
+        <member name="T:NuGet.Protocol.Core.Types.PluginManager">
+            <summary>
+            A plugin manager. This manages all the live plugins and their operation claims.
+            Invoked in by both the credential provider and the PluginResourceProvider
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Core.Types.PluginManager.EnvironmentVariableReader">
+            <summary>
+            Gets an environment variable reader.
+            </summary>
+            <remarks>This is non-private only to facilitate testing.</remarks>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.#ctor(NuGet.Common.IEnvironmentVariableReader,System.Lazy{NuGet.Protocol.Plugins.IPluginDiscoverer},System.Func{System.TimeSpan,NuGet.Protocol.Plugins.IPluginFactory})">
+            <summary>
+            Creates a new plugin manager
+            </summary>
+            <remarks>This is public to facilitate unit testing. This should not be called from product code</remarks>
+            <param name="reader">An environment variable reader.</param>
+            <param name="pluginDiscoverer">A lazy plugin discoverer.</param>
+            <param name="pluginFactoryCreator">A plugin factory creator.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="reader" /> is <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginDiscoverer" />
+            is <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginFactoryCreator" />
+            is <c>null</c>.</exception>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.Dispose">
+            <summary>
+            Disposes of this instance.
+            This should not be called in production code as this is a singleton instance.
+            The pattern is implemented because the plugin manager transitively owns objects
+            that need to implement IDisposable because they potentially have managed and unmanaged resources.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.FindAvailablePluginsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Find all available plugins on the machine
+            </summary>
+            <param name="cancellationToken"></param>
+            <returns>PluginDiscoveryResults</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.CreatePluginsAsync(NuGet.Protocol.Core.Types.SourceRepository,System.Threading.CancellationToken)">
+            <summary>
+            Create plugins appropriate for the given source
+            </summary>
+            <param name="source"></param>
+            <param name="cancellationToken"></param>
+            <exception cref="T:System.ArgumentNullException">Throw if <paramref name="source" /> is null </exception>
+            <returns>PluginCreationResults</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.TryGetSourceAgnosticPluginAsync(NuGet.Protocol.Plugins.PluginDiscoveryResult,NuGet.Protocol.Plugins.OperationClaim,System.Threading.CancellationToken)">
+            <summary>
+            Creates a plugin from the given pluginDiscoveryResult.
+            This plugin's operations will be source agnostic ones (Authentication)
+            </summary>
+            <param name="pluginDiscoveryResult">plugin discovery result</param>
+            <param name="requestedOperationClaim">The requested operation claim</param>
+            <param name="cancellationToken">cancellation token</param>
+            <returns>A plugin creation result, null if the requested plugin cannot handle the given operation claim</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.TryCreatePluginAsync(NuGet.Protocol.Plugins.PluginDiscoveryResult,NuGet.Protocol.Plugins.OperationClaim,NuGet.Protocol.Core.Types.PluginManager.PluginRequestKey,System.String,Newtonsoft.Json.Linq.JObject,System.Threading.CancellationToken)">
+            <summary>
+            Creates a plugin from the discovered plugin.
+            We firstly check the cache for the operation claims for the given request key.
+            If there is a valid cache entry, and it does contain the requested operation claim, then we start the plugin, and if need be update the cache value itself.
+            If there is a valid cache entry, and it does NOT contain the requested operation claim, then we return a null.
+            If there is no valid cache entry or an invalid one, we start the plugin as normally, return an active plugin even if the requested claim is not available, and write a cache entry.
+            </summary>
+            <param name="result">plugin discovery result</param>
+            <param name="requestedOperationClaim">The requested operation claim</param>
+            <param name="requestKey">plugin request key</param>
+            <param name="packageSourceRepository">package source repository</param>
+            <param name="serviceIndex">service index</param>
+            <param name="cancellationToken">cancellation token</param>
+            <returns>A plugin creation result, null if the requested plugin cannot handle the given operation claim</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginManager.GetCurrentCultureName">
+            <summary>
+            Gets the current culture.
+            An invariant culture's name will be "". Since InitializeRequest has a null or empty check, this can be a problem.
+            Because the InitializeRequest message is part of a protocol, and the reason why we set the culture is allow the plugins to localize their messages,
+            we can safely default to en. 
+            </summary>
+            <returns>CurrentCulture or an en default if the current culture is invariant</returns>
+        </member>
         <member name="T:NuGet.Protocol.Core.Types.ProviderComparer">
             <summary>
             An imperfect sort for provider before/after
@@ -387,22 +472,6 @@
             A plugin resource provider.
             </summary>
             <remarks>This is unsealed only to facilitate testing.</remarks>
-        </member>
-        <member name="P:NuGet.Protocol.Core.Types.PluginResourceProvider.EnvironmentVariableReader">
-            <summary>
-            Gets an environment variable reader.
-            </summary>
-            <remarks>This is non-private only to facilitate testing.</remarks>
-        </member>
-        <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.#ctor">
-            <summary>
-            Initializes a new <see cref="T:NuGet.Protocol.Core.Types.PluginResourceProvider" /> class.
-            </summary>
-        </member>
-        <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.Dispose">
-            <summary>
-            Disposes of this instance.
-            </summary>
         </member>
         <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.TryCreate(NuGet.Protocol.Core.Types.SourceRepository,System.Threading.CancellationToken)">
             <summary>
@@ -415,21 +484,6 @@
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="source" /> is <c>null</c>.</exception>
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
-        </member>
-        <member name="M:NuGet.Protocol.Core.Types.PluginResourceProvider.Reinitialize(NuGet.Common.IEnvironmentVariableReader,System.Lazy{NuGet.Protocol.Plugins.IPluginDiscoverer},System.Func{System.TimeSpan,NuGet.Protocol.Plugins.IPluginFactory})">
-            <summary>
-            Reinitializes static state.
-            </summary>
-            <remarks>This is non-private only to facilitate unit testing.
-            This should not be called by product code.</remarks>
-            <param name="reader">An environment variable reader.</param>
-            <param name="pluginDiscoverer">A lazy plugin discoverer.</param>
-            <param name="pluginFactoryCreator">A plugin factory creator.</param>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="reader" /> is <c>null</c>.</exception>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginDiscoverer" />
-            is <c>null</c>.</exception>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginFactoryCreator" />
-            is <c>null</c>.</exception>
         </member>
         <member name="T:NuGet.Protocol.Core.Types.PluginFindPackageByIdResource">
             <summary>
@@ -502,6 +556,26 @@
         <member name="M:NuGet.Protocol.Core.Types.PluginFindPackageByIdResource.GetDependencyInfoAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
             <summary>
             Asynchronously gets dependency information for a specific package.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
+        <member name="M:NuGet.Protocol.Core.Types.PluginFindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
             </summary>
             <param name="id">A package id.</param>
             <param name="version">A package version.</param>
@@ -723,6 +797,26 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
         </member>
+        <member name="M:NuGet.Protocol.Core.Types.FindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
         <member name="M:NuGet.Protocol.Core.Types.FindPackageByIdResource.GetDependencyInfo(NuGet.Packaging.NuspecReader)">
             <summary>
             Read dependency info from a nuspec.
@@ -800,7 +894,7 @@
             Create temporary verification api key endpoint: "create-verification-key/[package id]/[package version]"
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Core.Types.PackageUpdateResource.GetSymbolsPath(System.String)">
+        <member name="M:NuGet.Protocol.Core.Types.PackageUpdateResource.GetSymbolsPath(System.String,System.Boolean)">
             <summary>
             Get the symbols package from the original package. Removes the .nupkg and adds .symbols.nupkg
             </summary>
@@ -830,6 +924,11 @@
             The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns a <see cref="T:NuGet.Protocol.Core.Types.PluginResource.GetPluginResult" />.</returns>
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
+        </member>
+        <member name="T:NuGet.Protocol.Core.Types.SymbolPackageUpdateResourceV3">
+            <summary>
+            Contains logics to push symbol packages in Http server or file system
+            </summary>
         </member>
         <member name="T:NuGet.Protocol.Core.Types.SearchFilter">
             <summary>
@@ -906,8 +1005,8 @@
             Suppose there are only prerelease versions. Notice there are no package that has IsLatestVersion as true.
             
               Version     | Prerelease | IsLatestVersion | IsAbsoluteLatestVersion
-              8
-              ------------|------------|-----------------|------------------------.0.1-beta1 | true       | false           | false
+              ------------|------------|-----------------|------------------------
+              8.0.1-beta1 | true       | false           | false
               9.0.2-beta1 | true       | false           | true
             
             </remarks>
@@ -1853,6 +1952,26 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
         </member>
+        <member name="M:NuGet.Protocol.LocalV2FindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
         <member name="T:NuGet.Protocol.LocalV2FindPackageByIdResourceProvider">
             <summary>
             A v2-style package repository that has nupkgs at the root.
@@ -1954,6 +2073,26 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
         </member>
+        <member name="M:NuGet.Protocol.LocalV3FindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
         <member name="T:NuGet.Protocol.LocalV3FindPackageByIdResourceProvider">
             <summary>
             A v3-style package repository that has expanded packages.
@@ -2014,9 +2153,9 @@
         </member>
         <member name="M:NuGet.Protocol.LocalPackageFileCache.GetOrAddSha512(System.String)">
             <summary>
-            Read the .sha512 file from disk.
+            Read the .metadata.json file from disk.
             </summary>
-            <remarks>Throws if the file is not found.</remarks>
+            <remarks>Throws if the file is not found or corrupted.</remarks>
         </member>
         <member name="M:NuGet.Protocol.LocalPackageFileCache.Sha512Exists(System.String)">
             <summary>
@@ -2619,6 +2758,31 @@
             <exception cref="T:System.ObjectDisposedException">Thrown if this object is disposed.</exception>
             <remarks>This is intended to be called by NuGet client tools.</remarks>
         </member>
+        <member name="M:NuGet.Protocol.Plugins.IPluginManager.CreatePluginsAsync(NuGet.Protocol.Core.Types.SourceRepository,System.Threading.CancellationToken)">
+            <summary>
+            Create plugins appropriate for the given source
+            </summary>
+            <param name="source"></param>
+            <param name="cancellationToken"></param>
+            <exception cref="T:System.ArgumentNullException">Throw if <paramref name="source" /> is null </exception>
+            <returns>PluginCreationResults</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.IPluginManager.FindAvailablePluginsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Find all available plugins on the machine
+            </summary>
+            <param name="cancellationToken"></param>
+            <returns>PluginDiscoveryResults</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.IPluginManager.TryGetSourceAgnosticPluginAsync(NuGet.Protocol.Plugins.PluginDiscoveryResult,NuGet.Protocol.Plugins.OperationClaim,System.Threading.CancellationToken)">
+            <summary>
+            Creates a plugin from the given pluginDiscoveryResult.
+            This plugin's operations will be source agnostic ones
+            </summary>
+            <param name="pluginDiscoveryResult"></param>
+            <param name="cancellationToken"></param>
+            <returns>A PluginCreationResult</returns>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.IPluginMulticlientUtilities">
             <summary>
             Plugin multiclient utilities.
@@ -3113,6 +3277,11 @@
             Set log level
             </summary>
         </member>
+        <member name="F:NuGet.Protocol.Plugins.MessageMethod.GetAuthenticationCredentials">
+            <summary>
+            Get authentication credentials, for authentication operation
+            </summary>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.MessageResponseCode">
             <summary>
             Message response codes.
@@ -3288,6 +3457,91 @@
             <exception cref="T:System.ArgumentException">Thrown if <paramref name="message" />
             is either <c>null</c> or an empty string.</exception>
         </member>
+        <member name="T:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest">
+            <summary>
+            A get authentication credentials request
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest.Uri">
+            <summary>
+            Uri
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest.IsRetry">
+            <summary>
+            isRetry
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest.IsNonInteractive">
+            <summary>
+            IsNonInteractive - tells the plugin whether it can block the operation to ask for user input. Be it a device flow request or a pop-up. 
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest.CanShowDialog">
+            <summary>
+            CanShowDialog - tells the plugin whether it can show a dialog if the plugin is run in interactive mode. This being false normally means that the auth method should be device flow.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.GetAuthenticationCredentialsRequest.#ctor(System.Uri,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Create a GetAuthenticationCredentialsRequest
+            </summary>
+            <param name="uri"></param>
+            <param name="isRetry"></param>
+            <param name="isNonInteractive"></param>
+            <exception cref="T:System.ArgumentNullException"> if <paramref name="uri" /> is null</exception>
+        </member>
+        <member name="T:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse">
+            <summary>
+            A get authentication credentials response
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.Username">
+            <summary>
+            Username
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.Password">
+            <summary>
+            password token
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.Message">
+            <summary>
+            message - optional, can be used as a way to communicate to NuGet why the authentication failed.
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.AuthenticationTypes">
+            <summary>
+            Gets or sets the list of authentication types this credential is applicable to. Useful values include
+            <c>basic</c>, <c>digest</c>, <c>negotiate</c>, and <c>ntlm</c>
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.ResponseCode">
+            <summary>
+            ResponseCode - status of the credentials
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.#ctor(System.String,System.String,System.String,System.Collections.Generic.IList{System.String},NuGet.Protocol.Plugins.MessageResponseCode)">
+            <summary>
+            Create a response object
+            </summary>
+            <param name="username"></param>
+            <param name="password"></param>
+            <param name="message"></param>
+            <param name="authenticationTypes"></param>
+            <param name="responseCode"></param>
+            <exception cref="T:System.ArgumentException">If MessageResponseCode is not defined on this runtime</exception>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.GetAuthenticationCredentialsResponse.IsValid">
+            <summary>
+            Gets a value indicating whether the provider returnd a valid response.
+            </summary>
+            <remarks>
+            Either Username or Password (or both) must be set, and AuthTypes must either be null or contain at least
+            one element
+            </remarks>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.GetCredentialsRequest">
             <summary>
             A request to get credentials.
@@ -3330,7 +3584,7 @@
             Gets the username.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Plugins.GetCredentialsResponse.#ctor(NuGet.Protocol.Plugins.MessageResponseCode,System.String,System.String)">
+        <member name="M:NuGet.Protocol.Plugins.GetCredentialsResponse.#ctor(NuGet.Protocol.Plugins.MessageResponseCode,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String})">
             <summary>
             Initializes a new instance of the <see cref="T:NuGet.Protocol.Plugins.GetCredentialsResponse" /> class.
             </summary>
@@ -3402,6 +3656,7 @@
         <member name="T:NuGet.Protocol.Plugins.GetOperationClaimsRequest">
             <summary>
             A query to a plugin about which operations it supports for a specific package source.
+            In version 1.0.0, the fields are required. That's not the case for version 2.0.0
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Plugins.GetOperationClaimsRequest.PackageSourceRepository">
@@ -3420,9 +3675,7 @@
             </summary>
             <param name="packageSourceRepository">The package source location.</param>
             <param name="serviceIndex">The service index (index.json).</param>
-            <exception cref="T:System.ArgumentException">Thrown if <paramref name="packageSourceRepository" /> is either
-            <c>null</c> or an empty string.</exception>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="serviceIndex" /> is <c>null</c>.</exception>
+            <remarks>Both packageSourceRepository and service index can be null. If they are, the operation claims request is considered as source agnostic</remarks>
         </member>
         <member name="T:NuGet.Protocol.Plugins.GetOperationClaimsResponse">
             <summary>
@@ -4134,6 +4387,11 @@
             The download package operation claim.
             </summary>
         </member>
+        <member name="F:NuGet.Protocol.Plugins.OperationClaim.Authentication">
+            <summary>
+            The authentication operation claim
+            </summary>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.OutboundRequestContext">
             <summary>
             Context for an outbound request.
@@ -4312,6 +4570,32 @@
             </summary>
             <remarks>This does not call <see cref="M:System.IDisposable.Dispose" />.</remarks>
         </member>
+        <member name="T:NuGet.Protocol.Plugins.PluginCacheEntry">
+            <summary>
+            This class represents a plugin operations cache entry.
+            It contains expiry logic, read/write/update logic.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginCacheEntry.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Create a plugin cache entry.
+            </summary>
+            <param name="rootCacheFolder">The root cache folder, normally /localappdata/nuget/plugins-cache</param>
+            <param name="pluginFilePath">The full plugin file path, which will be used to create a key for the folder created in the root folder itself </param>
+            <param name="requestKey">A unique request key for the operation claims. Ideally the packageSourceRepository value of the PluginRequestKey. Example https://protected.package.feed/index.json, or Source-Agnostic</param>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginCacheEntry.LoadFromFile">
+            <summary>
+            Loads and processes the contet from the generated file if it exists.
+            Even after this method is invoked, the operation claims might be null. 
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginCacheEntry.UpdateCacheFileAsync">
+            <summary>
+            Updates the cache file with the current value in the operation claims if the operationn claims is not null.
+            </summary>
+            <returns>Task</returns>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.PluginConstants">
             <summary>
             Plugin constants.
@@ -4432,15 +4716,35 @@
             otherwise, <c>null</c>.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Plugins.PluginDiscoveryResult.#ctor(NuGet.Protocol.Plugins.PluginFile,System.String)">
+        <member name="M:NuGet.Protocol.Plugins.PluginDiscoveryResult.#ctor(NuGet.Protocol.Plugins.PluginFile)">
             <summary>
             Instantiates a new <see cref="T:NuGet.Protocol.Plugins.PluginDiscoveryResult" /> class.
             </summary>
             <param name="pluginFile">A plugin file.</param>
-            <param name="message">A message if <see cref="P:NuGet.Protocol.Plugins.PluginFile.State" /> is not
-            <see cref="F:NuGet.Protocol.Plugins.PluginFileState.Valid" />; otherwise, <c>null</c>.</param>
+            <see cref="F:NuGet.Protocol.Plugins.PluginFileState.Valid" />; otherwise, <c>null</c>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="pluginFile" />
             is <c>null</c>.</exception>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginDiscoveryUtility.GetInternalPlugins">
+            <summary>
+            The internal plugins located next to the NuGet assemblies.
+            </summary>
+            <returns>Internal plugins</returns>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginDiscoveryUtility.GetInternalPluginRelativeToMSBuildExe(System.String)">
+            <summary>
+            Given Visual Studio 2017 MSBuild.exe path, return the NuGet plugins directory which is in CommonExtensions\NuGet\Plugins
+            </summary>
+            <param name="msbuildExePath">The MsBuildExe path. Needs to be a valid path. file:// not supported.</param>
+            <returns>The NuGet plugins directory, null if <paramref name="msbuildExePath" /> is null</returns>
+            <remarks>The MSBuild.exe is in MSBuild\15.0\Bin\MsBuild.exe, the Plugins directory is in Common7\IDE\CommonExtensions\Microsoft\NuGet\Plugins</remarks>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.PluginDiscoveryUtility.GetNuGetPluginsDirectoryRelativeToNuGetAssembly(System.String)">
+            <summary>
+            Given a NuGet assembly path, returns the NuGet plugins directory
+            </summary>
+            <param name="nugetAssemblyPath">The path to a NuGet assembly in CommonExtensions\NuGet, needs to be a valid path. file:// not supported</param>
+            <returns>The NuGet plugins directory in CommonExtensions\NuGet\Plugins, null if the <paramref name="nugetAssemblyPath" /> is null</returns>
         </member>
         <member name="T:NuGet.Protocol.Plugins.PluginEventArgs">
             <summary>
@@ -4553,12 +4857,12 @@
             Gets the plugin file state.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.Plugins.PluginFile.#ctor(System.String,NuGet.Protocol.Plugins.PluginFileState)">
+        <member name="M:NuGet.Protocol.Plugins.PluginFile.#ctor(System.String,System.Lazy{NuGet.Protocol.Plugins.PluginFileState})">
             <summary>
             Instantiates a new <see cref="T:NuGet.Protocol.Plugins.PluginFile" /> class.
             </summary>
             <param name="filePath">The plugin's file path.</param>
-            <param name="state">The plugin file state.</param>
+            <param name="state">A lazy that evaluates the plugin file state.</param>
         </member>
         <member name="T:NuGet.Protocol.Plugins.PluginFileState">
             <summary>
@@ -5179,6 +5483,11 @@
             The current protocol version.
             </summary>
         </member>
+        <member name="F:NuGet.Protocol.Plugins.ProtocolConstants.Version100">
+            <summary>
+            The minimum supported protocol version.
+            </summary>
+        </member>
         <member name="F:NuGet.Protocol.Plugins.ProtocolConstants.HandshakeTimeout">
             <summary>
             The default handshake timeout.
@@ -5736,6 +6045,21 @@
             <param name="timeout">A timeout.</param>
             <returns><c>true</c> if the timeout is valid; otherwise, <c>false</c>.</returns>
         </member>
+        <member name="T:NuGet.Protocol.Plugins.UnixAndMonoPlatformsEmbeddedSignatureVerifier">
+            <summary>
+            Embedded Signature Verifier for the MacOS, Linux and Mono platforms.
+            </summary>
+        </member>
+        <member name="M:NuGet.Protocol.Plugins.UnixAndMonoPlatformsEmbeddedSignatureVerifier.IsValid(System.String)">
+            <summary>
+            Checks if a file has a valid embedded signature.
+            </summary>
+            <param name="filePath">The path of a file to be checked.</param>
+            <returns><c>true</c> if the file has a valid signature; otherwise, <c>false</c>.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="filePath" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.PlatformNotSupportedException">Thrown if the current platform is unsupported.</exception>
+        </member>
         <member name="T:NuGet.Protocol.Plugins.WindowsEmbeddedSignatureVerifier">
             <summary>
             Windows Authenticode signature verifier.
@@ -5972,6 +6296,26 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
         </member>
+        <member name="M:NuGet.Protocol.HttpFileSystemBasedFindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
         <member name="M:NuGet.Protocol.PackageUtilities.OpenNuspecFromNupkg(System.String,System.IO.Stream,NuGet.Common.ILogger)">
             <summary>
             Create a <see cref="T:NuGet.Packaging.NuspecReader" /> from a nupkg stream.
@@ -6096,6 +6440,26 @@
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
             is cancelled.</exception>
         </member>
+        <member name="M:NuGet.Protocol.RemoteV2FindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
         <member name="T:NuGet.Protocol.RemoteV2FindPackageByIdResourceProvider">
             <summary>
             A <see cref="T:NuGet.Protocol.Core.Types.ResourceProvider" /> for <see cref="T:NuGet.Protocol.Core.Types.FindPackageByIdResource" /> over v2 NuGet feeds.
@@ -6193,6 +6557,26 @@
             <returns>A task that represents the asynchronous operation.
             The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an <see cref="T:NuGet.Packaging.IPackageDownloader" />.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="packageIdentity" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
+            <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
+            is cancelled.</exception>
+        </member>
+        <member name="M:NuGet.Protocol.RemoteV3FindPackageByIdResource.DoesPackageExistAsync(System.String,NuGet.Versioning.NuGetVersion,NuGet.Protocol.Core.Types.SourceCacheContext,NuGet.Common.ILogger,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously check if exact package (id/version) exists at this source.
+            </summary>
+            <param name="id">A package id.</param>
+            <param name="version">A package version.</param>
+            <param name="cacheContext">A source cache context.</param>
+            <param name="logger">A logger.</param>
+            <param name="cancellationToken">A cancellation token.</param>
+            <returns>A task that represents the asynchronous operation.
+            The task result (<see cref="P:System.Threading.Tasks.Task`1.Result" />) returns an
+            <see cref="T:System.Collections.Generic.IEnumerable`1" />.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="id" />
+            is either <c>null</c> or an empty string.</exception>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version" /> <c>null</c>.</exception>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="cacheContext" /> <c>null</c>.</exception>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="logger" /> <c>null</c>.</exception>
             <exception cref="T:System.OperationCanceledException">Thrown if <paramref name="cancellationToken" />
@@ -6562,6 +6946,21 @@
               Looks up a localized string similar to the NuGet gallery.
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.Strings.LoadFileFromNupkg_FileNotFound">
+            <summary>
+              Looks up a localized string similar to The file '{0}' does not exist in the package..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.LoadFileFromNupkg_FileTooLarge">
+            <summary>
+              Looks up a localized string similar to Cannot load the file '{0}' because it is larger than {1} MB..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.LoadFileFromNupkg_UnknownProblemLoadingTheFile">
+            <summary>
+              Looks up a localized string similar to Unknown problem loading the file '{0}'..
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.Strings.Log_CanceledNupkgDownload">
             <summary>
               Looks up a localized string similar to Downloading a package from '{0}' was canceled..
@@ -6667,6 +7066,16 @@
               Looks up a localized string similar to No API Key was provided and no API Key could be found for {0}. To save an API Key for a source use the 'setApiKey' command..
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.Strings.NuGetLicense_LicenseExpressionVersionTooHigh">
+            <summary>
+              Looks up a localized string similar to The license version string '{0}' is higher than the one supported by this toolset '{1}'..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.NuGetLicenseExpression_NonStandardIdentifier">
+            <summary>
+              Looks up a localized string similar to The license identifier(s) {0} is(are) not recognized by the current toolset..
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.Strings.NuGetRepository_CannotCreateAggregateRepo">
             <summary>
               Looks up a localized string similar to Cannot create a NuGet Repository from the Aggregate Source.
@@ -6725,6 +7134,11 @@
         <member name="P:NuGet.Protocol.Strings.Plugin_ConnectionIsClosed">
             <summary>
               Looks up a localized string similar to The plugin connection is closed..
+            </summary>
+        </member>
+        <member name="P:NuGet.Protocol.Strings.Plugin_DownloadNotSupportedSinceUnsignedNotAllowed">
+            <summary>
+              Looks up a localized string similar to Downloading a package from a plugin is not supported since unsigned packages are not allowed and package download plugins do not support signed package verification..
             </summary>
         </member>
         <member name="P:NuGet.Protocol.Strings.Plugin_Exception">
@@ -6937,6 +7351,11 @@
               Looks up a localized string similar to Repository content URL for repository signatures must be HTTPS..
             </summary>
         </member>
+        <member name="P:NuGet.Protocol.Strings.RepositorySignaturesResourceMustBeHttps">
+            <summary>
+              Looks up a localized string similar to Repository Signatures resouce must be served over HTTPS. Source: {0}.
+            </summary>
+        </member>
         <member name="P:NuGet.Protocol.Strings.RequiredFeatureUnsupportedException_DefaultMessageWithFeature">
             <summary>
               Looks up a localized string similar to The '{0}' installation feature was required by a package but is not supported on the current host..
@@ -6971,6 +7390,14 @@
             <summary>
               Looks up a localized string similar to Found symbols package '{0}', but no API key was specified for the symbol server. To save an API Key, run 'NuGet.exe setApiKey [your API key from http://www.NuGet.org]'..
             </summary>
+        </member>
+        <member name="M:NuGet.Protocol.CachingUtility.ComputeHash(System.String,System.Boolean)">
+            <summary>
+            Given a string, it hashes said string and if <paramref name="addIdentifiableCharacters" /> is true appends identifiable characters to make the root of the cache more human readable
+            </summary>
+            <param name="value"></param>
+            <param name="addIdentifiableCharacters">whether to addIdentifiableCharacters. The default is true</param>
+            <returns>hash</returns>
         </member>
         <member name="M:NuGet.Protocol.FeedTypeUtility.GetFeedType(NuGet.Configuration.PackageSource)">
             <summary>
@@ -7197,7 +7624,7 @@
             <param name="root">Folder root.</param>
             <param name="id">Package id or package id prefix.</param>
         </member>
-        <member name="M:NuGet.Protocol.LocalFolderUtility.ResolvePackageFromPath(System.String)">
+        <member name="M:NuGet.Protocol.LocalFolderUtility.ResolvePackageFromPath(System.String,System.Boolean)">
             <summary>
             Resolves a package path into a list of paths.
             If the path contains wildcards then the path is expanded to all matching entries.
@@ -7276,16 +7703,16 @@
             Iterates through the properties of <paramref name="input" /> that are either <see cref="T:System.String" />s, <see cref="T:System.DateTimeOffset" />s, or <see cref="T:NuGet.Versioning.NuGetVersion" />s and checks them against the cache.
             </summary>
         </member>
-        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream)">
-            <summary>
-            Read a stream into a memory stream if CanSeek is false.
-            This method is used to ensure that network streams
-            can be read by non-async reads without hanging.
+        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream,System.Threading.CancellationToken)">
+             <summary>
+             Read a stream into a memory stream if CanSeek is false.
+             This method is used to ensure that network streams
+             can be read by non-async reads without hanging.
             
-            Closes the original stream by default.
-            </summary>
+             Closes the original stream by default.
+             </summary>
         </member>
-        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream,System.Boolean)">
+        <member name="M:NuGet.Protocol.StreamExtensions.AsSeekableStreamAsync(System.IO.Stream,System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Read a stream into a memory stream if CanSeek is false.
             This method is used to ensure that network streams
@@ -7408,4 +7835,4 @@
             </summary>
         </member>
     </members>
-<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><DigestValue>l7gjvL+L8tLJ/fxLMid/e0IGHx4=</DigestValue></Reference></SignedInfo><SignatureValue>o4jYsNosxJxF6nmCjSW3efZ4PhLUV8Lv8adWCREJDEryLWEckW80YWaHW/YaWAtauxwAv7NpmIKnD0v98LXZmzXRkAWuTUVs/T9L9ufSRW/NL/llhmyfBn9WuXozRV4NzN2W7/NczGFCWMdoYUWAoOWJYTQAkkEsprLkncVZ5HoaOnsLMqZvSpcVqYM2h6qxUAcKbX2PNxHUbOtpRCgHsujTQFo96/sSfQGnqpO7Xf0vv0lLaXu64f8kKeHyyLuhut4GmPk9XsNeiZ1Yg8bz98l/s9kZ1ADXCaH76AqAZhSKtFbbmPf6NFfmdtGYUkN6w6aiGluG352s88rA2+IZLA==</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>qCn+1BDI/1UKnpkAA1KP3LC/+av4Uf5cjFTCJ85MK5br24Ecy4Yrecp1frhngyaGvdYvHD7HWKqPb5X7WvynxhvBw+hMF04iPbdbVlx/11r1Lbq7pgm/BnzumP5A+TC4a/5Ab3SzuNY4ScnQhwcvMd+2vE6j0J63YntWcHVPZ78FzKOuvgCSwhtQoWE7EAABsYbQKfNA9Q/Zow9Xq2MJqNypaudHQ6e+FcQ9J6ToVlKIz1mZoQCENpvQOdIqDS/mBOK/E5aIg6lRNxhBieL5hZ2OZRo9A2TMxd5QcF3yC4Wpj7FF6Hf/g50Ju3Lg5lYIlbkrgxKJMfznWHIdvfmDIw==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIE7TCCA9WgAwIBAgITMwAAAXl8LldOUuHK1gABAAABeTANBgkqhkiG9w0BAQUFADB5MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSMwIQYDVQQDExpNaWNyb3NvZnQgQ29kZSBTaWduaW5nIFBDQTAeFw0xNzA4MTEyMDExMTVaFw0xODA4MTEyMDExMTVaMIGDMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMQ0wCwYDVQQLEwRNT1BSMR4wHAYDVQQDExVNaWNyb3NvZnQgQ29ycG9yYXRpb24wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCoKf7UEMj/VQqemQADUo/csL/5q/hR/lyMVMInzkwrluvbgRzLhit5ynV+uGeDJoa91i8cPsdYqo9vlfta/KfGG8HD6EwXTiI9t1tWXH/XWvUturumCb8GfO6Y/kD5MLhr/kBvdLO41jhJydCHBy8x37a8TqPQnrdie1ZwdU9nvwXMo66+AJLCG1ChYTsQAAGxhtAp80D1D9mjD1erYwmo3Klq50dDp74VxD0npOhWUojPWZmhAIQ2m9A50ioNL+YE4r8TloiDqVE3GEGJ4vmFnY5lGj0DZMzF3lBwXfILhamPsUXod/+DnQm7cuDmVgiVuSuDEokx/OdYch29+YMjAgMBAAGjggFhMIIBXTATBgNVHSUEDDAKBggrBgEFBQcDAzAdBgNVHQ4EFgQU+OR+jRxjfACqzHMAStPybTiqzYEwUgYDVR0RBEswSaRHMEUxDTALBgNVBAsTBE1PUFIxNDAyBgNVBAUTKzIyOTgwMysxYWJmOWU1Zi1jZWQwLTQyZTYtYTY1ZC1kOTM1MDk1OWZlMGUwHwYDVR0jBBgwFoAUyxHoytK0FlgByTcuMxYWuUyaCh8wVgYDVR0fBE8wTTBLoEmgR4ZFaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraS9jcmwvcHJvZHVjdHMvTWljQ29kU2lnUENBXzA4LTMxLTIwMTAuY3JsMFoGCCsGAQUFBwEBBE4wTDBKBggrBgEFBQcwAoY+aHR0cDovL3d3dy5taWNyb3NvZnQuY29tL3BraS9jZXJ0cy9NaWNDb2RTaWdQQ0FfMDgtMzEtMjAxMC5jcnQwDQYJKoZIhvcNAQEFBQADggEBAG9La36GDdgLJlBrOojIWqn2suoqmaflBjREAe9z+60v/e341YBqNRw0xxMMtV5kPHNrjPJv02m+zjsPm/kFcjwdRuHonD42sW81qaZQVH/h1Fc9Ox56XI8BP3c/XnMnV/qnMOfUcq+L33Ei/Yrg+uAt31/y3ndk39qwBgAJq0aQo/X+gYYskyt1xhEo1+WK4hwnq5eMmsTiBxnT8mQXsSvd8wh6eFCFBjIcOVCjzYtw3gjVe29MP5rodW3kyxNXHClZOF++Raummsr5KZ7NOM+5yAW6LPvEJb9oDd8Pe0IalcePvVprkAtR+te354+yszMocwNcf6NGgpyttjZ3doc=</X509Certificate><X509Certificate>MIIFvDCCA6SgAwIBAgIKYTMmGgAAAAAAMTANBgkqhkiG9w0BAQUFADBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMTAwODMxMjIxOTMyWhcNMjAwODMxMjIyOTMyWjB5MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSMwIQYDVQQDExpNaWNyb3NvZnQgQ29kZSBTaWduaW5nIFBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJyWVwZMGS/HZpgICBCmXZTbD4b1m/My/Hqa/6XFhDg3zp0gxq3L6Ay7P/ewkJOI9VyANs1VwqJyq4gSfTwaKxNS42lvXlLcZtHB9r9Jd+ddYjPqnNEf9eB2/O98jakyVxF3K+tPeAoaJcap6Vyc1bxF5Tk/TWUcqDWdl8ed0WDhTgW0HNbBbpnUo2lsmkv2hkL/pJ0KeJ2L1TdFDBZ+NKNYv3LyV9GMVC5JxPkQDDPcikQKCLHN049oDI9kM2hOAaFXE5WgigqBTK3S9dPY+fSLWLxRT3nrAgA9kahntFbjCZT6HqqSvJGzzc8OJ60d1ylF56NyxGPVjzBrAlfA9MCAwEAAaOCAV4wggFaMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFMsR6MrStBZYAck3LjMWFrlMmgofMAsGA1UdDwQEAwIBhjASBgkrBgEEAYI3FQEEBQIDAQABMCMGCSsGAQQBgjcVAgQWBBT90TFO0yaKleGYYDuoMW+mPLzYLTAZBgkrBgEEAYI3FAIEDB4KAFMAdQBiAEMAQTAfBgNVHSMEGDAWgBQOrIJgQFYnl+UlE/wq4QpTlVnkpDBQBgNVHR8ESTBHMEWgQ6BBhj9odHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpL2NybC9wcm9kdWN0cy9taWNyb3NvZnRyb290Y2VydC5jcmwwVAYIKwYBBQUHAQEESDBGMEQGCCsGAQUFBzAChjhodHRwOi8vd3d3Lm1pY3Jvc29mdC5jb20vcGtpL2NlcnRzL01pY3Jvc29mdFJvb3RDZXJ0LmNydDANBgkqhkiG9w0BAQUFAAOCAgEAWTk+fyZGr+tvQLEytWrrDi9uqEn361917Uw7LddDrQv+y+ktMaMjzHxQmIAhXaw9L0y6oqhWnONwu7i0+Hm1SXL3PupBf8rhDBdpy6WcIC36C1DEVs0t40rSvHDnqA2iA6VW4LiKS1fylUKc8fPv7uOGHzQ8uFaa8FMjhSqkghyT4pQHHfLiTviMocroE6WRTsgb0o9ylSpxbZsa+BzwU9ZnzCL/XB3Nooy9J7J5Y1ZEolHN+emjWFbdmwJFRC9f9Nqu1IIybvyklRPk62nnqaIsvsgrEA5ljpnb9aL6EiYJZTiU8XofSrvR4Vbo0HiWGFzJNRZf3ZMdSY4tvq00RBzuEBUaAF3dNVshzpjHCe6FDoxPbQ4TTj18KUicctHzbMrB7HCjV5JXfZSNoBtIA1r3z6NnCnSlNu0tLxfI5nI3EvRvsTxngvlSso0zFmUeDordEN5k9G/ORtTTF+l5xAS00/ss3x+KnqwK+xMnQK3k+eGpf0a7B2BHZWBATrBC7E7ts3Z52Ao0CW0cgDEf4g5U3eWh++VHEK1kmP9QFi58vwUheuKVQSdpw5OPlcmN2Jshrg1cnPCiroZogwxqLbt2awAdlq3yFnv2FoMkuYjPaqhHMS+a3ONxPdcAfmJH0c6IybgY+g5yjcGjPa8CQGr/aZuW4hCoELQ3UAjWwz0=</X509Certificate><X509Certificate>MIIFmTCCA4GgAwIBAgIQea0WoUqgpa1Mc1j0BxMuZTANBgkqhkiG9w0BAQUFADBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMDEwNTA5MjMxOTIyWhcNMjEwNTA5MjMyODEzWjBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDzXfqAZ9Rap6kMLJAg0DUIPHWEzbcHiZyJ2t7Ow2D6kWhanpRxKRh2fMLgyCV2lA5Y+gQ0Nubfr/eAuulYCyuT5Z0F43cikfc0ZDwikR1e4QmQvBT+/HVYGeF5tweSo66IWQjYnwfKA1j8aCltMtfSqMtL/OELSDJP5uu4rU/kXG8TlJnbldV126gat5SRtHdb9UgMj2p5fRRwBH1tr5D12nDYR7e/my9s5wW34RFgrHmRFHzF1qbk4X7Vw37lktI8ALU2gt554W3ztW74nzPJy1J9c5g224uha6KVl5uj3sJNJv8GlmclBsjnrOTuEjOVMZnINQhONMp5U9W1vmMyWUA2wKVOBE0921sHM+RYv+8/U2TYQlk1V/0PRXwkBE2e1jh0EZcikM5oRHSSb9VLb7CG48c2QqDQ/MHAWvmjYbkwR3GWChawkcBCle8Qfyhq4yofseTNAz93cQTHIPxJDx1FiKTXy36IrY4t7EXbxFEEySr87IaemhGXW97OU4jm4rf9rJXCKEDb7wSQ34EzOdmyRaUjhwalVYkxuwYtYA5BGH0fLrWXyxHrFdUkpZTvFRSJ/Utz+jJb/NEzAPlZYnAHMuouq0Ate8rdIWcbMJmPFqojqEHRsG4RmzbE3kB0nOFYZcFgHnpbOMiPuwQmfNQWQOW2a2yqhv0Av87BNQIDAQABo1EwTzALBgNVHQ8EBAMCAcYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUDqyCYEBWJ5flJRP8KuEKU5VZ5KQwEAYJKwYBBAGCNxUBBAMCAQAwDQYJKoZIhvcNAQEFBQADggIBAMURTQM6YN1dUhF3j7K7NsiyBb+0t6jYIJ1cEwO2HCL6BhM1tshj1JpHbyZX0lXxBLEmX9apUGigvNK4bszD6azfGc14rFl0rGY0NsQbPmw4TDMOMBINoyb+UVMA/69aToQNDx/kbQUuToVLjWwzb1TSZKu/UK99ejmgN+1jAw/8EwbOFjbUVDuVG1FiOuVNF9QFOZKaJ6hbqr3su77jIIlgcWxWs6UT0G0OI36VA+1oPfLYY7hrTbboMLXhypRL96KqXZkwsj2nwlFsKCABJCcrSwC3nRFrcL6yEIK8DJto0I07JIeqmShynTNfWZC99d6TnjpiWjQ54ohVHbkGsMGJay3XacMZEjaE0Mmg2v8vaXiy5Xra69cMwPe9Yxe4ORM4ojZbe/KFVmodZGLBOOKqv1FmopT1EpxmIhBr8rcwki3yKfA9OxRDaKLxnCk3y844ICVtfGfzfiQSJAMIgUfspZ6X9RjXz7vV73aW7/3O21adlaBC+ZdY4dcxItNfWeY+biIA6kOEtiXb2fMIVmjAZGsdfOy2k6JiV24u2OdYj8QxSSbd3ik1h/UwcXBbFDxpvYkSfesuo/7Yf56CWlIKK8FDK9kwiJ/IEPuJjeahhXUzfmye23MTZGJppS99ypZtn/gETTCSPW4hFCHJPeDD/YprnUr90aGdmUN3P7Da</X509Certificate></X509Data></KeyInfo><Object Id="ts-countersig"><X509Data><X509Certificate>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</X509Certificate><X509Certificate>MIIEwTCCA6mgAwIBAgITMwAAANd4Xn6sPypBiwAAAAAA1zANBgkqhkiG9w0BAQUFADB3MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSEwHwYDVQQDExhNaWNyb3NvZnQgVGltZS1TdGFtcCBQQ0EwHhcNMTcxMDAyMjI1NzU3WhcNMTkwMTAyMjI1NzU3WjCBsTELMAkGA1UEBhMCVVMxEzARBgNVBAgTCldhc2hpbmd0b24xEDAOBgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29mdCBDb3Jwb3JhdGlvbjEMMAoGA1UECxMDQU9DMSYwJAYDVQQLEx1UaGFsZXMgVFNTIEVTTjo5NkZGLTRCQzUtQTdEQzElMCMGA1UEAxMcTWljcm9zb2Z0IFRpbWUtU3RhbXAgU2VydmljZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK0R8WghBzWrkgfDoLwDByma12IHhlSPBbAGiWXRc2ixEiXWFkoH5IDW4fNnINAgbfCWThv3zAknQDa3H9IkZcvHSKEPgt7/MpC2LzuYiBGS7osE1YFJru5o3eQ15jRt+//Sk8j4fwis41AjCNiePkK8wCHusRFyEOABoMC2KjUwrAEQbsMCCcm9AYq3QXc7tvvDncJfnmSfK8KY1isAuPJcfIOsh7ugzUoklOUbkByfrwc51oWxyRhZTMGyJcvskauQzpqw8QIPJi4Upv/cW8ylaXvDD5rd+J7hJzkWpl/eg21LssBR2TdIVfJs48u99rvgf+ka05hE2lSLnnd67RUCAwEAAaOCAQkwggEFMB0GA1UdDgQWBBTYj8Ia8/dzgo7zIAVoJi/V/PwVPTAfBgNVHSMEGDAWgBQjNPjZUkZwCu1A+3b7syuwwzWzDzBUBgNVHR8ETTBLMEmgR6BFhkNodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpL2NybC9wcm9kdWN0cy9NaWNyb3NvZnRUaW1lU3RhbXBQQ0EuY3JsMFgGCCsGAQUFBwEBBEwwSjBIBggrBgEFBQcwAoY8aHR0cDovL3d3dy5taWNyb3NvZnQuY29tL3BraS9jZXJ0cy9NaWNyb3NvZnRUaW1lU3RhbXBQQ0EuY3J0MBMGA1UdJQQMMAoGCCsGAQUFBwMIMA0GCSqGSIb3DQEBBQUAA4IBAQBtoYxTxcEg/Q/A+oGoitT3aME8OF7a1OAQqSPnV3OLGFLv3uPYX8nvdOTnhbKV6BIsW/DGukZflJjCo9I5D9+wz0s9hICPFEqvfpqZumy2T94K7veD21BOZ59xfVauLrbWtBpISdd2kmGsaYacwd/Bf7ih4gmRKWdpGeLcYvN9d8fb68btqwJLKb0B161HcM0SYJ9VxYkvDVqc8YtcH5CszKWLnR2lzBBXR8447n3RY/2ulRFWFD82SsbqpWVUo7JnVaphz9qR5Jn9iarO/SNmtmobYwDPwVpmq4ef2w6iypR3Nrn/PaDv6e7qm3mYnkYtM13zQXbBBQ6DgWferczA</X509Certificate></X509Data><CounterSignature ts-format="cms-timestamp-message" xmlns="http://schemas.microsoft.com/xmldsig/timestamp/2003">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</CounterSignature></Object></Signature></doc>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><DigestValue>n4kHHIrh2H9hLo8RztLIUS3ylGU=</DigestValue></Reference></SignedInfo><SignatureValue>RDehmAeasty7HaklZxrK0jTA4XHebRa4QLOYFOt8D5Zmat/BrxRhGhdAfT8U7aS8Re6b72VsBc2p3Tw1vjoqwcp0Rc9el0KvOm1ao7Xet4wvrp6F4hQM+IL0cy/5hYUIoIxzAGEjhNuCxI4Odg7qncYI+5+7Ob2iTmCd4cWKgvEDK8kSeTIQEU2byE5kU1WNxFJzkhpeiiN+v9AedSEuQaShn3vQYGMFWgKG3GdJLYDb8h3Z6/tHJ+PVzRSM+hqEVcnxe/PwVm5sWKcI3UTiaDgfj+sVScdWYrYqti3EwCxIs4FPHeQXLpAlnnMMM3Bx65GdOKEdl4f5XJFzjvOdqg==</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>m1K+Tyy0HVPLPV0jHraDo5/A5UrgV7PC+C3WipFfzBLODN0Ct0Z49Gub3ufLICGP1D4OJZRyOnhjZi61X+Hbl/2IjqiIl1VMHR4+qWlJLRNj+X7DparTv3/CBzkhMGY2lZdvp96rpRL2heloKGkmmxqet6/sU3hvw8wxMIf29zYrMEBZSEaAUajNDIDd40qeLXRV7OanRHrVE770wiR9DP0zzeYjX5rN1CltAtUyWmonz7DJAYuUr+UMi3offSITg4byWkvThGNXGmtJeDpU6Y/hhcblP5Yl5175yMvHofLyGw0iW7kv/Izp2yjEVRe26PTXes/9nNOP7ul2KoKMoQ==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIE2zCCA8OgAwIBAgITMwAAAbHd7bpU6WW4XwABAAABsTANBgkqhkiG9w0BAQUFADB5MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSMwIQYDVQQDExpNaWNyb3NvZnQgQ29kZSBTaWduaW5nIFBDQTAeFw0xODA3MTIyMDExMTlaFw0xOTA3MjYyMDExMTlaMHQxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdSZWRtb25kMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xHjAcBgNVBAMTFU1pY3Jvc29mdCBDb3Jwb3JhdGlvbjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJtSvk8stB1Tyz1dIx62g6OfwOVK4Fezwvgt1oqRX8wSzgzdArdGePRrm97nyyAhj9Q+DiWUcjp4Y2YutV/h25f9iI6oiJdVTB0ePqlpSS0TY/l+w6Wq079/wgc5ITBmNpWXb6feq6US9oXpaChpJpsanrev7FN4b8PMMTCH9vc2KzBAWUhGgFGozQyA3eNKni10Vezmp0R61RO+9MIkfQz9M83mI1+azdQpbQLVMlpqJ8+wyQGLlK/lDIt6H30iE4OG8lpL04RjVxprSXg6VOmP4YXG5T+WJede+cjLx6Hy8hsNIlu5L/yM6dsoxFUXtuj013rP/ZzTj+7pdiqCjKECAwEAAaOCAV8wggFbMBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBREE7QCnXc+kFVx9eQcf6wXFM8+czBQBgNVHREESTBHpEUwQzEpMCcGA1UECxMgTWljcm9zb2Z0IE9wZXJhdGlvbnMgUHVlcnRvIFJpY28xFjAUBgNVBAUTDTIyOTgwMys0Mzc5NTAwHwYDVR0jBBgwFoAUyxHoytK0FlgByTcuMxYWuUyaCh8wVgYDVR0fBE8wTTBLoEmgR4ZFaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraS9jcmwvcHJvZHVjdHMvTWljQ29kU2lnUENBXzA4LTMxLTIwMTAuY3JsMFoGCCsGAQUFBwEBBE4wTDBKBggrBgEFBQcwAoY+aHR0cDovL3d3dy5taWNyb3NvZnQuY29tL3BraS9jZXJ0cy9NaWNDb2RTaWdQQ0FfMDgtMzEtMjAxMC5jcnQwDQYJKoZIhvcNAQEFBQADggEBAIOp8qYzxaF7HNJegK7spKbD6ShdVyUjjd0lCWlw6E1pFi+UuwXZm4DsWdBoZBuDNKjcz2ONnWt2APV7r0J0B8X8kcDirEUzll2x/fqORrJJ4kMGGZiFcXjTnunblRZBMTRwLEOWogJ3qS89YUpjWfGXfdFSlWCFqLwbRQc/2cGP91D1uX4IieRCxFiOQcCVOEkf1x34ME8pLztHWZI37pch7RdmkBwvLW1r/wt15aoS3fqvxBG04CEyWr8FzkX5P41Wrs5R1syufQQZMBLyv59IJpwOAA0oraXeRC3M1If/lEmVVwxNNJwjCt3DjTIJ9L01KMXe0Ig/qRIToTBwoBE=</X509Certificate><X509Certificate>MIIFvDCCA6SgAwIBAgIKYTMmGgAAAAAAMTANBgkqhkiG9w0BAQUFADBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMTAwODMxMjIxOTMyWhcNMjAwODMxMjIyOTMyWjB5MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSMwIQYDVQQDExpNaWNyb3NvZnQgQ29kZSBTaWduaW5nIFBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJyWVwZMGS/HZpgICBCmXZTbD4b1m/My/Hqa/6XFhDg3zp0gxq3L6Ay7P/ewkJOI9VyANs1VwqJyq4gSfTwaKxNS42lvXlLcZtHB9r9Jd+ddYjPqnNEf9eB2/O98jakyVxF3K+tPeAoaJcap6Vyc1bxF5Tk/TWUcqDWdl8ed0WDhTgW0HNbBbpnUo2lsmkv2hkL/pJ0KeJ2L1TdFDBZ+NKNYv3LyV9GMVC5JxPkQDDPcikQKCLHN049oDI9kM2hOAaFXE5WgigqBTK3S9dPY+fSLWLxRT3nrAgA9kahntFbjCZT6HqqSvJGzzc8OJ60d1ylF56NyxGPVjzBrAlfA9MCAwEAAaOCAV4wggFaMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFMsR6MrStBZYAck3LjMWFrlMmgofMAsGA1UdDwQEAwIBhjASBgkrBgEEAYI3FQEEBQIDAQABMCMGCSsGAQQBgjcVAgQWBBT90TFO0yaKleGYYDuoMW+mPLzYLTAZBgkrBgEEAYI3FAIEDB4KAFMAdQBiAEMAQTAfBgNVHSMEGDAWgBQOrIJgQFYnl+UlE/wq4QpTlVnkpDBQBgNVHR8ESTBHMEWgQ6BBhj9odHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpL2NybC9wcm9kdWN0cy9taWNyb3NvZnRyb290Y2VydC5jcmwwVAYIKwYBBQUHAQEESDBGMEQGCCsGAQUFBzAChjhodHRwOi8vd3d3Lm1pY3Jvc29mdC5jb20vcGtpL2NlcnRzL01pY3Jvc29mdFJvb3RDZXJ0LmNydDANBgkqhkiG9w0BAQUFAAOCAgEAWTk+fyZGr+tvQLEytWrrDi9uqEn361917Uw7LddDrQv+y+ktMaMjzHxQmIAhXaw9L0y6oqhWnONwu7i0+Hm1SXL3PupBf8rhDBdpy6WcIC36C1DEVs0t40rSvHDnqA2iA6VW4LiKS1fylUKc8fPv7uOGHzQ8uFaa8FMjhSqkghyT4pQHHfLiTviMocroE6WRTsgb0o9ylSpxbZsa+BzwU9ZnzCL/XB3Nooy9J7J5Y1ZEolHN+emjWFbdmwJFRC9f9Nqu1IIybvyklRPk62nnqaIsvsgrEA5ljpnb9aL6EiYJZTiU8XofSrvR4Vbo0HiWGFzJNRZf3ZMdSY4tvq00RBzuEBUaAF3dNVshzpjHCe6FDoxPbQ4TTj18KUicctHzbMrB7HCjV5JXfZSNoBtIA1r3z6NnCnSlNu0tLxfI5nI3EvRvsTxngvlSso0zFmUeDordEN5k9G/ORtTTF+l5xAS00/ss3x+KnqwK+xMnQK3k+eGpf0a7B2BHZWBATrBC7E7ts3Z52Ao0CW0cgDEf4g5U3eWh++VHEK1kmP9QFi58vwUheuKVQSdpw5OPlcmN2Jshrg1cnPCiroZogwxqLbt2awAdlq3yFnv2FoMkuYjPaqhHMS+a3ONxPdcAfmJH0c6IybgY+g5yjcGjPa8CQGr/aZuW4hCoELQ3UAjWwz0=</X509Certificate><X509Certificate>MIIFmTCCA4GgAwIBAgIQea0WoUqgpa1Mc1j0BxMuZTANBgkqhkiG9w0BAQUFADBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMDEwNTA5MjMxOTIyWhcNMjEwNTA5MjMyODEzWjBfMRMwEQYKCZImiZPyLGQBGRYDY29tMRkwFwYKCZImiZPyLGQBGRYJbWljcm9zb2Z0MS0wKwYDVQQDEyRNaWNyb3NvZnQgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDzXfqAZ9Rap6kMLJAg0DUIPHWEzbcHiZyJ2t7Ow2D6kWhanpRxKRh2fMLgyCV2lA5Y+gQ0Nubfr/eAuulYCyuT5Z0F43cikfc0ZDwikR1e4QmQvBT+/HVYGeF5tweSo66IWQjYnwfKA1j8aCltMtfSqMtL/OELSDJP5uu4rU/kXG8TlJnbldV126gat5SRtHdb9UgMj2p5fRRwBH1tr5D12nDYR7e/my9s5wW34RFgrHmRFHzF1qbk4X7Vw37lktI8ALU2gt554W3ztW74nzPJy1J9c5g224uha6KVl5uj3sJNJv8GlmclBsjnrOTuEjOVMZnINQhONMp5U9W1vmMyWUA2wKVOBE0921sHM+RYv+8/U2TYQlk1V/0PRXwkBE2e1jh0EZcikM5oRHSSb9VLb7CG48c2QqDQ/MHAWvmjYbkwR3GWChawkcBCle8Qfyhq4yofseTNAz93cQTHIPxJDx1FiKTXy36IrY4t7EXbxFEEySr87IaemhGXW97OU4jm4rf9rJXCKEDb7wSQ34EzOdmyRaUjhwalVYkxuwYtYA5BGH0fLrWXyxHrFdUkpZTvFRSJ/Utz+jJb/NEzAPlZYnAHMuouq0Ate8rdIWcbMJmPFqojqEHRsG4RmzbE3kB0nOFYZcFgHnpbOMiPuwQmfNQWQOW2a2yqhv0Av87BNQIDAQABo1EwTzALBgNVHQ8EBAMCAcYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUDqyCYEBWJ5flJRP8KuEKU5VZ5KQwEAYJKwYBBAGCNxUBBAMCAQAwDQYJKoZIhvcNAQEFBQADggIBAMURTQM6YN1dUhF3j7K7NsiyBb+0t6jYIJ1cEwO2HCL6BhM1tshj1JpHbyZX0lXxBLEmX9apUGigvNK4bszD6azfGc14rFl0rGY0NsQbPmw4TDMOMBINoyb+UVMA/69aToQNDx/kbQUuToVLjWwzb1TSZKu/UK99ejmgN+1jAw/8EwbOFjbUVDuVG1FiOuVNF9QFOZKaJ6hbqr3su77jIIlgcWxWs6UT0G0OI36VA+1oPfLYY7hrTbboMLXhypRL96KqXZkwsj2nwlFsKCABJCcrSwC3nRFrcL6yEIK8DJto0I07JIeqmShynTNfWZC99d6TnjpiWjQ54ohVHbkGsMGJay3XacMZEjaE0Mmg2v8vaXiy5Xra69cMwPe9Yxe4ORM4ojZbe/KFVmodZGLBOOKqv1FmopT1EpxmIhBr8rcwki3yKfA9OxRDaKLxnCk3y844ICVtfGfzfiQSJAMIgUfspZ6X9RjXz7vV73aW7/3O21adlaBC+ZdY4dcxItNfWeY+biIA6kOEtiXb2fMIVmjAZGsdfOy2k6JiV24u2OdYj8QxSSbd3ik1h/UwcXBbFDxpvYkSfesuo/7Yf56CWlIKK8FDK9kwiJ/IEPuJjeahhXUzfmye23MTZGJppS99ypZtn/gETTCSPW4hFCHJPeDD/YprnUr90aGdmUN3P7Da</X509Certificate></X509Data></KeyInfo><Object Id="ts-countersig"><X509Data><X509Certificate>MIIE2jCCA8KgAwIBAgITMwAAARmoHXguc2myCQAAAAABGTANBgkqhkiG9w0BAQUFADB3MQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMSEwHwYDVQQDExhNaWNyb3NvZnQgVGltZS1TdGFtcCBQQ0EwHhcNMTgxMDI0MjEwNzMyWhcNMjAwMTEwMjEwNzMyWjCByjELMAkGA1UEBhMCVVMxEzARBgNVBAgTCldhc2hpbmd0b24xEDAOBgNVBAcTB1JlZG1vbmQxHjAcBgNVBAoTFU1pY3Jvc29mdCBDb3Jwb3JhdGlvbjElMCMGA1UECxMcTWljcm9zb2Z0IEFtZXJpY2EgT3BlcmF0aW9uczEmMCQGA1UECxMdVGhhbGVzIFRTUyBFU046N0JGMS1FM0VBLUI4MDgxJTAjBgNVBAMTHE1pY3Jvc29mdCBUaW1lLVN0YW1wIFNlcnZpY2UwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCZD00sf9qDyvEHNMYfclRQ1uBs+M3hWBs9VbxN1mohoG3UDALe1YqVr1KBwwSXrcDqT77wj2owEQH5UdJS1CqxCnRG37fXAx3y8TodUGHA0pe4YP8l6VhMmT9j3q3w6dV+MkiVtk1me0Bz2WD9/i4kTLS5RAk+xq8kQ+leIt1JGXmfyeMPUP6oz1NfQ0MasCbjjtj3KVkzFOrssn59kgtEZZ8HKaFhaVePnI8aXIMtUB3diJCkU+3b9OR4kWLyJanEdM9yP2ULIjc8lv3YRXpdBBBDjOpTBFSHQjc31hX2iGpgyOomRp9DgR0ex8frlXIlYdLYYK/GwWCGfdD7JOdnAgMBAAGjggEJMIIBBTAdBgNVHQ4EFgQUZam8js8gwr3d+ZA5flOCnYD+QKwwHwYDVR0jBBgwFoAUIzT42VJGcArtQPt2+7MrsMM1sw8wVAYDVR0fBE0wSzBJoEegRYZDaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraS9jcmwvcHJvZHVjdHMvTWljcm9zb2Z0VGltZVN0YW1wUENBLmNybDBYBggrBgEFBQcBAQRMMEowSAYIKwYBBQUHMAKGPGh0dHA6Ly93d3cubWljcm9zb2Z0LmNvbS9wa2kvY2VydHMvTWljcm9zb2Z0VGltZVN0YW1wUENBLmNydDATBgNVHSUEDDAKBggrBgEFBQcDCDANBgkqhkiG9w0BAQUFAAOCAQEAVB76gZTgcghNM6gVhwGfQ5wb6R+cjoXb9laCIgithQkP3mHSyibxlj1kzF7UB4fniKAje+M0wskQR/X9l8kRSTHaqJgWE+3J/CGNXJ0E4LnVXSCWGK4tBjqOmUQIM7cLQHZL1fW4yeskHNcXk2ue++glhCVS26o+GTXSgDTbe38IgBOeNx5TjreZ/zcocp9fjvjwfAhZZxHzoUwjDFwPOr3eNqOBz0Ft2iwJ30/ZnsNv6RxFtNCiMlVddZ7qnvzwrVvbUDwgScQOeUvuRswTMJ5dFH4+fkLsbJeaVXQBxUxQR/glmn0EQufWGQnNAMbNYhnJc6fFGfNaLq8ia7KGAQ==</X509Certificate><X509Certificate>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</X509Certificate></X509Data><CounterSignature ts-format="cms-timestamp-message" xmlns="http://schemas.microsoft.com/xmldsig/timestamp/2003">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</CounterSignature></Object></Signature></doc>
