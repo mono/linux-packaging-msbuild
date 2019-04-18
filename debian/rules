@@ -10,7 +10,7 @@ override_dh_clean:
 
 override_dh_auto_build:
 	mkdir -p $(TEMP_HOME)
-	HOME=$(TEMP_HOME) ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests
+	HOME=$(TEMP_HOME) ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true 
 
 override_dh_auto_install:
 	./artifacts/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=$(DEBIAN_DIR_ABS)/tmp/usr /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
