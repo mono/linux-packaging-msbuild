@@ -23,6 +23,7 @@ Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Patch0:		fixed-build-version.diff
+Patch1:		gnu-ln-syntax.patch
 BuildRequires:  mono-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openssl-devel
@@ -56,6 +57,7 @@ contains components needed to build with .NET Core.
 %prep
 %setup -n msbuild-16.0
 %patch0 -p1
+%patch1 -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
@@ -69,7 +71,7 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
-./build.sh -hostType mono -configuration Release -skipTests -p:DisableNerdbankVersioning=true -p:BUILD_SOURCEVERSION=8af44c5b9e727c096833a88fae05c3ddb76716d0
+./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests
 
 %install
 %{?env_options}
