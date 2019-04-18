@@ -71,7 +71,7 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
-./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests
+./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true
 
 %install
 %{?env_options}
