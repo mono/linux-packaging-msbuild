@@ -112,6 +112,7 @@ rm -f %{buildroot}/%_prefix/lib/mono/xbuild/15.0
 %_prefix/lib/mono/xbuild/Current
 %_prefix/lib/mono/xbuild/Microsoft
 %_prefix/lib/mono/xbuild/*.dll*
+%_prefix/lib/mono/xbuild/*.pdb*
 %_prefix/share/man/*/*
 %_bindir/*
 
