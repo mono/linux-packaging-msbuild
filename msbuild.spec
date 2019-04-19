@@ -107,7 +107,6 @@ find %{buildroot} -name *.dylib -delete
 %_prefix/lib/mono/msbuild/Current/bin/*.tasks
 %_prefix/lib/mono/msbuild/Current/bin/*.xml
 %_prefix/lib/mono/msbuild/Current/bin/*.xsd
-%_prefix/lib/mono/msbuild/15.0
 %_prefix/lib/mono/xbuild/*
 %_prefix/share/man/*/*
 %_bindir/*
