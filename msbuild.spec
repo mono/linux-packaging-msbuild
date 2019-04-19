@@ -79,6 +79,7 @@ contains components needed to build with .NET Core.
 sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
+rm -f %{buildroot}/%_prefix/lib/mono/msbuild/15.0
 
 %files
 %defattr(-,root,root)
