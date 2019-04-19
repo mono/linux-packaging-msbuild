@@ -80,6 +80,7 @@ sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
 rm -f %{buildroot}/%_prefix/lib/mono/msbuild/15.0
+rm -f %{buildroot}/%_prefix/lib/mono/xbuild/15.0
 
 %files
 %defattr(-,root,root)
@@ -108,7 +109,9 @@ rm -f %{buildroot}/%_prefix/lib/mono/msbuild/15.0
 %_prefix/lib/mono/msbuild/Current/bin/*.tasks
 %_prefix/lib/mono/msbuild/Current/bin/*.xml
 %_prefix/lib/mono/msbuild/Current/bin/*.xsd
-%_prefix/lib/mono/xbuild/*
+%_prefix/lib/mono/xbuild/Current
+%_prefix/lib/mono/xbuild/Microsoft
+%_prefix/lib/mono/xbuild/*.dll*
 %_prefix/share/man/*/*
 %_bindir/*
 
