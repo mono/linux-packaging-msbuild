@@ -110,6 +110,7 @@ end
 
 %files
 %defattr(-,root,root)
+%_prefix/lib/mono/msbuild/15.0
 %_prefix/lib/mono/msbuild/Current/bin/ru
 %_prefix/lib/mono/msbuild/Current/bin/fr
 %_prefix/lib/mono/msbuild/Current/bin/ja
@@ -135,6 +136,7 @@ end
 %_prefix/lib/mono/msbuild/Current/bin/*.tasks
 %_prefix/lib/mono/msbuild/Current/bin/*.xml
 %_prefix/lib/mono/msbuild/Current/bin/*.xsd
+%_prefix/lib/mono/xbuild/15.0
 %_prefix/lib/mono/xbuild/Current
 %_prefix/lib/mono/xbuild/Microsoft
 %_prefix/lib/mono/xbuild/*.dll*
