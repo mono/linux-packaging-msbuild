@@ -1,5 +1,7 @@
 /usr/bin/
-/usr/lib/mono/xbuild/
+/usr/lib/mono/xbuild/Microsoft
+/usr/lib/mono/xbuild/Current
+/usr/lib/mono/xbuild/*.dll*
 /usr/lib/mono/msbuild/Current/bin/Sdks/
 /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.Build.NuGetSdkResolver
 /usr/lib/mono/msbuild/Current/bin/*.config

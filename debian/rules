@@ -15,7 +15,6 @@ override_dh_auto_build:
 override_dh_auto_install:
 	HOME=$(TEMP_HOME) ./artifacts/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=$(DEBIAN_DIR_ABS)/tmp/usr /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
 	sed -i "s@$(DEBIAN_DIR_ABS)/tmp@@g" debian/tmp/usr/bin/msbuild
-	sed -i "s@15.0@Current@g" debian/tmp/usr/bin/msbuild
 	find debian/tmp/usr/lib/mono/ -name Microsoft.DiaSymReader.Native.*dll -delete
 	find debian/tmp/usr/lib/mono/ -name *.dylib -delete
 
