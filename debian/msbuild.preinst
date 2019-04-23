@@ -1,0 +1,20 @@
+#!/bin/sh -e
+
+OLD_XBUILDDIR=/usr/lib/mono/xbuild/15.0
+OLD_MSBUILDDIR=/usr/lib/mono/msbuild/15.0
+
+if [ "$1" = "upgrade" -o "$1" = "install" ] ; then
+   if [ -d "$OLD_XBUILDDIR" -a ! -L "$OLD_XBUILDDIR" ] ; then
+     echo "Found old XBuild tools directory, moving out of the way"
+     mv $OLD_XBUILDDIR $OLD_XBUILDDIR.old
+   fi
+fi
+
+if [ "$1" = "upgrade" -o "$1" = "install" ] ; then
+   if [ -d "$OLD_MSBUILDDIR" -a ! -L "$OLD_MSBUILDDIR" ] ; then
+     echo "Found old MSBuild tools directory, moving out of the way"
+     mv $OLD_MSBUILDDIR $OLD_MSBUILDDIR.old
+   fi
+fi
+
+#DEBHELPER#
