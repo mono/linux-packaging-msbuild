@@ -23,6 +23,7 @@ Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Patch0:		fixed-build-version.diff
+Patch1:		license_check_is_case_sensitive.diff
 BuildRequires:  mono-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openssl-devel
@@ -56,6 +57,7 @@ contains components needed to build with .NET Core.
 %prep
 %setup -n msbuild-16.1
 %patch0 -p1
+%patch1 -p1
 
 %define _use_internal_dependency_generator 0
 %if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
