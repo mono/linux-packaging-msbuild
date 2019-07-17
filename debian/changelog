@@ -1,3 +1,9 @@
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 16:24:43 +0000
+
 msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin4) preview; urgency=medium
 
   * Packaging bugfix:
