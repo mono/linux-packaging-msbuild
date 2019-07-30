@@ -7,6 +7,6 @@ Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
      # rename just to make it obvious when reading logs!
      mv $artifacts_dir/msbuild $mono_msbuild_dir
 +    cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so $artifacts_dir/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
+     sed -i 's#/sh$#/bash#' $artifacts_dir/mono-msbuild/msbuild
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
      rm "$msbuild_zip"
-   fi
