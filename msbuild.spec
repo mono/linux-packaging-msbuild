@@ -22,6 +22,7 @@ Group:          Development/Libraries/Other
 Url:            https://github.com/Microsoft/msbuild
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
+Patch0:		copy_hostfxr.patch
 Patch1:		license_check_is_case_sensitive.diff
 BuildRequires:  mono-devel
 BuildRequires:  libcurl-devel
@@ -55,6 +56,7 @@ contains components needed to build with .NET Core.
 
 %prep
 %setup -n msbuild-16.3
+%patch0 -p1
 %patch1 -p1
 
 %define _use_internal_dependency_generator 0
@@ -69,6 +71,7 @@ contains components needed to build with .NET Core.
 %build
 %{?exp_env}
 %{?env_options}
+cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so ./mono/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
 ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true
 
 %install
@@ -77,6 +80,7 @@ contains components needed to build with .NET Core.
 sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
+find %{buildroot} -name *.so -delete
 
 %pretrans -p <lua>
 path = "/usr/lib/mono/msbuild/15.0"
