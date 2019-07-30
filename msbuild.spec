@@ -54,7 +54,7 @@ in environments where Visual Studio isn't installed. This package
 contains components needed to build with .NET Core.
 
 %prep
-%setup -n msbuild-16.1
+%setup -n msbuild-16.3
 %patch1 -p1
 
 %define _use_internal_dependency_generator 0
