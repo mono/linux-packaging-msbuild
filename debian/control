@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Jo Shields <joshield@microsoft.com>
 Build-Depends: debhelper (>=7.0.50~), mono-devel (>= 4.0), cli-common-dev,
 	curl, unzip, libunwind8-dev, libicu-dev, ca-certificates-mono,
-	libcurl4-openssl-dev, coreutils
+	libcurl4-openssl-dev, coreutils, msbuild-libhostfxr
 Standards-Version: 3.9.6
 Homepage: https://github.com/mono/msbuild
 

@@ -6,10 +6,12 @@ TEMP_HOME = $(DEBIAN_DIR_ABS)/homedir/
 
 override_dh_clean:
 	rm -rf $(TEMP_HOME)
+	rm -f ./mono/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so
 	dh_clean
 
 override_dh_auto_build:
 	mkdir -p $(TEMP_HOME)
+	cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so ./mono/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
 	HOME=$(TEMP_HOME) ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true 
 
 override_dh_auto_install:
