@@ -130,6 +130,7 @@ end
 %_prefix/lib/mono/msbuild/Current/bin/Sdks
 %_prefix/lib/mono/msbuild/Current/bin/*.config
 %_prefix/lib/mono/msbuild/Current/bin/*.dll
+%_prefix/lib/mono/msbuild/Current/bin/*.json
 %_prefix/lib/mono/msbuild/Current/bin/*.overridetasks
 %_prefix/lib/mono/msbuild/Current/bin/*.pdb
 %_prefix/lib/mono/msbuild/Current/bin/*.props
