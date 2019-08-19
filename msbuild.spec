@@ -76,7 +76,7 @@ cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkRes
 
 %install
 %{?env_options}
-./artifacts/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=%{buildroot}/%_prefix /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
+./stage1/mono-msbuild/msbuild mono/build/install.proj /p:MonoInstallPrefix=%{buildroot}/%_prefix /p:Configuration=Release-MONO /p:IgnoreDiffFailure=true
 sed -i "s@%{buildroot}@@g" %{buildroot}/%_prefix/bin/msbuild
 find %{buildroot} -name Microsoft.DiaSymReader.Native.*dll -delete
 find %{buildroot} -name *.dylib -delete
