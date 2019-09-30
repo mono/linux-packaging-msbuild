@@ -1,22 +1,22 @@
-Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-===================================================================
---- xamarin-pkg-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
-+++ xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-@@ -56,6 +56,7 @@ function DownloadMSBuildForMono {
+diff -urNad msbuild-16.4.bak/eng/cibuild_bootstrapped_msbuild.sh msbuild-16.4/eng/cibuild_bootstrapped_msbuild.sh
+--- msbuild-16.4.bak/eng/cibuild_bootstrapped_msbuild.sh	2019-09-30 14:23:17.341164452 -0400
++++ msbuild-16.4/eng/cibuild_bootstrapped_msbuild.sh	2019-09-30 14:23:56.653532041 -0400
+@@ -56,6 +56,7 @@
      unzip -q "$msbuild_zip" -d "$artifacts_dir"
      # rename just to make it obvious when reading logs!
      mv $artifacts_dir/msbuild $mono_msbuild_dir
 +    cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so $artifacts_dir/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
      rm "$msbuild_zip"
-Index: xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
-===================================================================
---- xamarin-pkg-msbuild.orig/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
-+++ xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
-@@ -63,6 +63,5 @@
+   fi
+diff -urNad msbuild-16.4.bak/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj msbuild-16.4/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
+--- msbuild-16.4.bak/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj	2019-09-30 14:23:17.357164601 -0400
++++ msbuild-16.4/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj	2019-09-30 14:24:16.801720430 -0400
+@@ -62,7 +62,5 @@
+             Projects="$(MSBuildThisFileDirectory)\nuget-build-tasks\nuget-build-tasks.csproj"
              Targets="Restore;Build"
              Properties="OutputDirectory=$(DotNetOverlayDirectory)\nuget-support\msbuild-bin"/>
-         
+-        
 -        <Exec Command="$(MSBuildThisFileDirectory)/../extract_and_copy_hostfxr.sh $(DotNetSdkVersionForLibHostFxr) $(MSBuildSdkResolverOutDir)" />
      </Target>
  </Project>
