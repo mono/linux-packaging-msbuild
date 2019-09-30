@@ -15,7 +15,7 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>16.3.0</VersionPrefix>
+    <VersionPrefix>16.4.0</VersionPrefix>
     <AssemblyVersion>15.1.0.0</AssemblyVersion>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
@@ -36,6 +36,22 @@
   </PropertyGroup>
   <!-- Product Dependencies -->
   <PropertyGroup>
-    <SystemResourcesExtensionsVersion>4.6.0-preview8.19364.1</SystemResourcesExtensionsVersion>
+    <SystemResourcesExtensionsVersion>4.6.0-rc1.19425.2</SystemResourcesExtensionsVersion>
   </PropertyGroup>
+  <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
+    <!-- See https://github.com/dotnet/arcade/issues/3386
+
+         Arcade doesn't support this directly; AutoGenerateAssemblyVersion
+         set to false means that FileVersion=$(AssemblyVersion), but that's
+         not ok for MSBuild because we have a fixed AssemblyVersion for
+         compat (15.1.0.0), but varied FileVersion, which is user-visible
+         via $(MSBuildVersion) and msbuild -version.
+
+         So: we want this to match the NuGet package version and also the
+         AssemblyInformationalVersion. Jump through hoops to do so.
+         -->
+    <PropertyGroup>
+      <FileVersion>$(VersionPrefix).$(FileVersion.Split('.')[3])</FileVersion>
+    </PropertyGroup>
+  </Target>
 </Project>
