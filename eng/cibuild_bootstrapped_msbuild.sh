@@ -75,18 +75,18 @@ if [ $host_type = "mono" ] ; then
   export _InitializeBuildTool="mono"
   export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
   export _InitializeBuildToolFramework="net472"
+  export MONO_ENV_OPTIONS="$MONO_ENV_OPTIONS --assembly-loader=strict"
 
   configuration="$configuration-MONO"
   extn_path="$mono_msbuild_dir/Extensions"
-  nuget_tasks_version=`grep NuGet.Build.Tasks= $RepoRoot/mono/build/SdkVersions.txt | sed -e 's,.*=,,' -e 's,;,,'`
-
-  properties="$properties /p:NuGetPackageVersion=$nuget_tasks_version"
 
   extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false"
 fi
 
 if [[ $build_stage1 == true ]];
 then
+    "$_InitializeBuildTool" "$_InitializeBuildToolCommand" $extra_properties /bl mono/build/update_bundled_bits.proj || exit $?
+
 	/bin/bash "$ScriptRoot/common/build.sh" $run_restore --build --ci --configuration $configuration /p:CreateBootstrap=true $properties $extra_properties || exit $?
 fi
 

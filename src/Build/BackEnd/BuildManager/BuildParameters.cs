@@ -295,6 +295,7 @@ namespace Microsoft.Build.Execution
             _isolateProjects = other._isolateProjects;
             _inputResultsCacheFiles = other._inputResultsCacheFiles;
             _outputResultsCacheFile = other._outputResultsCacheFile;
+            DiscardBuildResults = other.DiscardBuildResults;
         }
 
 #if FEATURE_THREAD_PRIORITY
@@ -704,7 +705,7 @@ namespace Microsoft.Build.Execution
         /// <summary>
         /// The one and only project root element cache to be used for the build.
         /// </summary>
-        internal ProjectRootElementCache ProjectRootElementCache { get; set; }
+        internal ProjectRootElementCacheBase ProjectRootElementCache { get; set; }
 
 #if FEATURE_APPDOMAIN
         /// <summary>
@@ -831,6 +832,7 @@ namespace Microsoft.Build.Execution
             // ResetCaches is not transmitted.
             // LegacyThreadingSemantics is not transmitted.
             // InputResultsCacheFiles and OutputResultsCacheFile are not transmitted, as they are only used by the BuildManager
+            // DiscardBuildResults is not transmitted.
         }
 
 #region INodePacketTranslatable Members
@@ -882,7 +884,7 @@ namespace Microsoft.Build.Execution
         /// <summary>
         /// Centralization of the common parts of construction.
         /// </summary>
-        private void Initialize(PropertyDictionary<ProjectPropertyInstance> environmentProperties, ProjectRootElementCache projectRootElementCache, ToolsetProvider toolsetProvider)
+        private void Initialize(PropertyDictionary<ProjectPropertyInstance> environmentProperties, ProjectRootElementCacheBase projectRootElementCache, ToolsetProvider toolsetProvider)
         {
             _buildProcessEnvironment = CommunicationsUtilities.GetEnvironmentVariables();
             _environmentProperties = environmentProperties;
