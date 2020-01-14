@@ -910,8 +910,7 @@
     <comment>{StrBegin="MSB3554: "}</comment>
   </data>
   <data name="GenerateResource.CorruptOutput">
-    <value>MSB3555: Output file "{0}" is possibly corrupt.</value>
-    <comment>{StrBegin="MSB3555: "}</comment>
+    <value>Output file "{0}" is possibly corrupt and will be deleted and recreated.</value>
   </data>
   <data name="GenerateResource.OnlyStringsSupported">
     <value>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</value>
@@ -1130,6 +1129,10 @@
   <data name="GenerateResource.PreserializedResourcesRequiresProperty">
     <value>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</value>
     <comment>{StrBegin="MSB3823: "}</comment>
+  </data>
+  <data name="GenerateResource.CoreSupportsLimitedScenarios">
+    <value>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</value>
+    <comment>{StrBegin="MSB3824: "}</comment>
   </data>
 
 
@@ -2264,6 +2267,10 @@
   <data name="XslTransform.UseTrustedSettings" xml:space="preserve">
     <value>The usage of the document() method and embedded scripts is prohibited by default, due to risks of foreign code execution.  If "{0}" is a trusted source that requires those constructs, please set the "UseTrustedSettings" parameter to "true" to allow their execution.</value>
   </data>
+    <data name="XslTransform.PrecompiledXsltError" xml:space="preserve">
+    <value>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</value>
+    <comment>{StrBegin="MSB3705: "}</comment>
+  </data>
 
 
   <!--
@@ -2681,6 +2688,14 @@
   -->
   <data name="Copy.ExactlyOneTypeOfLink">
     <value>MSB3891: Both "{0}" and "{1}" were specified in the project file. Please choose one or the other.</value>
+  </data>
+  <data name="Copy.ErrorIfLinkFailsSetWithoutLinkOption" xml:space="preserve">
+    <value>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</value>
+    <comment>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</comment>
+  </data>
+  <data name="Copy.LinkFailed" xml:space="preserve">
+    <value>MSB3893: Could not use a link to copy "{0}" to "{1}".</value>
+    <comment>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</comment>
   </data>
 
   <!--

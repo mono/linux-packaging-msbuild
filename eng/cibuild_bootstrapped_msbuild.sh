@@ -7,6 +7,7 @@ run_tests="--test"
 run_restore="--restore"
 properties=
 extra_properties=
+use_system_mono=false
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -39,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       host_type=$2
       shift 2
       ;;
+    --use_system_mono)
+      use_system_mono=true
+      shift
+      ;;
     *)
       properties="$properties $1"
       shift 1
@@ -66,21 +71,29 @@ artifacts_dir="$RepoRoot/artifacts"
 Stage1Dir="$RepoRoot/stage1"
 
 mono_msbuild_dir="$artifacts_dir/mono-msbuild"
-msbuild_download_url="https://github.com/mono/msbuild/releases/download/0.07/mono_msbuild_xplat-master-8f608e49.zip"
+msbuild_download_url="https://github.com/mono/msbuild/releases/download/0.08/mono_msbuild_6.4.0.208.zip"
 msbuild_zip="$artifacts_dir/msbuild.zip"
 
 if [ $host_type = "mono" ] ; then
-  DownloadMSBuildForMono
+  if [ $use_system_mono == false ] ; then
+      DownloadMSBuildForMono
 
-  export _InitializeBuildTool="mono"
-  export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
-  export _InitializeBuildToolFramework="net472"
-  export MONO_ENV_OPTIONS="$MONO_ENV_OPTIONS --assembly-loader=strict"
+      export _InitializeBuildTool="mono"
+      export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
+      export _InitializeBuildToolFramework="net472"
 
-  configuration="$configuration-MONO"
-  extn_path="$mono_msbuild_dir/Extensions"
+      configuration="$configuration-MONO"
+      extn_path="$mono_msbuild_dir/Extensions"
 
-  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false"
+      extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1"
+  else
+      export _InitializeBuildTool="msbuild"
+      export _InitializeBuildToolCommand=""
+      export _InitializeBuildToolFramework="net472"
+
+      configuration="$configuration-MONO"
+      extra_properties=" /fl /flp:v=diag"
+  fi
 fi
 
 if [[ $build_stage1 == true ]];
@@ -112,7 +125,7 @@ then
   export MonoTool=`which mono`
 
   extn_path="$bootstrapRoot/net472/MSBuild"
-  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false"
+  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1"
 else
   echo "Unsupported hostType ($host_type)"
   exit 1

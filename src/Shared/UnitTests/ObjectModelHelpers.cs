@@ -14,7 +14,7 @@ using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Experimental.Graph;
+using Microsoft.Build.Graph;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
@@ -442,12 +442,10 @@ namespace Microsoft.Build.UnitTests
             if (expected == null)
             {
                 Assert.Null(actual); // "Expected a null array"
-            }
-            else
-            {
-                Assert.NotNull(actual); // "Result should be non-null."
+                return;
             }
 
+            Assert.NotNull(actual); // "Result should be non-null."
             Assert.Equal(expected.Length, actual.Length); // "Expected array length of <" + expected.Length + "> but was <" + actual.Length + ">.");
 
             // Now that we've verified they're both non-null and of the same length, compare each item in the array.

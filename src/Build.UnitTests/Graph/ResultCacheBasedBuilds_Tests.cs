@@ -3,13 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 using Microsoft.Build.UnitTests;
 using Shouldly;
@@ -17,10 +17,10 @@ using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.Build.UnitTests.Helpers;
 
-using ExpectedNodeBuildOutput = System.Collections.Generic.Dictionary<Microsoft.Build.Experimental.Graph.ProjectGraphNode, string[]>;
-using OutputCacheDictionary = System.Collections.Generic.Dictionary<Microsoft.Build.Experimental.Graph.ProjectGraphNode, string>;
+using ExpectedNodeBuildOutput = System.Collections.Generic.Dictionary<Microsoft.Build.Graph.ProjectGraphNode, string[]>;
+using OutputCacheDictionary = System.Collections.Generic.Dictionary<Microsoft.Build.Graph.ProjectGraphNode, string>;
 
-namespace Microsoft.Build.Experimental.Graph.UnitTests
+namespace Microsoft.Build.Graph.UnitTests
 {
     public class ResultCacheBasedBuilds_Tests : IDisposable
     {
@@ -392,6 +392,12 @@ namespace Microsoft.Build.Experimental.Graph.UnitTests
             results["1"].Result.OverallResult.ShouldBe(BuildResultCode.Failure);
             results["1"].Logger.ErrorCount.ShouldBe(1);
             results["1"].Logger.Errors.First().Message.ShouldContain("MSB4252");
+
+            results["1"].Logger.Errors.First().BuildEventContext.NodeId.ShouldNotBe(BuildEventContext.InvalidNodeId);
+            results["1"].Logger.Errors.First().BuildEventContext.ProjectInstanceId.ShouldNotBe(BuildEventContext.InvalidProjectInstanceId);
+            results["1"].Logger.Errors.First().BuildEventContext.ProjectContextId.ShouldNotBe(BuildEventContext.InvalidProjectContextId);
+            results["1"].Logger.Errors.First().BuildEventContext.TargetId.ShouldNotBe(BuildEventContext.InvalidTargetId);
+            results["1"].Logger.Errors.First().BuildEventContext.TaskId.ShouldNotBe(BuildEventContext.InvalidTaskId);
         }
 
         /// <summary>

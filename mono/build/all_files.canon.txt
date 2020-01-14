@@ -82,6 +82,7 @@ lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/ru
 lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/tr/Microsoft.DotNet.MSBuildSdkResolver.resources.dll
 lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/zh-Hans/Microsoft.DotNet.MSBuildSdkResolver.resources.dll
 lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/zh-Hant/Microsoft.DotNet.MSBuildSdkResolver.resources.dll
+lib/mono/msbuild/Current/bin/SdkVersions.Details.xml
 lib/mono/msbuild/Current/bin/Sdks/FSharp.NET.Sdk/Sdk/Sdk.OnRestore.targets
 lib/mono/msbuild/Current/bin/Sdks/FSharp.NET.Sdk/Sdk/Sdk.props
 lib/mono/msbuild/Current/bin/Sdks/FSharp.NET.Sdk/Sdk/Sdk.targets
@@ -95,6 +96,7 @@ lib/mono/msbuild/Current/bin/Sdks/Microsoft.Docker.Sdk/Sdk/Sdk.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.Docker.Sdk/Sdk/Sdk.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/Sdk/Sdk.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/Sdk/Sdk.targets
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/packageIcon.png
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/targets/ComputeTargets/Microsoft.NET.Sdk.Publish.ComputeFiles.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/targets/CopyTargets/Microsoft.NET.Sdk.Publish.CopyFiles.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Publish/targets/DotNetCLIToolTargets/Microsoft.NET.Sdk.DotNetCLITool.targets
@@ -134,11 +136,14 @@ lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/build/netstandard2.0/S
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/buildMultiTargeting/Microsoft.NET.Sdk.Razor.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/buildMultiTargeting/Sdk.Razor.CurrentVersion.MultiTargeting.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/extensions/mvc-3-0/Microsoft.AspNetCore.Mvc.Razor.Extensions.dll
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/lib/netstandard2.0/_._
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/packageIcon.png
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/tasks/net46/Microsoft.NET.Sdk.Razor.Tasks.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/tasks/net46/System.Collections.Immutable.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Razor/tasks/net46/System.Reflection.Metadata.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web.ProjectSystem/Sdk/Sdk.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web.ProjectSystem/Sdk/Sdk.targets
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web.ProjectSystem/packageIcon.png
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web.ProjectSystem/targets/Microsoft.NET.Sdk.Web.ProjectSystem.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web.ProjectSystem/targets/Microsoft.NET.Sdk.Web.ProjectSystem.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/Sdk/Sdk.props
@@ -147,6 +152,9 @@ lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/analyzers/cs/Microsoft.A
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/analyzers/cs/Microsoft.AspNetCore.Components.Analyzers.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/analyzers/cs/Microsoft.AspNetCore.Mvc.Analyzers.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/analyzers/cs/Microsoft.AspNetCore.Mvc.Api.Analyzers.dll
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk.Web/packageIcon.png
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.AfterCommon.targets
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.BeforeCommon.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/Sdk/Sdk.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.ComposeStore.targets
@@ -164,6 +172,7 @@ lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.NuGetO
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.ObsoleteReferences.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PackProjectTool.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PackProjectTool.targets
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PackStubs.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PackTool.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PackTool.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.PreserveCompilationContext.targets
@@ -189,6 +198,7 @@ lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.ta
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.SupportedTargetFrameworks.props
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.TargetFrameworkInference.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolution.targets
+lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/targets/Microsoft.PackageDependencyResolutionStubs.targets
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/tools/net472/Microsoft.DotNet.PlatformAbstractions.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/tools/net472/Microsoft.Extensions.DependencyModel.dll
 lib/mono/msbuild/Current/bin/Sdks/Microsoft.NET.Sdk/tools/net472/Microsoft.NET.Build.Tasks.dll

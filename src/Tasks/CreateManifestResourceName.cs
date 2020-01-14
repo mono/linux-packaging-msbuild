@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Shared;
+using System.ComponentModel;
 
 namespace Microsoft.Build.Tasks
 {
@@ -35,7 +36,7 @@ namespace Microsoft.Build.Tasks
 
         public bool UseDependentUponConvention { get; set; }
 
-        internal abstract string SourceFileExtension { get; }
+        protected abstract string SourceFileExtension { get; }
 
         /// <summary>
         /// The possibly dependent resource files.
@@ -144,14 +145,41 @@ namespace Microsoft.Build.Tasks
                 try
                 {
                     string fileName = resourceFile.ItemSpec;
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                     string dependentUpon = resourceFile.GetMetadata(ItemMetadataNames.dependentUpon);
 
-                    // If opted into convention and no DependentUpon metadata, reference "<filename>.cs" if it exists.
-                    if (UseDependentUponConvention && string.IsNullOrEmpty(dependentUpon))
-                    {
-                        string conventionDependentUpon = Path.ChangeExtension(fileName, SourceFileExtension);
+                    string fileType = resourceFile.GetMetadata("Type");
 
-                        if (File.Exists(conventionDependentUpon))
+                    // If it has "type" metadata and the value is "Resx"
+                    // This value can be specified by the user, if not it will have been automatically assigned by the SplitResourcesByCulture target.
+                    bool isResxFile = (!string.IsNullOrEmpty(fileType) && fileType == "Resx");
+
+                    // If not, fall back onto the extension.
+                    if (string.IsNullOrEmpty(fileType))
+                    {
+                        isResxFile = Path.GetExtension(fileName) == ".resx";
+                    }
+
+                    // If opted into convention and no DependentUpon metadata and is a resx file, reference "<filename>.<ext>" (.cs or .vb) if it exists.
+                    if (isResxFile && UseDependentUponConvention && string.IsNullOrEmpty(dependentUpon))
+                    {
+                        // Assume that by convention the expected file name is "<filename>.<ext>"
+                        string conventionDependentUpon = Path.ChangeExtension(Path.GetFileName(fileName), SourceFileExtension);
+
+                        // Verify that the file name didn't have a culture associated with it. Ex: "<filename>.<culture>.resx" If we don't strip the culture we look for TestComponent.de.cs, which we don't want.
+                        if (resourceFile.GetMetadata("WithCulture") == "true")
+                        {
+                            string culture = resourceFile.GetMetadata("Culture");
+                            if (!string.IsNullOrEmpty(culture))
+                            {
+                                int indexJustBeforeCulture = fileNameWithoutExtension.Length - culture.Length - 1;
+
+                                // Strip the culture from the name, append the appropriate extension, now we have "<filename>.<ext>", this is the file resourceFile is dependent upon
+                                conventionDependentUpon = fileNameWithoutExtension.Substring(0, indexJustBeforeCulture) + SourceFileExtension;
+                            }
+                        }
+
+                        if (File.Exists(Path.Combine(Path.GetDirectoryName(fileName), conventionDependentUpon)))
                         {
                             dependentUpon = conventionDependentUpon;
                         }

@@ -1,15 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19426.12">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19502.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>36ce21e795e2e90081300f4cb645dfd8cf6eb2b3</Sha>
+      <Sha>f4823f5c2c1f95e85bb595f533b17afc71924dd6</Sha>
     </Dependency>
   </ToolsetDependencies>
   <ProductDependencies>
-    <Dependency Name="System.Resources.Extensions" Version="4.6.0-rc1.19425.2">
-      <Uri>https://github.com/dotnet/corefx</Uri>
-      <Sha>7cfc8fc8b202782d3f69db967c733766350706a0</Sha>
+    <Dependency Name="Microsoft.NET.Sdk" Version="3.1.100-rtm.19568.4">
+      <Uri>https://github.com/dotnet/sdk</Uri>
+      <Sha>49bbede419cf63e15c70f4b463f80e4811fe3f34</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Sdk.Razor" Version="3.1.1-servicing.19575.9">
+      <Uri>https://github.com/aspnet/AspNetCore-Tooling</Uri>
+      <Sha>5a489a79189da32e5046c3eeda5f80c4e1258cb8</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Sdk.Web" Version="3.1.100-rtm.19575.2">
+      <Uri>https://github.com/aspnet/websdk</Uri>
+      <Sha>72a4eb78f1aa8af48f6fd7441fccea38639d9d6d</Sha>
+    </Dependency>
+    <Dependency Name="ILLink.Tasks" Version="0.1.6-prerelease.19380.1">
+      <Uri>https://github.com/mono/linker</Uri>
+      <Sha>1127689f262d52ea8ff68ef03d706fa62b3b40a1</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NETCore.App" Version="3.1.0-preview2.19521.15">
+      <Uri>https://github.com/dotnet/core-setup</Uri>
+      <Sha>f830769364b45286b638a57176d4a7997dbc5237</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Cli.Runtime" Version="3.1.101-servicing.19572.3">
+      <Uri>https://github.com/dotnet/cli</Uri>
+      <Sha>0e5712bd568bb17296171cf7f6bc31ecf414b0c0</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Build.Tasks" Version="5.4.0-rtm.6292">
+      <Uri>https://github.com/NuGet/NuGet.Client</Uri>
+      <Sha>6f8eb3a2e1db6b458451b9cfd2a4f5557769b041</Sha>
     </Dependency>
   </ProductDependencies>
 </Dependencies>

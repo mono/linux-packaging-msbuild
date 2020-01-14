@@ -180,6 +180,7 @@ namespace Microsoft.Build.Tasks
         [Microsoft.Build.Framework.OutputAttribute]
         public Microsoft.Build.Framework.ITaskItem[] DestinationFiles { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskItem DestinationFolder { get { throw null; } set { } }
+        public bool ErrorIfLinkFails { get { throw null; } set { } }
         public bool OverwriteReadOnlyFiles { get { throw null; } set { } }
         public int Retries { get { throw null; } set { } }
         public int RetryDelayMilliseconds { get { throw null; } set { } }
@@ -194,6 +195,7 @@ namespace Microsoft.Build.Tasks
     public partial class CreateCSharpManifestResourceName : Microsoft.Build.Tasks.CreateManifestResourceName
     {
         public CreateCSharpManifestResourceName() { }
+        protected override string SourceFileExtension { get { throw null; } }
         protected override string CreateManifestName(string fileName, string linkFileName, string rootNamespace, string dependentUponFileName, System.IO.Stream binaryStream) { throw null; }
         protected override bool IsSourceFile(string fileName) { throw null; }
     }
@@ -219,6 +221,7 @@ namespace Microsoft.Build.Tasks
         [Microsoft.Build.Framework.OutputAttribute]
         public Microsoft.Build.Framework.ITaskItem[] ResourceFilesWithManifestResourceNames { get { throw null; } set { } }
         public string RootNamespace { get { throw null; } set { } }
+        protected abstract string SourceFileExtension { get; }
         public bool UseDependentUponConvention { get { throw null; } set { } }
         protected abstract string CreateManifestName(string fileName, string linkFileName, string rootNamespaceName, string dependentUponFileName, System.IO.Stream binaryStream);
         public override bool Execute() { throw null; }
@@ -237,6 +240,7 @@ namespace Microsoft.Build.Tasks
     public partial class CreateVisualBasicManifestResourceName : Microsoft.Build.Tasks.CreateManifestResourceName
     {
         public CreateVisualBasicManifestResourceName() { }
+        protected override string SourceFileExtension { get { throw null; } }
         protected override string CreateManifestName(string fileName, string linkFileName, string rootNamespace, string dependentUponFileName, System.IO.Stream binaryStream) { throw null; }
         protected override bool IsSourceFile(string fileName) { throw null; }
     }
