@@ -161,6 +161,11 @@
         <target state="translated">MSB3021: Die Datei "{0}" kann nicht in "{1}" kopiert werden. {2}</target>
         <note>{StrBegin="MSB3021: "}</note>
       </trans-unit>
+      <trans-unit id="Copy.ErrorIfLinkFailsSetWithoutLinkOption">
+        <source>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</source>
+        <target state="translated">MSB3892: ErrorIfLinkFails erfordert die Festlegung von UseHardlinksIfPossible oder UseSymbolicLinksIfPossible.</target>
+        <note>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</note>
+      </trans-unit>
       <trans-unit id="Copy.ExactlyOneTypeOfDestination">
         <source>MSB3022: Both "{0}" and "{1}" were specified as input parameters in the project file. Please choose one or the other.</source>
         <target state="translated">MSB3022: "{0}" und "{1}" wurden in der Projektdatei als Eingabeparameter angegeben. Verwenden Sie nur einen dieser Parameter.</target>
@@ -175,6 +180,11 @@
         <source>Creating hard link to copy "{0}" to "{1}".</source>
         <target state="translated">Es wird ein fester Link erstellt, um "{0}" in "{1}" zu kopieren.</target>
         <note>LOCALIZATION: {0} and {1} are paths.</note>
+      </trans-unit>
+      <trans-unit id="Copy.LinkFailed">
+        <source>MSB3893: Could not use a link to copy "{0}" to "{1}".</source>
+        <target state="translated">MSB3893: Es konnte kein Link verwendet werden, um "{0}" in "{1}" zu kopieren.</target>
+        <note>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</note>
       </trans-unit>
       <trans-unit id="Copy.RetryingAsFileCopy">
         <source>Could not use a link to copy "{0}" to "{1}". Copying the file instead. {2}</source>
@@ -969,6 +979,11 @@
         <target state="translated">MSB3190: Die Anforderungsausführungsebene "{0}" wird von ClickOnce nicht unterstützt.</target>
         <note>{StrBegin="MSB3190: "}</note>
       </trans-unit>
+      <trans-unit id="GenerateResource.CoreSupportsLimitedScenarios">
+        <source>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</source>
+        <target state="translated">MSB3824: Für die Kompilierung mit .NET Core müssen Ressourceneingaben im TXT- oder RESX-Format vorliegen.</target>
+        <note>{StrBegin="MSB3824: "}</note>
+      </trans-unit>
       <trans-unit id="GenerateResource.InputDoesntExist">
         <source>Input file "{0}" does not exist.</source>
         <target state="translated">Die Eingabedatei "{0}" ist nicht vorhanden.</target>
@@ -1001,12 +1016,12 @@
       </trans-unit>
       <trans-unit id="GenerateResource.PreserializedResourcesRequiresExtensions">
         <source>MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</source>
-        <target state="new">MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</target>
+        <target state="translated">MSB3822: Ressourcen, die nicht im Zeichenfolgenformat vorliegen, erfordern zur Laufzeit die System.Resources.Extensions-Assembly, aber diese wurde in den Projektverweisen nicht gefunden.</target>
         <note>{StrBegin="MSB3822: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.PreserializedResourcesRequiresProperty">
         <source>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</source>
-        <target state="new">MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</target>
+        <target state="translated">MSB3823: Für Ressourcen, die nicht im Zeichenfolgenformat vorliegen, muss die Eigenschaft "GenerateResourceUsePreserializedResources" auf "true" festgelegt werden.</target>
         <note>{StrBegin="MSB3823: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.ResourceNotFound">
@@ -1025,9 +1040,9 @@
         <note>{StrBegin="MSB3554: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.CorruptOutput">
-        <source>MSB3555: Output file "{0}" is possibly corrupt.</source>
-        <target state="translated">MSB3555: Die Ausgabedatei "{0}" ist möglicherweise beschädigt.</target>
-        <note>{StrBegin="MSB3555: "}</note>
+        <source>Output file "{0}" is possibly corrupt and will be deleted and recreated.</source>
+        <target state="translated">Die Ausgabedatei "{0}" ist möglicherweise beschädigt, sie wird gelöscht und neu erstellt.</target>
+        <note />
       </trans-unit>
       <trans-unit id="GenerateResource.OnlyStringsSupported">
         <source>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</source>
@@ -1713,7 +1728,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoProfilesFound">
         <source>MSB3260: Could not find any target framework profile redist files in the FullFrameworkFolders locations.</source>
-        <target state="translated">MSB3260: Es wurden keine redist-Dateien für das Zielframeworkprofil an den FullFrameworkFolders-Speicherorten gefunden.</target>
+        <target state="translated">MSB3260: Es wurden keine Redistributabledateien für das Zielframeworkprofil an den FullFrameworkFolders-Speicherorten gefunden.</target>
         <note>{StrBegin="MSB3260: "}</note>
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.FrameworkDirectoryOnProfiles">
@@ -1916,7 +1931,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.RemappedReference">
         <source>Due to a remapping entry in the currently targeted framework redist list, reference "{0}" was remapped to "{1}".</source>
-        <target state="translated">Wegen eines Neuzuordnungs-Eintrags in der gegenwärtigen Framework Redist-Liste des Ziels wurde Referenz "{0}" neu zugeordnet zu "{1}".</target>
+        <target state="translated">Wegen eines Neuzuordnungseintrags in der redist-Liste des aktuellen Zielframeworks wurde der Verweis "{0}" neu zugeordnet zu "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.UnificationByFrameworkRetarget">
@@ -1991,7 +2006,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoSubSetRedistListName">
         <source>The redist list file "{0}" has a null or empty Redist name in the FileList element. Make sure the Redist Name is not null or empty.</source>
-        <target state="translated">Der Redist-Name im FileList-Element der redist-Listendatei "{0}" ist NULL oder leer. Vergewissern Sie sich, dass der Redist-Name nicht NULL oder leer ist.</target>
+        <target state="translated">Der redist-Name im FileList-Element der redist-Listendatei "{0}" ist NULL oder leer. Vergewissern Sie sich, dass der redist-Name nicht NULL oder leer ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveComReference.TreatingTlbOfActiveXAsNonEmbedded">
@@ -2578,6 +2593,11 @@
         <target state="translated">MSB3701: Die Argumente für die XslTransformation-Aufgabe können nicht geladen werden. {0}</target>
         <note>{StrBegin="MSB3701: "}</note>
       </trans-unit>
+      <trans-unit id="XslTransform.PrecompiledXsltError">
+        <source>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</source>
+        <target state="translated">MSB3705: XslCompiledDllPath wird bei der Kompilierung mit .NET Core nicht unterstützt.</target>
+        <note>{StrBegin="MSB3705: "}</note>
+      </trans-unit>
       <trans-unit id="XslTransform.XsltArgumentsError">
         <source>MSB3702: Unable to process the XsltParameters argument for the XslTransformation task. {0}</source>
         <target state="translated">MSB3702: Das XsltParameters-Argument für die XslTransformation-Aufgabe kann nicht verarbeitet werden. {0}</target>
@@ -3000,7 +3020,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ExpandRedistFrom">
         <source>Looking for redist files under "{0}".</source>
-        <target state="translated">redist-Dateien werden gesucht in "{0}".</target>
+        <target state="translated">Redistributabledateien werden gesucht in "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.NotExpanding">
@@ -3020,7 +3040,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistSameSDK">
         <source>There was a conflict between two redist files going to the same target path "{0}" within the "{1}" SDK. Choosing "{2}" over "{3}" because it was resolved first.</source>
-        <target state="translated">Konflikt zwischen zwei redist-Dateien für denselben Zielpfad "{0}" im SDK "{1}". "{2}" wird "{3}" gegenüber bevorzugt, da es zuerst aufgelöst wurde.</target>
+        <target state="translated">Konflikt zwischen zwei Redistributabledateien für denselben Zielpfad "{0}" im SDK "{1}". "{2}" wird "{3}" gegenüber bevorzugt, da es zuerst aufgelöst wurde.</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistDifferentSDK">
@@ -3080,12 +3100,12 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetConfiguration">
         <source>MSB3797: The targeted configuration for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted configuration.</source>
-        <target state="translated">MSB3797: Die Zielkonfiguration für den aufgelösten SDK-Verweis "{0}" war leer. Verweis- oder redist-Dateien können ohne Zielkonfiguration nicht gefunden werden.</target>
+        <target state="translated">MSB3797: Die Zielkonfiguration für den aufgelösten SDK-Verweis "{0}" war leer. Redistributable- oder Verweisdateien können ohne Zielkonfiguration nicht gefunden werden.</target>
         <note>{StrBegin="MSB3797: "}</note>
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetArchitecture">
         <source>MSB3798: The targeted architecture for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted architecture.</source>
-        <target state="translated">MSB3798: Die Zielarchitektur für den aufgelösten SDK-Verweis "{0}" war leer. Verweis- oder redist-Dateien können ohne Zielarchitektur nicht gefunden werden.</target>
+        <target state="translated">MSB3798: Die Zielarchitektur für den aufgelösten SDK-Verweis "{0}" war leer. Redistributable- oder Verweisdateien können ohne Zielarchitektur nicht gefunden werden.</target>
         <note>{StrBegin="MSB3798: "}</note>
       </trans-unit>
       <trans-unit id="FindInvalidProjectReferences.WarnWhenVersionIsIncompatible">

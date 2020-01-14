@@ -118,6 +118,10 @@
             <Output TaskParameter="CopiedFiles" ItemName="CopiedFiles" />
         </Copy>
 
+        <Copy SourceFiles="$(RepoRoot)\eng\Version.Details.xml" DestinationFiles="$(MSBuildInstallBinDir)\SdkVersions.Details.xml">
+            <Output TaskParameter="CopiedFiles" ItemName="CopiedFiles" />
+        </Copy>
+
         <Copy SourceFiles="@(ResourceAssemblies)"
             DestinationFiles="@(ResourceAssemblies -> '$(MSBuildInstallBinDir)\%(RecursiveDir)%(Filename)%(Extension)')">
             <Output TaskParameter="CopiedFiles" ItemName="CopiedFiles" />
