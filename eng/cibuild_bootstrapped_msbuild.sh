@@ -73,8 +73,17 @@ Stage1Dir="$RepoRoot/stage1"
 mono_msbuild_dir="$artifacts_dir/mono-msbuild"
 msbuild_download_url="https://github.com/mono/msbuild/releases/download/0.08/mono_msbuild_6.4.0.208.zip"
 msbuild_zip="$artifacts_dir/msbuild.zip"
+roslyn_version_to_use=`grep -i MicrosoftNetCompilersVersion $ScriptRoot/Versions.props  | sed -e 's,^.*>\([^<]*\)<.*$,\1,'`
+nuget_version_to_use=`grep -i NuGetBuildTasksVersion $ScriptRoot/Versions.props  | sed -e 's,^.*>\([^<]*\)<.*$,\1,'`
 
 if [ $host_type = "mono" ] ; then
+  if [ -z "$roslyn_version_to_use" ]; then
+      echo  "Unable to find a Roslyn version to use for Microsoft.Net.Compilers.Toolset"
+      exit 1
+  fi
+  if [ -z "$nuget_version_to_use" ]; then
+      echo  "Unable to find a NuGet.Build.Tasks version to use."
+  fi
   if [ $use_system_mono == false ] ; then
       DownloadMSBuildForMono
 
@@ -82,17 +91,18 @@ if [ $host_type = "mono" ] ; then
       export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
       export _InitializeBuildToolFramework="net472"
 
+
       configuration="$configuration-MONO"
       extn_path="$mono_msbuild_dir/Extensions"
 
-      extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1"
+      extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1 /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
   else
       export _InitializeBuildTool="msbuild"
       export _InitializeBuildToolCommand=""
       export _InitializeBuildToolFramework="net472"
 
       configuration="$configuration-MONO"
-      extra_properties=" /fl /flp:v=diag"
+      extra_properties=" /fl /flp:v=diag /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
   fi
 fi
 
@@ -107,10 +117,6 @@ bootstrapRoot="$Stage1Dir/bin/bootstrap"
 
 if [ $host_type = "core" ]
 then
-  . "$ScriptRoot/common/tools.sh"
-
-  InitializeDotNetCli true
-
   _InitializeBuildTool="$_InitializeDotNetCli/dotnet"
   _InitializeBuildToolCommand="$bootstrapRoot/netcoreapp2.1/MSBuild/MSBuild.dll"
   _InitializeBuildToolFramework="netcoreapp2.1"
@@ -125,7 +131,7 @@ then
   export MonoTool=`which mono`
 
   extn_path="$bootstrapRoot/net472/MSBuild"
-  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1"
+  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m:1 /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
 else
   echo "Unsupported hostType ($host_type)"
   exit 1

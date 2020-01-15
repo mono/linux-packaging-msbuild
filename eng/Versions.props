@@ -15,15 +15,16 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>16.4.0</VersionPrefix>
+    <VersionPrefix>16.5.0</VersionPrefix>
     <AssemblyVersion>15.1.0.0</AssemblyVersion>
-    <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
     <!-- Workaround for https://github.com/dotnet/roslyn/issues/35793 -->
     <SemanticVersioningV1>true</SemanticVersioningV1>
     <MicroBuildPluginsSwixBuildVersion>1.0.672</MicroBuildPluginsSwixBuildVersion>
     <MonoBuild Condition="'$(Configuration)' == 'Debug-MONO' or '$(Configuration)' == 'Release-MONO'">true</MonoBuild>
+    <MicrosoftDotnetToolsetInternalVersion>3.1.200-preview.20060.1</MicrosoftDotnetToolsetInternalVersion>
+    <MicrosoftNetCompilersVersion>3.5.0-beta1-19606-04</MicrosoftNetCompilersVersion>
   </PropertyGroup>
   <!-- Repo Toolset Features -->
   <PropertyGroup Condition="'$(MonoBuild)' != 'true'">
@@ -34,15 +35,14 @@
   </PropertyGroup>
   <!-- Toolset Dependencies -->
   <PropertyGroup>
-    <DotNetCliVersion>3.0.100</DotNetCliVersion>
-    <MicrosoftNetCompilersVersion>3.4.0-beta4-19569-03</MicrosoftNetCompilersVersion>
-    <MicrosoftNETSdkVersion>3.1.100-rtm.19568.4</MicrosoftNETSdkVersion>
-    <MicrosoftNETSdkRazorVersion>3.1.1-servicing.19575.9</MicrosoftNETSdkRazorVersion>
-    <MicrosoftNETSdkWebVersion>3.1.100-rtm.19575.2</MicrosoftNETSdkWebVersion>
-    <NuGetBuildTasksVersion>5.4.0-rtm.6292</NuGetBuildTasksVersion>
+    <MicrosoftNETSdkVersion>3.1.200-preview.20059.2</MicrosoftNETSdkVersion>
+    <MicrosoftNETSdkRazorVersion>3.1.0</MicrosoftNETSdkRazorVersion>
+    <MicrosoftNETSdkWebVersion>3.1.200-preview.20057.3</MicrosoftNETSdkWebVersion>
+    <NuGetBuildTasksVersion>5.5.0-preview.2.6355</NuGetBuildTasksVersion>
     <ILLinkTasksVersion>0.1.6-prerelease.19380.1</ILLinkTasksVersion>
-    <MicrosoftNETCoreAppVersion>3.1.0-preview2.19521.15</MicrosoftNETCoreAppVersion>
-    <MicrosoftDotNetCliRuntimeVersion>3.1.101-servicing.19572.3</MicrosoftDotNetCliRuntimeVersion>
+    <MicrosoftNETCoreAppVersion>3.1.0-rtm.19565.2</MicrosoftNETCoreAppVersion>
+    <MicrosoftDotNetCliRuntimeVersion>3.1.200-preview.20059.1</MicrosoftDotNetCliRuntimeVersion>
+    <DotNetCliVersion>3.1.100</DotNetCliVersion>
   </PropertyGroup>
   <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
     <!-- See https://github.com/dotnet/arcade/issues/3386
