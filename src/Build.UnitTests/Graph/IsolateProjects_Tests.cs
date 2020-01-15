@@ -59,7 +59,7 @@ namespace Microsoft.Build.Graph.UnitTests
                     <Target Name='SelfTarget'>
                     </Target>
 
-                    <UsingTask TaskName='CustomMSBuild' TaskFactory='{5}' AssemblyFile='$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll'>
+                    <UsingTask TaskName='CustomMSBuild' TaskFactory='RoslynCodeTaskFactory' AssemblyFile='$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll'>
                         <ParameterGroup>
                           <Projects ParameterType='Microsoft.Build.Framework.ITaskItem[]' Required='true' />
                           <Targets ParameterType='Microsoft.Build.Framework.ITaskItem[]' Required='true' />
@@ -401,8 +401,7 @@ BuildEngine5.BuildProjectFilesInParallel(
                     : string.Empty,
                 excludeReferencesFromConstraints
                     ? $"{declaredReferenceFile};{undeclaredReferenceFile}"
-                    : string.Empty,
-                NativeMethodsShared.IsMono ? "CodeTaskFactory" : "RoslynCodeTaskFactory")
+                    : string.Empty)
                 .Cleanup();
 
             File.WriteAllText(rootProjectFile, projectContents);

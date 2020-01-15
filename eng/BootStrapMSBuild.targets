@@ -136,16 +136,17 @@
     <Copy SourceFiles="@(InstalledNuGetFiles)"
           DestinationFiles="@(InstalledNuGetFiles->'$(BootstrapDestination)Microsoft\NuGet\%(Filename)%(Extension)')" />
 
-    <Copy SourceFiles="@(_NuGetRuntimeDependencies)"
-          DestinationFolder="$(BootstrapDestination)..\Common7\IDE\CommonExtensions\Microsoft\NuGet\"
-          Condition="'$(MonoBuild)' != 'true'" />
-    <Copy SourceFiles="@(_NuGetRuntimeDependencies)"
-          DestinationFolder="$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\"
-          Condition="'$(MonoBuild)' == 'true'" />
+    <Copy Condition="'$(MonoBuild)' != 'true'"
+          SourceFiles="@(_NuGetRuntimeDependencies)"
+          DestinationFolder="$(BootstrapDestination)..\Common7\IDE\CommonExtensions\Microsoft\NuGet\" />
 
-    <Copy SourceFiles="@(MonoBinDirOverlayFiles)"
-          DestinationFolder="$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\"
-          Condition="'$(MonoBuild)' == 'true'" />
+    <Copy Condition="'$(MonoBuild)' == 'true'"
+          SourceFiles="@(_NuGetRuntimeDependencies)"
+          DestinationFolder="$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\" />
+
+    <Copy Condition="'$(MonoBuild)' == 'true'"
+          SourceFiles="@(MonoBinDirOverlayFiles)"
+          DestinationFolder="$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\" />
 
     <Copy SourceFiles="@(NuGetSdkResolverManifest)"
           DestinationFolder="$(BootstrapDestination)$(TargetMSBuildToolsVersion)\Bin\SdkResolvers\Microsoft.Build.NuGetSdkResolver" />
