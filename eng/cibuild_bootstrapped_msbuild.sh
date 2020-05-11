@@ -1,6 +1,6 @@
-#!/bin/bash
+#! /bin/bash
 
-configuration="debug"
+configuration="Debug"
 host_type="core"
 build_stage1=true
 run_tests="--test"
@@ -106,6 +106,8 @@ if [ $host_type = "mono" ] ; then
   fi
 fi
 
+pkill -9 -f VBCSCompiler.exe
+
 if [[ $build_stage1 == true ]];
 then
     "$_InitializeBuildTool" "$_InitializeBuildToolCommand" $extra_properties /bl mono/build/update_bundled_bits.proj || exit $?
@@ -151,4 +153,3 @@ export DOTNET_HOST_PATH="$_InitializeDotNetCli/dotnet"
 # - Do run tests
 # - Don't try to create a bootstrap deployment
 . "$ScriptRoot/common/build.sh" $run_restore --build $run_tests --ci --nodereuse false --configuration $configuration /p:CreateBootstrap=false $properties $extra_properties
-
