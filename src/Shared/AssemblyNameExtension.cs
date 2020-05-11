@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Configuration.Assemblies;
 using System.Runtime.Serialization;
 using System.IO;
-#if !FEATURE_ASSEMBLY_LOADFROM || MONO
+#if FEATURE_ASSEMBLYLOADCONTEXT || MONO
 using System.Reflection.PortableExecutable;
 using System.Reflection.Metadata;
 #endif
@@ -183,7 +183,7 @@ namespace Microsoft.Build.Shared
         internal static AssemblyNameExtension GetAssemblyNameEx(string path)
         {
             AssemblyName assemblyName = null;
-#if FEATURE_ASSEMBLY_LOADFROM && !MONO
+#if !FEATURE_ASSEMBLYLOADCONTEXT && !MONO
             try
             {
                 assemblyName = AssemblyName.GetAssemblyName(path);
