@@ -1,4 +1,2 @@
 fix_bashisms.patch
 copy_hostfxr.patch
-
-case_sensitive_dotnetbits.patch
