@@ -1,6 +1,6 @@
 <Project DefaultTargets="DeploySdksAndNuGets">
     <Import Project="$(MSBuildThisFileDirectory)\..\common.props" />
-    <Import Project="$(MSBuildThisFileDirectory)\..\DotnetBitsVersions.props" />
+    <Import Project="$(MSBuildThisFileDirectory)\..\DotNetBitsVersions.props" />
 
     <PropertyGroup>
         <HostOSName Condition="'$(HostOSName)' == ''">osx</HostOSName>
@@ -60,7 +60,7 @@
             Projects="$(MSBuildThisFileDirectory)\nuget-build-tasks\nuget-build-tasks.csproj"
             Targets="Restore;Build"
             Properties="OutputDirectory=$(DotNetOverlayDirectory)\nuget-support\msbuild-bin"/>
-        
+
         <Exec Command="$(MSBuildThisFileDirectory)/../extract_and_copy_hostfxr.sh $(DotNetSdkVersionForLibHostFxr) $(MSBuildSdkResolverOutDir)" />
     </Target>
 </Project>
