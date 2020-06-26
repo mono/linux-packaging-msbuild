@@ -15,16 +15,17 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>16.5.0</VersionPrefix>
+    <VersionPrefix>16.6.0</VersionPrefix>
     <AssemblyVersion>15.1.0.0</AssemblyVersion>
+    <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
     <!-- Workaround for https://github.com/dotnet/roslyn/issues/35793 -->
     <SemanticVersioningV1>true</SemanticVersioningV1>
     <MicroBuildPluginsSwixBuildVersion>1.0.672</MicroBuildPluginsSwixBuildVersion>
     <MonoBuild Condition="'$(Configuration)' == 'Debug-MONO' or '$(Configuration)' == 'Release-MONO'">true</MonoBuild>
-    <MicrosoftDotnetToolsetInternalVersion>3.1.200-preview.20120.8</MicrosoftDotnetToolsetInternalVersion>
-    <MicrosoftNetCompilersVersion>3.5.0-beta4-20121-02</MicrosoftNetCompilersVersion>
+    <MicrosoftDotnetToolsetInternalVersion>3.1.300-preview.20227.3</MicrosoftDotnetToolsetInternalVersion>
+    <MicrosoftNetCompilersVersion>3.6.0-4.20224.5</MicrosoftNetCompilersVersion>
   </PropertyGroup>
   <!-- Repo Toolset Features -->
   <PropertyGroup Condition="'$(MonoBuild)' != 'true'">
@@ -35,13 +36,13 @@
   </PropertyGroup>
   <!-- Toolset Dependencies -->
   <PropertyGroup>
-    <MicrosoftNETSdkVersion>3.1.200-preview.20113.2</MicrosoftNETSdkVersion>
-    <MicrosoftNETSdkRazorVersion>3.1.1</MicrosoftNETSdkRazorVersion>
-    <MicrosoftNETSdkWebVersion>3.1.200-preview.20113.3</MicrosoftNETSdkWebVersion>
-    <NuGetBuildTasksVersion>5.5.0-rtm.6422</NuGetBuildTasksVersion>
+    <MicrosoftNETSdkVersion>3.1.300-preview.20214.15</MicrosoftNETSdkVersion>
+    <MicrosoftNETSdkRazorVersion>3.1.2</MicrosoftNETSdkRazorVersion>
+    <MicrosoftNETSdkWebVersion>3.1.300-servicing.20216.7</MicrosoftNETSdkWebVersion>
+    <NuGetBuildTasksVersion>5.6.0-rtm.6591</NuGetBuildTasksVersion>
     <ILLinkTasksVersion>0.1.6-prerelease.19380.1</ILLinkTasksVersion>
-    <MicrosoftNETCoreAppVersion>3.1.1-servicing.19608.4</MicrosoftNETCoreAppVersion>
-    <MicrosoftDotNetCliRuntimeVersion>3.1.200-preview.20118.2</MicrosoftDotNetCliRuntimeVersion>
+    <MicrosoftNETCoreAppVersion>3.1.2-servicing.20067.4</MicrosoftNETCoreAppVersion>
+    <MicrosoftDotNetCliRuntimeVersion>3.1.300-preview.20227.1</MicrosoftDotNetCliRuntimeVersion>
     <DotNetCliVersion>3.1.100</DotNetCliVersion>
   </PropertyGroup>
   <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
