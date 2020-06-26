@@ -13,7 +13,7 @@
 # published by the Open Source Initiative.
 
 Name:           msbuild
-Version:	16.5+xamarinxplat.2020.02.20.11.54
+Version:	16.6+xamarinxplat.2020.04.29.14.43
 Release:	0.xamarin.1
 Summary:        Build system for .NET projects
 Epoch:		1
