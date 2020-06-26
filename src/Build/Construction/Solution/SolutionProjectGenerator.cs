@@ -163,7 +163,7 @@ namespace Microsoft.Build.Construction
 
             if (targetNames != null)
             {
-                _targetNames = targetNames.Select(i => i.Split(MSBuildConstants.ColonChar, 2, StringSplitOptions.RemoveEmptyEntries).Last()).ToList();
+                _targetNames = targetNames.Select(i => i.Split(new char[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries).Last()).ToList();
             }
         }
 
@@ -1347,7 +1347,7 @@ namespace Microsoft.Build.Construction
             }
 
             task.SetParameter("BuildInParallel", "True");
-            task.SetParameter("ToolsVersion", MSBuildConstants.CurrentToolsVersion);
+            task.SetParameter("ToolsVersion", "Current");
             task.SetParameter("Properties", SolutionProperties);
             task.SetParameter("SkipNonexistentProjects", "%(ProjectReference.SkipNonexistentProjects)");
 
@@ -1963,7 +1963,10 @@ namespace Microsoft.Build.Construction
                 outputItemAsItem = "@(" + outputItem + ")";
             }
 
-            ProjectTargetInstance target = traversalProject.AddTarget(targetName ?? "Build", String.Empty, String.Empty, outputItemAsItem, null, String.Empty, String.Empty, String.Empty, String.Empty, false /* legacy target returns behaviour */);
+            string correctedTargetName = targetName ?? "Build";
+
+            traversalProject.RemoveTarget(correctedTargetName);
+            ProjectTargetInstance target = traversalProject.AddTarget(correctedTargetName, string.Empty, string.Empty, outputItemAsItem, null, string.Empty, string.Empty, string.Empty, string.Empty, false /* legacy target returns behaviour */);
             AddReferencesBuildTask(target, targetName, outputItem);
         }
 
