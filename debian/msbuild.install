@@ -8,7 +8,6 @@
 /usr/lib/mono/msbuild/Current/bin/*.dll
 /usr/lib/mono/msbuild/Current/bin/*.json
 /usr/lib/mono/msbuild/Current/bin/*.overridetasks
-/usr/lib/mono/msbuild/Current/bin/*.pdb
 /usr/lib/mono/msbuild/Current/bin/*.props
 /usr/lib/mono/msbuild/Current/bin/*.rsp
 /usr/lib/mono/msbuild/Current/bin/*.targets
