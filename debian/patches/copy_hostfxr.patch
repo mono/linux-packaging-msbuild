@@ -1,8 +1,8 @@
-Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
+Index: linux-packaging-msbuild/eng/cibuild_bootstrapped_msbuild.sh
 ===================================================================
---- xamarin-pkg-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
-+++ xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-@@ -56,6 +56,7 @@ function DownloadMSBuildForMono {
+--- linux-packaging-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
++++ linux-packaging-msbuild/eng/cibuild_bootstrapped_msbuild.sh
+@@ -61,6 +61,7 @@ function DownloadMSBuildForMono {
      unzip -q "$msbuild_zip" -d "$artifacts_dir"
      # rename just to make it obvious when reading logs!
      mv $artifacts_dir/msbuild $mono_msbuild_dir
@@ -10,10 +10,10 @@ Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
      sed -i 's#/sh$#/bash#' $artifacts_dir/mono-msbuild/msbuild
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
      rm "$msbuild_zip"
-Index: xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
+Index: linux-packaging-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
 ===================================================================
---- xamarin-pkg-msbuild.orig/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
-+++ xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
+--- linux-packaging-msbuild.orig/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
++++ linux-packaging-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
 @@ -61,7 +61,6 @@
              Targets="Restore;Build"
              Properties="OutputDirectory=$(DotNetOverlayDirectory)\nuget-support\msbuild-bin"/>

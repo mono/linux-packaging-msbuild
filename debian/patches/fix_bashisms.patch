@@ -1,38 +1,38 @@
-Index: xamarin-pkg-msbuild/gen_build_info.sh
+Index: linux-packaging-msbuild/gen_build_info.sh
 ===================================================================
---- xamarin-pkg-msbuild.orig/gen_build_info.sh
-+++ xamarin-pkg-msbuild/gen_build_info.sh
+--- linux-packaging-msbuild.orig/gen_build_info.sh
++++ linux-packaging-msbuild/gen_build_info.sh
 @@ -1,4 +1,4 @@
 -#!/bin/sh
 +#!/bin/bash
  
  if [ $# -ne 1 ]; then
  	echo "Usage: $0 <filename.cs>"
-Index: xamarin-pkg-msbuild/mono/create_bootstrap.sh
+Index: linux-packaging-msbuild/mono/create_bootstrap.sh
 ===================================================================
---- xamarin-pkg-msbuild.orig/mono/create_bootstrap.sh
-+++ xamarin-pkg-msbuild/mono/create_bootstrap.sh
+--- linux-packaging-msbuild.orig/mono/create_bootstrap.sh
++++ linux-packaging-msbuild/mono/create_bootstrap.sh
 @@ -1,4 +1,4 @@
 -#!/bin/sh
 +#!/bin/bash
  
  # This creates a bootstrap from an exising mono installation
  # This is just to ensure that we have the correct "matched" Roslyn
-Index: xamarin-pkg-msbuild/msbuild-deploy.in
+Index: linux-packaging-msbuild/msbuild-deploy.in
 ===================================================================
---- xamarin-pkg-msbuild.orig/msbuild-deploy.in
-+++ xamarin-pkg-msbuild/msbuild-deploy.in
+--- linux-packaging-msbuild.orig/msbuild-deploy.in
++++ linux-packaging-msbuild/msbuild-deploy.in
 @@ -1,4 +1,4 @@
 -#!/bin/sh
 +#!/bin/bash
  ABSOLUTE_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)/`basename "${BASH_SOURCE[0]}"`
  MSBUILD_SRC_DIR=`dirname $ABSOLUTE_PATH`
  mono $MONO_OPTIONS $MSBUILD_SRC_DIR/MSBuild.exe $*
-Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
+Index: linux-packaging-msbuild/eng/cibuild_bootstrapped_msbuild.sh
 ===================================================================
---- xamarin-pkg-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
-+++ xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-@@ -56,6 +56,7 @@ function DownloadMSBuildForMono {
+--- linux-packaging-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
++++ linux-packaging-msbuild/eng/cibuild_bootstrapped_msbuild.sh
+@@ -61,6 +61,7 @@ function DownloadMSBuildForMono {
      unzip -q "$msbuild_zip" -d "$artifacts_dir"
      # rename just to make it obvious when reading logs!
      mv $artifacts_dir/msbuild $mono_msbuild_dir
@@ -40,3 +40,29 @@ Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
      rm "$msbuild_zip"
    fi
+Index: linux-packaging-msbuild/mono/build/extract_and_copy_hostfxr.sh
+===================================================================
+--- linux-packaging-msbuild.orig/mono/build/extract_and_copy_hostfxr.sh
++++ linux-packaging-msbuild/mono/build/extract_and_copy_hostfxr.sh
+@@ -21,7 +21,7 @@ OLDCWD=`pwd`
+ cd $TMPDIR
+ 
+ GetDotNetInstallScript $TMPDIR
+-sh ./dotnet-install.sh --version $1 --install-dir $DOTNET_DIR --architecture x64 --runtime dotnet --skip-non-versioned-files
++bash ./dotnet-install.sh --version $1 --install-dir $DOTNET_DIR --architecture x64 --runtime dotnet --skip-non-versioned-files
+ find $DOTNET_DIR -name libhostfxr.dylib | xargs -I {} cp -v {} $DESTDIR
+ 
+ cd $OLDCWD
+Index: linux-packaging-msbuild/mono/build/get_sdk_files.sh
+===================================================================
+--- linux-packaging-msbuild.orig/mono/build/get_sdk_files.sh
++++ linux-packaging-msbuild/mono/build/get_sdk_files.sh
+@@ -24,7 +24,7 @@ OLDCWD=`pwd`
+ cd $TMPDIR
+ 
+ GetDotNetInstallScript $TMPDIR
+-sh ./dotnet-install.sh --version $dotnet_sdk_version --install-dir $DOTNET_DIR --architecture x64 --skip-non-versioned-files
++bash ./dotnet-install.sh --version $dotnet_sdk_version --install-dir $DOTNET_DIR --architecture x64 --skip-non-versioned-files
+ find $DOTNET_DIR -name Microsoft.NETCoreSdk.BundledVersions.props -exec cp -v {} $1 \;
+ find $DOTNET_DIR -name RuntimeIdentifierGraph.json -exec cp -v {} $1 \;
+ 
