@@ -1,3 +1,9 @@
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.6+xamarinxplat.2020.04.29.14.43.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 13:03:18 +0000
+
 msbuild (1:16.5+xamarinxplat.2020.02.20.11.54-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
