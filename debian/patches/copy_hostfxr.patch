@@ -19,5 +19,6 @@ Index: xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.pro
              Properties="OutputDirectory=$(DotNetOverlayDirectory)\nuget-support\msbuild-bin"/>
          
 -        <Exec Command="$(MSBuildThisFileDirectory)/../extract_and_copy_hostfxr.sh $(DotNetSdkVersionForLibHostFxr) $(MSBuildSdkResolverOutDir)" />
+         <Exec Command="$(MSBuildThisFileDirectory)/../get_sdk_files.sh $(DotNetOverlayDirectory)\msbuild-bin" />
      </Target>
  </Project>
