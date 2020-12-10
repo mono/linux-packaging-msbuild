@@ -24,7 +24,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        msbuild-%{version}.tar.xz
 Patch0:		copy_hostfxr.patch
 Patch1:		license_check_is_case_sensitive.diff
-Patch2:		case_sensitive_dotnetbits.patch
 BuildRequires:  mono-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openssl-devel
