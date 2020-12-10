@@ -185,11 +185,11 @@
         <Exec
             Condition="Exists('$(AllInstalledFiles_FileCanonical)')"
             IgnoreExitCode="$(IgnoreDiffFailure)"
-            Command="sort -o $(AllInstalledFiles_File) $(AllInstalledFiles_File) ; diff -u $(AllInstalledFiles_FileCanonical) $(AllInstalledFiles_File)" />
+            Command="sort -o $(AllInstalledFiles_FileCanonical) $(AllInstalledFiles_FileCanonical) ; sort -o $(AllInstalledFiles_File) $(AllInstalledFiles_File) ; diff -u $(AllInstalledFiles_FileCanonical) $(AllInstalledFiles_File)" />
 
         <Exec
             Condition="Exists('$(RemainingFiles_FileCanonical)')"
             IgnoreExitCode="$(IgnoreDiffFailure)"
-            Command="sort -o $(RemainingFiles_File) $(RemainingFiles_File); diff -u $(RemainingFiles_FileCanonical) $(RemainingFiles_File)" />
+            Command="sort -o $(RemainingFiles_FileCanonical) $(RemainingFiles_FileCanonical) ; sort -o $(RemainingFiles_File) $(RemainingFiles_File); diff -u $(RemainingFiles_FileCanonical) $(RemainingFiles_File)" />
     </Target>
 </Project>
