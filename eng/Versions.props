@@ -15,17 +15,16 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>16.6.0</VersionPrefix>
+    <VersionPrefix>16.8.0</VersionPrefix>
     <AssemblyVersion>15.1.0.0</AssemblyVersion>
-    <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
     <!-- Workaround for https://github.com/dotnet/roslyn/issues/35793 -->
     <SemanticVersioningV1>true</SemanticVersioningV1>
     <MicroBuildPluginsSwixBuildVersion>1.0.672</MicroBuildPluginsSwixBuildVersion>
     <MonoBuild Condition="'$(Configuration)' == 'Debug-MONO' or '$(Configuration)' == 'Release-MONO'">true</MonoBuild>
-    <MicrosoftDotnetToolsetInternalVersion>3.1.300-preview.20227.3</MicrosoftDotnetToolsetInternalVersion>
-    <MicrosoftNetCompilersVersion>3.6.0-4.20224.5</MicrosoftNetCompilersVersion>
+    <MicrosoftDotnetToolsetInternalVersion>3.1.400-preview.20367.3</MicrosoftDotnetToolsetInternalVersion>
+    <MicrosoftNetCompilersVersion>3.7.0-5.20367.1</MicrosoftNetCompilersVersion>
   </PropertyGroup>
   <!-- Repo Toolset Features -->
   <PropertyGroup Condition="'$(MonoBuild)' != 'true'">
@@ -33,17 +32,20 @@
     <UsingToolVisualStudioIbcTraining>true</UsingToolVisualStudioIbcTraining>
     <UsingToolSymbolUploader>true</UsingToolSymbolUploader>
     <UsingToolVSSDK>true</UsingToolVSSDK>
+    <!-- Override Arcade's default VSSDK version with one that supports client enablement.
+         Can be removed after Arcade moves up. -->
+    <MicrosoftVSSDKBuildToolsVersion>16.7.13</MicrosoftVSSDKBuildToolsVersion>
   </PropertyGroup>
   <!-- Toolset Dependencies -->
   <PropertyGroup>
-    <MicrosoftNETSdkVersion>3.1.300-preview.20214.15</MicrosoftNETSdkVersion>
-    <MicrosoftNETSdkRazorVersion>3.1.2</MicrosoftNETSdkRazorVersion>
+    <MicrosoftNETSdkVersion>3.1.400-preview.20365.20</MicrosoftNETSdkVersion>
+    <MicrosoftNETSdkRazorVersion>3.1.6</MicrosoftNETSdkRazorVersion>
     <MicrosoftNETSdkWebVersion>3.1.300-servicing.20216.7</MicrosoftNETSdkWebVersion>
-    <NuGetBuildTasksVersion>5.6.0-rtm.6591</NuGetBuildTasksVersion>
+    <NuGetBuildTasksVersion>5.7.0-rtm.6710</NuGetBuildTasksVersion>
     <ILLinkTasksVersion>0.1.6-prerelease.19380.1</ILLinkTasksVersion>
-    <MicrosoftNETCoreAppVersion>3.1.2-servicing.20067.4</MicrosoftNETCoreAppVersion>
-    <MicrosoftDotNetCliRuntimeVersion>3.1.300-preview.20227.1</MicrosoftDotNetCliRuntimeVersion>
-    <DotNetCliVersion>3.1.100</DotNetCliVersion>
+    <MicrosoftNETCoreAppVersion>3.1.6-servicing.20316.4</MicrosoftNETCoreAppVersion>
+    <MicrosoftDotNetCliRuntimeVersion>3.1.400-preview.20365.4</MicrosoftDotNetCliRuntimeVersion>
+    <DotNetCliVersion>3.0.100</DotNetCliVersion>
   </PropertyGroup>
   <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
     <!-- See https://github.com/dotnet/arcade/issues/3386

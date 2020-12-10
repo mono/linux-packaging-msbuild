@@ -1,5 +1,5 @@
 <Project DefaultTargets="FetchAndUpdateSdksAndNuGets">
-    <Import Project="$(MSBuildThisFileDirectory)\DotnetBitsVersions.props" />
+    <Import Project="$(MSBuildThisFileDirectory)\DotNetBitsVersions.props" />
 
     <Target Name="Build" DependsOnTargets="FetchAndUpdateSdksAndNuGets" />
 

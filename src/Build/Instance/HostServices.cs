@@ -90,11 +90,6 @@ namespace Microsoft.Build.Execution
                 {
 #if FEATURE_COM_INTEROP
 
-                    if (Environment.Is64BitProcess)
-                    {
-                        throw new PlatformNotSupportedException("GetHostObject with monikerName is only supported in 32 bit");
-                    }
-
                     try
                     {
                         object objectFromRunningObjectTable =
@@ -139,8 +134,13 @@ namespace Microsoft.Build.Execution
 
             HostObjects hostObjects = GetHostObjectsFromMapByKeyOrCreateNew(projectFile);
 
-            hostObjects.RegisterHostObject(targetName, taskName, hostObject);
+            _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
+
+            HostObjects hostObjects = GetHostObjectsFromMapByKeyOrCreateNew(projectFile);
+
+            hostObjects.RegisterHostObject(targetName, taskName, monikerName);
         }
+#endif
 
 #if FEATURE_COM_INTEROP
         /// <summary>
@@ -160,11 +160,6 @@ namespace Microsoft.Build.Execution
             ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
             ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
             ErrorUtilities.VerifyThrowArgumentNull(monikerName, "monikerName");
-
-            if (Environment.Is64BitProcess)
-            {
-                throw new PlatformNotSupportedException("RegisterHostObject with monikerName is only supported in 32 bit");
-            }
 
             _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
 
@@ -450,6 +445,23 @@ namespace Microsoft.Build.Execution
                     _hostObjects[new TargetTaskKey(targetName, taskName)] = new MonikerNameOrITaskHost(hostObject);
                 }
             }
+
+#if FEATURE_COM_INTEROP
+            /// <summary>
+            /// Registers a host object for this project file
+            /// </summary>
+            internal void RegisterHostObject(string targetName, string taskName, string monikerName)
+            {
+                if (monikerName == null)
+                {
+                    _hostObjects.Remove(new TargetTaskKey(targetName, taskName));
+                }
+                else
+                {
+                    _hostObjects[new TargetTaskKey(targetName, taskName)] = new MonikerNameOrITaskHost(monikerName);
+                }
+            }
+#endif
 
 #if FEATURE_COM_INTEROP
             /// <summary>

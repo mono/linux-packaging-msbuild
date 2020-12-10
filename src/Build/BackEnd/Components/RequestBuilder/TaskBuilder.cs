@@ -242,7 +242,7 @@ namespace Microsoft.Build.BackEnd
 
             List<string> taskParameters = new List<string>(_taskNode.ParametersForBuild.Count + _taskNode.Outputs.Count);
 
-            foreach (KeyValuePair<string, Tuple<string, ElementLocation>> taskParameter in _taskNode.ParametersForBuild)
+            foreach (KeyValuePair<string, (string, ElementLocation)> taskParameter in _taskNode.ParametersForBuild)
             {
                 taskParameters.Add(taskParameter.Value.Item1);
             }
@@ -405,6 +405,13 @@ namespace Microsoft.Build.BackEnd
                 return taskResult;
             }
 
+            // Some tests do not provide an actual taskNode; checking if _taskNode == null prevents those tests from failing.
+            if (MSBuildEventSource.Log.IsEnabled())
+            {
+                TaskLoggingContext taskLoggingContext = _targetLoggingContext.LogTaskBatchStarted(_projectFullPath, _targetChildInstance);
+                MSBuildEventSource.Log.ExecuteTaskStart(_taskNode?.Name, taskLoggingContext.BuildEventContext.TaskId);
+            }
+
             // If this is an Intrinsic task, it gets handled in a special fashion.
             if (_taskNode == null)
             {
@@ -510,6 +517,13 @@ namespace Microsoft.Build.BackEnd
 
                     taskResult = new WorkUnitResult(WorkUnitResultCode.Success, WorkUnitActionCode.Continue, null);
                 }
+            }
+
+            // Some tests do not provide an actual taskNode; checking if _taskNode == null prevents those tests from failing.
+            if (MSBuildEventSource.Log.IsEnabled())
+            {
+                TaskLoggingContext taskLoggingContext = _targetLoggingContext.LogTaskBatchStarted(_projectFullPath, _targetChildInstance);
+                MSBuildEventSource.Log.ExecuteTaskStop(_taskNode?.Name, taskLoggingContext.BuildEventContext.TaskId);
             }
 
             return taskResult;
@@ -768,6 +782,7 @@ namespace Microsoft.Build.BackEnd
                     if (taskType == typeof(MSBuild))
                     {
                         MSBuild msbuildTask = host.TaskInstance as MSBuild;
+
                         ErrorUtilities.VerifyThrow(msbuildTask != null, "Unexpected MSBuild internal task.");
 
                         var undeclaredProjects = GetUndeclaredProjects(msbuildTask);
@@ -940,6 +955,29 @@ namespace Microsoft.Build.BackEnd
                     else
                     {
                         ErrorUtilities.ThrowInternalErrorUnreachable();
+                    }
+                }
+
+                // When a task fails it must log an error. If a task fails to do so,
+                // that is logged as an error. MSBuild tasks are an exception because
+                // errors are not logged directly from them, but the tasks spawned by them.
+                IBuildEngine be = host.TaskInstance.BuildEngine;
+                if (taskReturned && !taskResult && !taskLoggingContext.HasLoggedErrors && (be is TaskHost th ? th.BuildRequestsSucceeded : false) && (be is IBuildEngine7 be7 ? be7.AllowFailureWithoutError : true))
+                {
+                    if (_continueOnError == ContinueOnError.WarnAndContinue)
+                    {
+                        taskLoggingContext.LogWarning(null,
+                            new BuildEventFileInfo(_targetChildInstance.Location),
+                            "TaskReturnedFalseButDidNotLogError",
+                            _taskNode.Name);
+
+                        taskLoggingContext.LogComment(MessageImportance.Normal, "ErrorConvertedIntoWarning");
+                    }
+                    else
+                    {
+                        taskLoggingContext.LogError(new BuildEventFileInfo(_targetChildInstance.Location),
+                            "TaskReturnedFalseButDidNotLogError",
+                            _taskNode.Name);
                     }
                 }
 
