@@ -38,5 +38,5 @@ Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
      mv $artifacts_dir/msbuild $mono_msbuild_dir
 +    sed -i 's#/sh$#/bash#' $artifacts_dir/mono-msbuild/msbuild
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
-     rm "$msbuild_zip"
-   fi
+ 
+     if [[ `uname -s` != 'Darwin' ]]; then
