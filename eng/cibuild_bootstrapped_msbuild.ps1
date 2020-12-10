@@ -1,11 +1,15 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $hostType,
+  [string] $msbuildEngine,
   [string] $configuration = "Debug",
   [switch] $prepareMachine,
   [bool] $buildStage1 = $True,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
+
+# Ensure that static state in tools is aware that this is
+# a CI scenario
+$ci = $true
 
 . $PSScriptRoot\common\tools.ps1
 
@@ -50,9 +54,9 @@ $ArtifactsDir = Join-Path $RepoRoot "artifacts"
 $Stage1Dir = Join-Path $RepoRoot "stage1"
 $Stage1BinDir = Join-Path $Stage1Dir "bin"
 
-if ($hostType -eq '')
+if ($msbuildEngine -eq '')
 {
-  $hostType = 'full'
+  $msbuildEngine = 'vs'
 }
 
 $msbuildToUse = "msbuild"
@@ -66,7 +70,7 @@ try {
 
   if ($buildStage1)
   {
-    & $PSScriptRoot\Common\Build.ps1 -restore -build -ci /p:CreateBootstrap=true @properties
+    & $PSScriptRoot\Common\Build.ps1 -restore -build -ci -msbuildEngine $msbuildEngine /p:CreateBootstrap=true @properties
   }
 
   $bootstrapRoot = Join-Path $Stage1BinDir "bootstrap"
@@ -75,10 +79,11 @@ try {
   $dotnetToolPath = InitializeDotNetCli $true
   $dotnetExePath = Join-Path $dotnetToolPath "dotnet.exe"
 
-  if ($hostType -eq 'full')
+  if ($msbuildEngine -eq 'vs')
   {
     $buildToolPath = Join-Path $bootstrapRoot "net472\MSBuild\Current\Bin\MSBuild.exe"
     $buildToolCommand = "";
+    $buildToolFramework = "net472"
 
     if ($configuration -eq "Debug-MONO" -or $configuration -eq "Release-MONO")
     {
@@ -91,6 +96,7 @@ try {
   {
     $buildToolPath = $dotnetExePath
     $buildToolCommand = Join-Path $bootstrapRoot "netcoreapp2.1\MSBuild\MSBuild.dll"
+    $buildToolFramework = "netcoreapp2.1"
   }
 
   # Use separate artifacts folder for stage 2
@@ -100,10 +106,15 @@ try {
 
   if ($buildStage1)
   {
+    if (Test-Path $Stage1Dir)
+    {
+      Remove-Item -Force -Recurse $Stage1Dir
+    }
+
     Move-Item -Path $ArtifactsDir -Destination $Stage1Dir -Force
   }
 
-  $buildTool = @{ Path = $buildToolPath; Command = $buildToolCommand }
+  $buildTool = @{ Path = $buildToolPath; Command = $buildToolCommand; Tool = $msbuildEngine; Framework = $buildToolFramework }
   $global:_BuildTool = $buildTool
 
   # turn vbcscompiler back on to save on time. It speeds up the build considerably

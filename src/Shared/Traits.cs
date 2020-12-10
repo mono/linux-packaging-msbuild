@@ -47,6 +47,8 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         public readonly bool UseSimpleInternConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleInternConcurrency"));
 
+        public readonly bool UseSimpleProjectRootElementCacheConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleProjectRootElementCacheConcurrency"));
+
         /// <summary>
         /// Cache wildcard expansions for the entire process
         /// </summary>
@@ -77,6 +79,11 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         public readonly bool LogPropertyFunctionsRequiringReflection = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBuildLogPropertyFunctionsRequiringReflection"));
 
+        /// <summary>
+        /// Log property tracking information.
+        /// </summary>
+        public readonly int LogPropertyTracking = ParseIntFromEnvironmentVariableOrDefault("MsBuildLogPropertyTracking", 0); // Default to logging nothing via the property tracker.
+
         private static int ParseIntFromEnvironmentVariableOrDefault(string environmentVariable, int defaultValue)
         {
             return int.TryParse(Environment.GetEnvironmentVariable(environmentVariable), out int result)
@@ -88,6 +95,17 @@ namespace Microsoft.Build.Utilities
     internal class EscapeHatches
     {
         /// <summary>
+        /// Do not log command line information to build loggers. Useful to unbreak people who parse the msbuild log and who are unwilling to change their code.
+        /// </summary>
+        public readonly bool DoNotSendDeferredMessagesToBuildManager = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildDoNotSendDeferredMessagesToBuildManager"));
+
+        /// <summary>
+        /// https://github.com/microsoft/msbuild/pull/4975 started expanding qualified metadata in Update operations. Before they'd expand to empty strings.
+        /// This escape hatch turns back the old empty string behavior.
+        /// </summary>
+        public readonly bool DoNotExpandQualifiedMetadataInUpdateOperation = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBuildDoNotExpandQualifiedMetadataInUpdateOperation"));
+
+        /// <summary>
         /// Force whether Project based evaluations should evaluate elements with false conditions.
         /// </summary>
         public readonly bool? EvaluateElementsWithFalseConditionInProjectEvaluation = ParseNullableBoolFromEnvironmentVariable("MSBUILDEVALUATEELEMENTSWITHFALSECONDITIONINPROJECTEVALUATION");
@@ -97,7 +115,53 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         public readonly bool AlwaysUseContentTimestamp = Environment.GetEnvironmentVariable("MSBUILDALWAYSCHECKCONTENTTIMESTAMP") == "1";
 
-        public readonly bool LogProjectImports = Environment.GetEnvironmentVariable("MSBUILDLOGIMPORTS") == "1";
+        /// <summary>
+        /// Truncate task inputs when logging them. This can reduce memory pressure
+        /// at the expense of log usefulness.
+        /// </summary>
+        public readonly bool TruncateTaskInputs = Environment.GetEnvironmentVariable("MSBUILDTRUNCATETASKINPUTS") == "1";
+
+        /// <summary>
+        /// Emit events for project imports.
+        /// </summary>
+        private bool? _logProjectImports;
+
+        /// <summary>
+        /// Emit events for project imports.
+        /// </summary>
+        public bool LogProjectImports
+        {
+            get
+            {
+                // Cache the first time
+                if (_logProjectImports == null)
+                {
+                    _logProjectImports = !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBUILDLOGIMPORTS"));
+                }
+                return _logProjectImports.Value;
+            }
+            set
+            {
+                _logProjectImports = value;
+            }
+        }
+
+        private bool? _logTaskInputs;
+        public bool LogTaskInputs
+        {
+            get
+            {
+                if (_logTaskInputs == null)
+                {
+                    _logTaskInputs = Environment.GetEnvironmentVariable("MSBUILDLOGTASKINPUTS") == "1";
+                }
+                return _logTaskInputs.Value;
+            }
+            set
+            {
+                _logTaskInputs = value;
+            }
+        }
 
         /// <summary>
         /// Read information only once per file per ResolveAssemblyReference invocation.
@@ -110,6 +174,11 @@ namespace Microsoft.Build.Utilities
         /// Never use the slow (but more accurate) CreateFile approach to timestamp extraction.
         /// </summary>
         public readonly bool UseSymlinkTimeInsteadOfTargetTime = Environment.GetEnvironmentVariable("MSBUILDUSESYMLINKTIMESTAMP") == "1";
+
+        /// <summary>
+        /// Allow node reuse of TaskHost nodes. This results in task assemblies locked past the build lifetime, preventing them from being rebuilt if custom tasks change, but may improve performance.
+        /// </summary>
+        public readonly bool ReuseTaskHostNodes = Environment.GetEnvironmentVariable("MSBUILDREUSETASKHOSTNODES") == "1";
 
         /// <summary>
         /// Whether or not to ignore imports that are considered empty.  See ProjectRootElement.IsEmptyXmlFile() for more info.
@@ -155,14 +224,37 @@ namespace Microsoft.Build.Utilities
         public readonly bool DisableNuGetSdkResolver = Environment.GetEnvironmentVariable("MSBUILDDISABLENUGETSDKRESOLVER") == "1";
 
         /// <summary>
+        /// Don't delete TargetPath metadata from associated files found by RAR.
+        /// </summary>
+        public readonly bool TargetPathForRelatedFiles = Environment.GetEnvironmentVariable("MSBUILDTARGETPATHFORRELATEDFILES") == "1";
+
+        /// <summary>
+        /// Disable AssemblyLoadContext isolation for plugins.
+        /// </summary>
+        public readonly bool UseSingleLoadContext = Environment.GetEnvironmentVariable("MSBUILDSINGLELOADCONTEXT") == "1";
+
+        /// <summary>
         /// Enables the user of autorun functionality in CMD.exe on Windows which is disabled by default in MSBuild.
         /// </summary>
         public readonly bool UseAutoRunWhenLaunchingProcessUnderCmd = Environment.GetEnvironmentVariable("MSBUILDUSERAUTORUNINCMD") == "1";
 
         /// <summary>
+        /// Disables switching codepage to UTF-8 after detection of characters that can't be represented in the current codepage.
+        /// </summary>
+        public readonly bool AvoidUnicodeWhenWritingToolTaskBatch = Environment.GetEnvironmentVariable("MSBUILDAVOIDUNICODE") == "1";
+
+        /// <summary>
         /// Workaround for https://github.com/Microsoft/vstest/issues/1503.
         /// </summary>
         public readonly bool EnsureStdOutForChildNodesIsPrimaryStdout = Environment.GetEnvironmentVariable("MSBUILDENSURESTDOUTFORTASKPROCESSES") == "1";
+
+        /// <summary>
+        /// Use the original, string-only resx parsing in .NET Core scenarios.
+        /// </summary>
+        /// <remarks>
+        /// Escape hatch for problems arising from https://github.com/microsoft/msbuild/pull/4420.
+        /// </remarks>
+        public readonly bool UseMinimalResxParsingInCoreScenarios = Environment.GetEnvironmentVariable("MSBUILDUSEMINIMALRESX") == "1";
 
         private static bool? ParseNullableBoolFromEnvironmentVariable(string environmentVariable)
         {

@@ -148,16 +148,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.VisualStudioVersion.v*.Common.props" Condition="'$(VisualStudioVersion)' == ''" />
 
-  <!--
-    Properties for extension of ProjectReferenceTargets.
-    Append any current value which may have been provided in a Directory.Build.props since the intent was likely to append, not prepend.
-  -->
-  <PropertyGroup>
-    <ProjectReferenceTargetsForBuild>GetTargetFrameworks;.default;GetNativeManifest;GetCopyToOutputDirectoryItems;$(ProjectReferenceTargetsForBuild)</ProjectReferenceTargetsForBuild>
-    <ProjectReferenceTargetsForClean>GetTargetFrameworks;Clean;$(ProjectReferenceTargetsForClean)</ProjectReferenceTargetsForClean>
-    <ProjectReferenceTargetsForRebuild>$(ProjectReferenceTargetsForBuild);$(ProjectReferenceTargetsForClean);$(ProjectReferenceTargetsForRebuild)</ProjectReferenceTargetsForRebuild>
-  </PropertyGroup>
-
   <!-- 
          Only import the extension targets if we're actually in a 12.0 project here (rather than one we're attempting 
          to treat as 4.0) OR if the Dev11 Microsoft.Common.props don't exist.  If it's a 12.0 project we're redirecting 
@@ -174,4 +164,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <Import Project="$(MSBuildUserExtensionsPath)\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportAfter\*" Condition="'$(ImportUserLocationsByWildcardAfterMicrosoftCommonProps)' == 'true' and exists('$(MSBuildUserExtensionsPath)\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportAfter')"/>
     <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportAfter\*" Condition="'$(ImportByWildcardAfterMicrosoftCommonProps)' == 'true' and exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportAfter')"/>
   </ImportGroup>
+
+  <!-- 
+        Import NuGet.props file.
+    -->
+  <PropertyGroup>
+    <MSBuildUseVisualStudioDirectoryLayout Condition="'$(MSBuildUseVisualStudioDirectoryLayout)'==''">$([MSBuild]::IsRunningFromVisualStudio())</MSBuildUseVisualStudioDirectoryLayout>
+    <NuGetPropsFile Condition="'$(NuGetPropsFile)'=='' and '$(MSBuildUseVisualStudioDirectoryLayout)'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.props</NuGetPropsFile>
+    <NuGetPropsFile Condition="'$(NuGetPropsFile)'==''">$(MSBuildToolsPath)\NuGet.props</NuGetPropsFile>
+  </PropertyGroup>
+  <Import Condition="Exists('$(NuGetPropsFile)')" Project="$(NuGetPropsFile)" />
 </Project>

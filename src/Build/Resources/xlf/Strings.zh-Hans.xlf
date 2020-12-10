@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
-  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../Strings.resx">
+  <file datatype="xml" source-language="en" target-language="zh-HANS" original="../Strings.resx">
     <body>
       <trans-unit id="AmbiguousTaskParameterError">
         <source>MSB4001: The "{0}" task has more than one parameter called "{1}".</source>
@@ -32,25 +32,33 @@
         <note />
       </trans-unit>
       <trans-unit id="CacheMissesNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4252: Project "{0}" has a reference to "{1}" ({2} target(s)) but the build result for the reference is not in the engine cache. In isolated builds this could mean one of the following:
-    - the reference was not explicitly specified as a ProjectReference item in "{0}"
-    - the reference was not included in the provided input caches
-    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in "{0}"
+        <source>MSB4252: Project "{0}" with global properties
+    ({1})
+    is building project "{2}" with global properties
+    ({3})
+    with the ({4}) target(s) but the build result for the built project is not in the engine cache. In isolated builds this could mean one of the following:
+    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in project "{0}"
+    - the reference was called with global properties that do not match the static graph inferred nodes
+    - the reference was not explicitly specified as a ProjectReference item in project "{0}"
     </source>
-        <target state="translated">MSB4252: 项目“{0}”引用了“{1}” ({2} target(s))，但引用的生成结果不在引擎缓存中。在独立生成中，这代表以下某项内容:
-    - 引用未明确指定为“{0}”中的 ProjectReference 项
-    - 引用未包含在提供的输入缓存中
-    - 使用未在“{0}”的 ProjectReferenceTargets 项中指定的目标调用引用
+        <target state="translated">MSB4252: 具有全局属性({1})的项目 "{0}"
+    正在
+    生成项目 "{2}"，其中包括全局属性
+    ({3})
+    和({4})个目标，但生成项目的生成结果不在引擎缓存中。在独立的生成中，这可能表示以下各项之一:
+    - 调用该引用所使用的目标未在项目 "{0}" 中的 ProjectReferenceTargets 项中指定
+    - 调用引用的全局属性与静态图形推断节点不匹配
+    - 未在项目 "{0}" 中显式将引用指定为 ProjectReference 项
     </target>
         <note>
       {StrBegin="MSB4252:"}
-      LOCALIZATION: Do not localize the following words: ProjectReference.
+      LOCALIZATION: Do not localize the following words: ProjectReference, ProjectReferenceTargets
     </note>
       </trans-unit>
       <trans-unit id="CannotExpandItemMetadata">
         <source>MSB4248: Cannot expand metadata in expression "{0}". {1}</source>
         <target state="translated">MSB4248: 无法在表达式“{0}”中展开元数据。{1}</target>
-        <note>{StrBegin="MSB4023: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
+        <note>{StrBegin="MSB4248: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
     %(RootDir) to an item-spec that's not a valid path would result in this error.
     LOCALIZATION: "{1}" is a localized message explaining the problem.</note>
       </trans-unit>
@@ -67,6 +75,11 @@
         <target state="translated">MSB4257: 指定的输出结果缓存文件为空。</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnvironmentVariableRead">
+        <source>Read environment variable "{0}"</source>
+        <target state="translated">读取环境变量“{0}”</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ErrorReadingCacheFile">
         <source>MSB4256: Reading input result cache files from path "{0}" encountered an error: {1}</source>
         <target state="translated">MSB4256: 从路径“{0}”读取输入结果缓存文件时遇到错误: {1}</target>
@@ -80,6 +93,23 @@
       <trans-unit id="InputCacheFilesDoNotExist">
         <source>MSB4255: The following input result cache files do not exist: "{0}"</source>
         <target state="translated">MSB4255: 以下输入结果缓存文件不存在:“{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidVersionFormat">
+        <source>Version string was not in a correct format.</source>
+        <target state="translated">版本字符串的格式不正确。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LogLoggerVerbosity">
+        <source>Logging verbosity is set to: {0}.</source>
+        <target state="translated">日志记录详细程度设置为: {0}。</target>
+        <note>
+      LOCALIZATION: {0} is an enum value of LoggerVerbosity.
+    </note>
+      </trans-unit>
+      <trans-unit id="LogTaskInputs.Truncated">
+        <source>The parameters have been truncated beyond this point. To view all parameters, clear the MSBUILDTRUNCATETASKINPUTLOGGING environment variable.</source>
+        <target state="translated">这些参数在此点之前已被截断。若要查看所有参数，请清除 MSBUILDTRUNCATETASKINPUTLOGGING 环境变量。</target>
         <note />
       </trans-unit>
       <trans-unit id="MetaprojectGenerated">
@@ -100,6 +130,11 @@
       LOCALIZATION:  Do not localize the following words: ProjectInstanceFactoryFunc.
     </note>
       </trans-unit>
+      <trans-unit id="OM_TargetNameNullOrEmpty">
+        <source>Method {0} cannot be called with a collection containing null or empty target names.</source>
+        <target state="translated">无法使用包含 null 或空目标名称的集合调用方法 {0}。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProjectGraphDoesNotSupportProjectReferenceWithToolset">
         <source>MSB4250: ProjectGraph does not support ProjectReference items with the ToolsVersion metadata set. Found ProjectReference "{0}" with ToolsVersion in file "{1}"</source>
         <target state="translated">MSB4250: ProjectGraph 不支持具有 ToolsVersion 元数据集的 ProjectReference 项。在“{1}”文件中发现了带有 ToolsVersion 的 ProjectReference“{0}”</target>
@@ -108,13 +143,59 @@
       LOCALIZATION:  Do not localize the following words: ProjectGraph, ProjectReference, ToolsVersion.
     </note>
       </trans-unit>
+      <trans-unit id="PropertyAssignment">
+        <source>Property initial value: $({0})="{1}" Source: {2}</source>
+        <target state="translated">属性初始值: $({0})=“{1}”，源: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedConstraintsOnRequest">
+        <source>MSB4260: Project "{0}" skipped graph isolation constraints on referenced project "{1}"</source>
+        <target state="translated">MSB4260: 项目“{0}”已跳过所引用的项目“{1}”上的图形隔离约束</target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphAcceptsSingleSolutionEntryPoint">
+        <source>MSB4261: Static graph only accepts a solution as the only entry point. Multiple entry points detected: {0}</source>
+        <target state="translated">MSB4261: 静态图仅接受解决方案作为唯一入口点。检测到多个入口点: {0}</target>
+        <note>
+      LOCALIZATION: {0} is a semicolon delimited list of files
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphDoesNotSupportSlnReferences">
+        <source>MSB4263: Project "{0}" has a reference to solution file "{1}". Referencing solutions is not supported in static graph.
+    </source>
+        <target state="translated">MSB4263: 项目“{0}”具有对解决方案文件“{1}”的引用。静态图中不支持引用解决方案。
+    </target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphSolutionLoaderEncounteredSolutionWarningsAndErrors">
+        <source>MSB4262: Solution file "{0}" contains the following warnings and errors:
+           Warnings: {1}
+           Errors: {2}
+    </source>
+        <target state="translated">MSB4262: 解决方案文件“{0}”包含以下警告和错误:
+           警告: {1}
+           错误: {2}
+    </target>
+        <note>
+      LOCALIZATION: {0} is a file, {1} and {2} are semicolon delimited lists of messages
+    </note>
+      </trans-unit>
       <trans-unit id="UndeclaredMSBuildTasksNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4254: The MSBuild task is building project(s) {0} which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
-        <target state="translated">MSB4254: MSBuild 任务正在生成未在 ProjectReference 项中指定的 {0} 项目。在独立生成中，这可能表示未将引用显式地指定为“{1}”中的 ProjectReference 项</target>
+        <source>MSB4254: The MSBuild task is building project(s) "{0}" which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
+        <target state="translated">MSB4254: MSBuild task 正在生成未在 ProjectReference 项中指定的项目“{0}”。在独立生成中，这可能表示未将引用显式地指定为“{1}”中的 ProjectReference 项</target>
         <note>
       {StrBegin="MSB4254:"}
       LOCALIZATION: Do not localize the following words: ProjectReference, MSBuild, task.
     </note>
+      </trans-unit>
+      <trans-unit id="UninitializedPropertyRead">
+        <source>Read uninitialized property "{0}"</source>
+        <target state="translated">读取未初始化的属性“{0}”</target>
+        <note />
       </trans-unit>
       <trans-unit id="UsingInputCaches">
         <source>Using input build results caches: {0}</source>
@@ -545,18 +626,18 @@
         <note>{StrBegin="MSB4101: "}</note>
       </trans-unit>
       <trans-unit id="ImportedProjectNotFound">
-        <source>MSB4019: The imported project "{0}" was not found. Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk.</source>
-        <target state="translated">MSB4019: 未找到导入的项目“{0}”。请确认 &lt;Import&gt; 声明中的路径正确，且磁盘上存在该文件。</target>
+        <source>MSB4019: The imported project "{0}" was not found. Confirm that the expression in the Import declaration "{1}" is correct, and that the file exists on disk.</source>
+        <target state="translated">MSB4019: 找不到导入的项目“{0}”。请确认 Import 声明“{1}”中的表达式正确，且文件位于磁盘上。</target>
         <note>{StrBegin="MSB4019: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFoundFromAppConfig">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . These search paths are defined in "{4}". Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: 未找到导入的项目“{0}”。此外，请尝试在 {2} - {3} 的回退搜索路径中查找“{1}”。在“{4}”中定义了这些搜索路径。请确认 &lt;Import&gt; 声明中的路径正确，且其中一个搜索路径中存在该文件。</target>
+        <target state="translated">MSB4226: 找不到导入的项目“{0}”。此外，已尝试在 {2} - {3} 的回退搜索路径中找到“{1}”。这些搜索路径在“{4}”中定义。确认 &lt;Import&gt; 声明中的路径正确，并且该文件位于某个搜索路径中的磁盘上。</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFound">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: 未找到导入的项目“{0}”。此外，请尝试在 {2} - {3} 的回退搜索路径中查找“{1}”。请确认 &lt;Import&gt; 声明中的路径正确，且其中一个搜索路径中存在该文件。</target>
+        <target state="translated">MSB4226: 找不到导入的项目“{0}”。此外，已尝试在 {2} - {3} 的回退搜索路径中找到“{1}”。请确认 &lt;Import&gt; 声明中的路径正确，并且该文件位于某个搜索路径中的磁盘上。</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="IncorrectNumberOfFunctionArguments">
@@ -783,7 +864,7 @@
       </trans-unit>
       <trans-unit id="MissingTaskError">
         <source>MSB4036: The "{0}" task was not found. Check the following: 1.) The name of the task in the project file is the same as the name of the task class. 2.) The task class is "public" and implements the Microsoft.Build.Framework.ITask interface. 3.) The task is correctly declared with &lt;UsingTask&gt; in the project file, or in the *.tasks files located in the "{1}" directory.</source>
-        <target state="translated">MSB4036: 未找到“{0}”任务。请检查下列各项: 1.)项目文件中的任务名称与任务类的名称相同。2.)任务类为“public”且实现 Microsoft.Build.Framework.ITask 接口。3.)在项目文件中或位于“{1}”目录的 *.tasks 文件中使用 &lt;UsingTask&gt; 正确声明了该任务。</target>
+        <target state="translated">MSB4036: 未找到“{0}”任务。请检查下列各项: 1.) 项目文件中的任务名称与任务类的名称相同。2.) 任务类为“public”且实现 Microsoft.Build.Framework.ITask 接口。3.) 在项目文件中或位于“{1}”目录的 *.tasks 文件中使用 &lt;UsingTask&gt; 正确声明了该任务。</target>
         <note>{StrBegin="MSB4036: "}LOCALIZATION: &lt;UsingTask&gt; and "*.tasks" should not be localized.</note>
       </trans-unit>
       <trans-unit id="MSBuildToolsPathIsNotSpecified">
@@ -1121,7 +1202,7 @@
       </trans-unit>
       <trans-unit id="SolutionVenusProjectSkipped">
         <source>Skipping because the "$(AspNetConfiguration)" configuration is not supported for this web project.  You can use the AspNetConfiguration property to override the configuration used for building web projects, by adding /p:AspNetConfiguration=&lt;value&gt; to the command line. Currently web projects only support Debug and Release configurations.</source>
-        <target state="translated">由于此 Web 项目不支持“$(AspNetConfiguration)”配置，因此跳过。通过向命令行添加 /p:AspNetConfiguration=，可以使用 AspNetConfiguration 属性来重写用于生成 Web 项目的配置。Web 项目目前仅支持 Debug 和 Release 配置。</target>
+        <target state="translated">由于此 Web 项目不支持“$(AspNetConfiguration)”配置，因此跳过。通过向命令行添加 /p:AspNetConfiguration=&lt;value&gt;，可以使用 AspNetConfiguration 属性来重写用于生成 Web 项目的配置。Web 项目目前仅支持 Debug 和 Release 配置。</target>
         <note>
     UE: This is not an error, so doesn't need an error code.
     LOCALIZATION: Do NOT localize "AspNetConfiguration", "Debug", "Release".
@@ -1978,7 +2059,7 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="General.InvalidPropertyError">
         <source>MSB3100: Syntax for "{0}" parameter is not valid ({1}). Correct syntax is {0}="&lt;name&gt;=&lt;value&gt;".</source>
-        <target state="translated">MSB3100: 参数“{0}”的语法无效({1})。正确的语法为 {0}="="。</target>
+        <target state="translated">MSB3100: 参数“{0}”的语法无效({1})。正确的语法为 {0}="&lt;name&gt;=&lt;value&gt;"。</target>
         <note>{StrBegin="MSB3100: "}This error is shown if the user does any of the following:
     Properties="foo"              (missing property value)
     Properties="=4"               (missing property name)
@@ -2016,17 +2097,17 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="InvalidAttributeDueToDuplication">
         <source>MSB4227: The attribute "{0}" on element &lt;{1}&gt; is invalid because an attribute with that name already exists</source>
-        <target state="translated">MSB4227: 元素 &lt;{1}&gt; 上的参数“{0}”无效，因为已存在同名参数</target>
+        <target state="translated">MSB4227: 元素 &lt;{1}&gt; 上的特性“{0}”无效，因为已存在具有该名称的特性</target>
         <note>{StrBegin="MSB4227: "}</note>
       </trans-unit>
       <trans-unit id="InvalidMetadataAsAttribute">
         <source>MSB4228: The name "{0}" is not valid for metadata expressed as an attribute (on element &lt;{1}&gt;)</source>
-        <target state="translated">MSB4228: 名称“{0}”对于表达为(元素 &lt;{1}&gt; 上)属性的元数据无效</target>
+        <target state="translated">MSB4228: 表示为特性(在元素 &lt;{1}&gt; 上)的元数据的名称“{0}”无效</target>
         <note>{StrBegin="MSB4228: "}</note>
       </trans-unit>
       <trans-unit id="OM_OneOfAttributeButNotMore">
         <source>The &lt;{0}&gt; element must have either the "{1}" attribute, the "{2}" attribute, or the "{3}" attribute, but not more than one.</source>
-        <target state="translated">&lt;{0}&gt;元素必须且只能具有“{1}”属性、“{2}”属性或“{3}”属性之一。</target>
+        <target state="translated">&lt;{0}&gt; 元素必须具有“{1}”特性、“{2}”特性、或“{3}”特性，但只能有一个特性。</target>
         <note />
       </trans-unit>
       <trans-unit id="OM_ItemsOutsideTargetMustHaveIncludeOrUpdateOrRemove">
@@ -2181,7 +2262,7 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="ErrorWritingProfilerReport">
         <source>MSBUILD : error MSB4239: Error writing profiling report. {0}</source>
-        <target state="translated">MSBUILD : 错误 MSB4239: 写入分析报告时出错。{0}</target>
+        <target state="translated">MSBUILD : error MSB4239: 写入分析报告时出错。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WritingProfilerReport">

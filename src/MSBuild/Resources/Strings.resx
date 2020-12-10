@@ -252,11 +252,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <value>  -logger:&lt;logger&gt;   Use this logger to log events from MSBuild. To specify
                      multiple loggers, specify each logger separately.
                      The &lt;logger&gt; syntax is:
-                       [&lt;logger class&gt;,]&lt;logger assembly&gt;[;&lt;logger parameters&gt;]
+                       [&lt;class&gt;,]&lt;assembly&gt;[,&lt;options&gt;][;&lt;parameters&gt;]
                      The &lt;logger class&gt; syntax is:
                        [&lt;partial or full namespace&gt;.]&lt;logger class name&gt;
                      The &lt;logger assembly&gt; syntax is:
                        {&lt;assembly name&gt;[,&lt;strong name&gt;] | &lt;assembly file&gt;}
+                     Logger options specify how MSBuild creates the logger.
                      The &lt;logger parameters&gt; are optional, and are passed
                      to the logger exactly as you typed them. (Short form: -l)
                      Examples:
@@ -406,11 +407,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                      multiple loggers, specify each logger separately.
                      (Short form -dl)
                      The &lt;logger&gt; syntax is:
-                       [&lt;logger class&gt;,]&lt;logger assembly&gt;[;&lt;logger parameters&gt;]
+                       [&lt;class&gt;,]&lt;assembly&gt;[,&lt;options&gt;][;&lt;parameters&gt;]
                      The &lt;logger class&gt; syntax is:
                        [&lt;partial or full namespace&gt;.]&lt;logger class name&gt;
                      The &lt;logger assembly&gt; syntax is:
                        {&lt;assembly name&gt;[,&lt;strong name&gt;] | &lt;assembly file&gt;}
+                     Logger options specify how MSBuild creates the logger.
                      The &lt;logger parameters&gt; are optional, and are passed
                      to the logger exactly as you typed them. (Short form: -l)
                      Examples:
@@ -785,6 +787,39 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
     </comment>
   </data>
+  <data name="HelpMessage_37_DocsLink" Visibility="Public">
+    <value>For more detailed information, see https://aka.ms/msbuild/docs</value>
+  </data>
+  <data name="HelpMessage_38_TargetsSwitch" Visibility="Public">
+    <value>  -targets[:file]
+                     Prints a list of available targets without executing the
+                     actual build process. By default the output is written to
+                     the console window. If the path to an output file
+                     is provided that will be used instead.
+                     (Short form: -ts)
+                     Example:
+                       -ts:out.txt
+    </value>
+    <comment>
+      LOCALIZATION: "MSBuild" should not be localized.
+      LOCALIZATION: "-targets" and "-ts" should not be localized.
+      LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
+    </comment>
+  </data>
+  <data name="HelpMessage_39_LowPrioritySwitch" Visibility="Public">
+    <value>  -lowPriority[:True|False]
+                     Causes MSBuild to run at low process priority.
+
+                     Specifying -lowPriority is the same as specifying
+                     -lowPriority:True.
+                     (Short form: -low)
+    </value>
+    <comment>
+      LOCALIZATION: "MSBuild" should not be localized.
+      LOCALIZATION: "-lowPriority" and "-low" should not be localized.
+      LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
+    </comment>
+  </data>
   <data name="InvalidConfigurationFile" Visibility="Public">
     <value>MSBUILD : Configuration error MSB1043: The application could not start. {0}</value>
     <comment>
@@ -1152,6 +1187,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <value>MSBUILD : error MSB1047: File to preprocess to is not valid. {0}</value>
     <comment>{StrBegin="MSBUILD : error MSB1047: "}</comment>
   </data>
+  <data name="TargetsCouldNotBePrinted">
+    <value>MSBUILD : error MSB1059: Targets could not be printed. {0}</value>
+    <comment>{StrBegin="MSBUILD : error MSB1059: "}</comment>
+  </data>
   <!-- MSB1021 and MSB1020 are also used in the engine but their copies do not have the "MSBUILD : " prefix so we must have our own -->
   <data name="LoggerCreationError" UESanitized="true" Visibility="Public">
     <value>MSBUILD : error MSB1021: Cannot create an instance of the logger. {0}</value>
@@ -1216,10 +1255,33 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <value>MSBUILD : error MSB1058: Only one output results cache can be specified.</value>
     <comment>{StrBegin="MSBUILD : error MSB1058: "}</comment>
   </data>
+  <data name="OptionalLoggerCreationMessage" UESanitized="true" Visibility="Public">
+    <value>The specified logger could not be created and will not be used. {0}</value>
+    <comment>
+      UE: This error is shown when a logger cannot be loaded and instantiated from its assembly.
+      LOCALIZATION: {0} contains the exception message explaining why the
+      logger could not be created -- this message comes from the CLR/FX and is localized.
+    </comment>
+  </data>
+  <data name="Process" UESanitized="true" Visibility="Public">
+    <value>Process = "{0}"</value>
+  </data>
+  <data name="MSBExePath" UESanitized="true" Visibility="Public">
+    <value>MSBuild executable path = "{0}"</value>
+  </data>
+  <data name="CommandLine" UESanitized="true" Visibility="Public">
+    <value>Command line arguments = "{0}"</value>
+  </data>
+  <data name="CurrentDirectory" UESanitized="true" Visibility="Public">
+    <value>Current directory = "{0}"</value>
+  </data>
+  <data name="MSBVersion" UESanitized="true" Visibility="Public">
+    <value>MSBuild version = "{0}"</value>
+  </data>
     <!--
         The command line message bucket is: MSB1001 - MSB1999
 
-        Next error code should be MSB1059.
+        Next error code should be MSB1060.
 
         Don't forget to update this comment after using the new code.
   -->

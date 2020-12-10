@@ -841,7 +841,7 @@ namespace Microsoft.Build.Evaluation
         /// <param name="buildEventContext">The build event context used to log during task registration.</param>
         /// <param name="projectRootElementCache">The <see cref="ProjectRootElementCache"/> to use.</param>
         /// <returns>The task registry</returns>
-        internal TaskRegistry GetTaskRegistry(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCache projectRootElementCache)
+        internal TaskRegistry GetTaskRegistry(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCacheBase projectRootElementCache)
         {
             RegisterDefaultTasks(loggingServices, buildEventContext, projectRootElementCache);
             return _defaultTaskRegistry;
@@ -869,7 +869,7 @@ namespace Microsoft.Build.Evaluation
         /// <param name="buildEventContext">The build event context used to log during task registration.</param>
         /// <param name="projectRootElementCache">The <see cref="ProjectRootElementCache"/> to use.</param>
         /// <returns>The task registry</returns>
-        internal TaskRegistry GetOverrideTaskRegistry(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCache projectRootElementCache)
+        internal TaskRegistry GetOverrideTaskRegistry(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCacheBase projectRootElementCache)
         {
             RegisterOverrideTasks(loggingServices, buildEventContext, projectRootElementCache);
             return _overrideTaskRegistry;
@@ -889,7 +889,7 @@ namespace Microsoft.Build.Evaluation
         /// <param name="loggingServices">The logging services to use to log during this registration.</param>
         /// <param name="buildEventContext">The build event context to use to log during this registration.</param>
         /// <param name="projectRootElementCache">The <see cref="ProjectRootElementCache"/> to use.</param>
-        private void RegisterDefaultTasks(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCache projectRootElementCache)
+        private void RegisterDefaultTasks(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCacheBase projectRootElementCache)
         {
             if (!_defaultTasksRegistrationAttempted)
             {
@@ -900,7 +900,7 @@ namespace Microsoft.Build.Evaluation
                     InitializeProperties(loggingServices, buildEventContext);
 
                     string[] defaultTasksFiles = GetTaskFiles(_getFiles, loggingServices, buildEventContext, DefaultTasksFilePattern, ToolsPath, "DefaultTasksFileLoadFailureWarning");
-                    LoadAndRegisterFromTasksFile(ToolsPath, defaultTasksFiles, loggingServices, buildEventContext, DefaultTasksFilePattern, "DefaultTasksFileFailure", projectRootElementCache, _defaultTaskRegistry);
+                    LoadAndRegisterFromTasksFile(defaultTasksFiles, loggingServices, buildEventContext, "DefaultTasksFileFailure", projectRootElementCache, _defaultTaskRegistry);
                 }
                 finally
                 {
@@ -986,7 +986,7 @@ namespace Microsoft.Build.Evaluation
         /// <summary>
         /// Used to load information about MSBuild override tasks i.e. tasks that override tasks declared in tasks or project files.
         /// </summary>
-        private void RegisterOverrideTasks(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCache projectRootElementCache)
+        private void RegisterOverrideTasks(ILoggingService loggingServices, BuildEventContext buildEventContext, ProjectRootElementCacheBase projectRootElementCache)
         {
             if (!_overrideTasksRegistrationAttempted)
             {
@@ -1031,7 +1031,7 @@ namespace Microsoft.Build.Evaluation
                         string[] overrideTasksFiles = GetTaskFiles(_getFiles, loggingServices, buildEventContext, OverrideTasksFilePattern, _overrideTasksPath, "OverrideTasksFileLoadFailureWarning");
 
                         // Load and register any override tasks
-                        LoadAndRegisterFromTasksFile(_overrideTasksPath, overrideTasksFiles, loggingServices, buildEventContext, OverrideTasksFilePattern, "OverrideTasksFileFailure", projectRootElementCache, _overrideTaskRegistry);
+                        LoadAndRegisterFromTasksFile(overrideTasksFiles, loggingServices, buildEventContext, "OverrideTasksFileFailure", projectRootElementCache, _overrideTaskRegistry);
                     }
                 }
                 finally
@@ -1044,7 +1044,7 @@ namespace Microsoft.Build.Evaluation
         /// <summary>
         /// Do the actual loading of the tasks or override tasks file and register the tasks in the task registry
         /// </summary>
-        private void LoadAndRegisterFromTasksFile(string searchPath, string[] defaultTaskFiles, ILoggingService loggingServices, BuildEventContext buildEventContext, string defaultTasksFilePattern, string taskFileError, ProjectRootElementCache projectRootElementCache, TaskRegistry registry)
+        private void LoadAndRegisterFromTasksFile(string[] defaultTaskFiles, ILoggingService loggingServices, BuildEventContext buildEventContext, string taskFileError, ProjectRootElementCacheBase projectRootElementCache, TaskRegistry registry)
         {
             foreach (string defaultTasksFile in defaultTaskFiles)
             {

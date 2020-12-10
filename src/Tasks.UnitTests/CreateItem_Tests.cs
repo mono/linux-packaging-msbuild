@@ -1,16 +1,28 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
+using System.Collections.Generic;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Xunit;
+using Xunit.Abstractions;
+using Shouldly;
 
 namespace Microsoft.Build.UnitTests
 {
     sealed public class CreateItem_Tests
     {
+        private readonly ITestOutputHelper _testOutput;
+
+        public CreateItem_Tests(ITestOutputHelper output)
+        {
+            _testOutput = output;
+        }
+
         /// <summary>
         /// CreateIteming identical lists results in empty list.
         /// </summary>
@@ -141,10 +153,48 @@ namespace Microsoft.Build.UnitTests
             ObjectModelHelpers.CreateFileInTempProjectDirectory("Foo.txt", "foo");
             ObjectModelHelpers.CreateFileInTempProjectDirectory(Path.Combine("Subdir", "Bar.txt"), "bar");
 
-            ObjectModelHelpers.BuildTempProjectFileExpectSuccess("Myapp.proj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectSuccess("Myapp.proj", logger);
 
             ObjectModelHelpers.AssertFileExistsInTempProjectDirectory(Path.Combine("Destination", "Foo.txt"));
             ObjectModelHelpers.AssertFileExistsInTempProjectDirectory(Path.Combine("Destination", "Subdir", "Bar.txt"));
+        }
+
+        /// <summary>
+        /// Using the CreateItem task to expand wildcards and verifying that the RecursiveDir metadatum is successfully
+        /// serialized/deserialized cross process.
+        /// </summary>
+        [Fact]
+        public void RecursiveDirOutOfProc()
+        {
+            using var env = TestEnvironment.Create(_testOutput);
+
+            ObjectModelHelpers.DeleteTempProjectDirectory();
+
+            string projectFileFullPath = ObjectModelHelpers.CreateFileInTempProjectDirectory("Myapp.proj", @"
+                <Project ToolsVersion=`msbuilddefaulttoolsversion` xmlns=`msbuildnamespace`>
+                  <Target Name =`Repro` Returns=`@(Text)`>
+                    <CreateItem Include=`**\*.txt`>
+                      <Output TaskParameter=`Include` ItemName=`Text`/>
+                    </CreateItem>
+                  </Target>
+                </Project>
+                ");
+
+            ObjectModelHelpers.CreateFileInTempProjectDirectory(Path.Combine("Subdir", "Bar.txt"), "bar");
+
+            env.SetEnvironmentVariable("MSBUILDTARGETRESULTCOMPRESSIONTHRESHOLD", "0");
+
+            BuildRequestData data = new BuildRequestData(projectFileFullPath, new Dictionary<string, string>(), null, new string[] { "Repro" }, null);
+            BuildParameters parameters = new BuildParameters
+            {
+                DisableInProcNode = true,
+                EnableNodeReuse = false,
+                Loggers = new ILogger[] { new MockLogger(_testOutput) },
+            };
+            BuildResult result = BuildManager.DefaultBuildManager.Build(parameters, data);
+            result.OverallResult.ShouldBe(BuildResultCode.Success);
+            result.ResultsByTarget["Repro"].Items[0].GetMetadata("RecursiveDir").ShouldBe("Subdir" + Path.DirectorySeparatorChar);
         }
 
         /// <summary>

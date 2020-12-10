@@ -240,6 +240,7 @@ namespace Microsoft.Build.Utilities
     {
         public const string AMD64 = "AMD64";
         public const string ARM = "ARM";
+        public const string ARM64 = "ARM64";
         public const string IA64 = "IA64";
         public const string MSIL = "MSIL";
         public const string X86 = "x86";
@@ -323,6 +324,7 @@ namespace Microsoft.Build.Utilities
         Version47 = 11,
         Version471 = 12,
         Version472 = 13,
+        Version48 = 14,
         VersionLatest = 10,
     }
     public partial class TargetPlatformSDK : System.IEquatable<Microsoft.Build.Utilities.TargetPlatformSDK>
@@ -349,6 +351,7 @@ namespace Microsoft.Build.Utilities
         public Microsoft.Build.Framework.IBuildEngine3 BuildEngine3 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine4 BuildEngine4 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine5 BuildEngine5 { get { throw null; } }
+        public Microsoft.Build.Framework.IBuildEngine6 BuildEngine6 { get { throw null; } }
         protected string HelpKeywordPrefix { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskHost HostObject { get { throw null; } set { } }
         public Microsoft.Build.Utilities.TaskLoggingHelper Log { get { throw null; } }
@@ -567,6 +570,7 @@ namespace Microsoft.Build.Utilities
         protected virtual void LogEventsFromTextOutput(string singleLine, Microsoft.Build.Framework.MessageImportance messageImportance) { }
         protected virtual void LogPathToTool(string toolName, string pathToTool) { }
         protected virtual void LogToolCommand(string message) { }
+        protected virtual void ProcessStarted() { }
         protected virtual string ResponseFileEscape(string responseString) { throw null; }
         protected virtual bool SkipTaskExecution() { throw null; }
         protected internal virtual bool ValidateParameters() { throw null; }

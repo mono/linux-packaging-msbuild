@@ -184,6 +184,30 @@ namespace Microsoft.Build.UnitTests
             sc.ToString().ShouldContain("XXX:");
         }
 
+        [Fact]
+        [SkipOnTargetFramework(TargetFrameworkMonikers.Netcoreapp, "Minimal path validation in Core allows expanding path containing quoted slashes.")]
+        [SkipOnTargetFramework(TargetFrameworkMonikers.Mono, "Minimal path validation in Mono allows expanding path containing quoted slashes.")]
+        public void TestItemsWithUnexpandableMetadata()
+        {
+            SimulatedConsole sc = new SimulatedConsole();
+            ConsoleLogger logger = new ConsoleLogger(LoggerVerbosity.Diagnostic, sc.Write, null, null);
+            ObjectModelHelpers.BuildProjectExpectSuccess(@"
+<Project>
+<ItemDefinitionGroup>
+  <F>
+   <MetadataFileName>a\b\%(Filename).c</MetadataFileName>
+  </F>
+ </ItemDefinitionGroup>
+ <ItemGroup>
+  <F Include=""-in &quot;x\y\z&quot;"" />
+ </ItemGroup>
+ <Target Name=""X"" />
+</Project>", logger);
+
+            sc.ToString().ShouldContain("\"a\\b\\%(Filename).c\"");
+
+        }
+
         /// <summary>
         /// Verify that on minimal verbosity the console logger does not log the target names.
         /// </summary>
@@ -536,7 +560,6 @@ namespace Microsoft.Build.UnitTests
 
                 if (expectedMessageType.Equals("message"))
                 {
-                    
                     console.ToString().ShouldMatch($@"<{expectedColor}><cyan>\d\d:\d\d:\d\d\.\d\d\d\s+\d+><reset color>{Regex.Escape(file)}\({lineNumber}\): {subcategory} {expectedMessageType} {code}: {message} \(TaskId:\d+\){Environment.NewLine}<reset color>");
                 }
                 else
@@ -551,7 +574,7 @@ namespace Microsoft.Build.UnitTests
                 console.ToString().ShouldMatch($@"<{expectedColor}>{Regex.Escape(file)}\({lineNumber}\): {subcategory} {expectedMessageType} {code}: {message}{Environment.NewLine}<reset color>");
             }
         }
-        
+
 
         [Fact]
         public void TestQuietWithHighMessage()
@@ -1152,13 +1175,13 @@ namespace Microsoft.Build.UnitTests
             sc.ToString().ShouldBe("<cyan>" + BaseConsoleLogger.projectSeparatorLine + Environment.NewLine +
                                    ResourceUtilities.FormatResourceStringStripCodeAndKeyword("ProjectStartedPrefixForTopLevelProjectWithDefaultTargets", "fname1") + Environment.NewLine +
                                    Environment.NewLine + "<reset color>");
-            
+
             sc.Clear();
 
             es.Consume(new TargetStartedEventArgs("ts", null,
                                                      "tarname", "fname", "tfile"));
             sc.ToString().ShouldBeEmpty();
-            
+
             sc.Clear();
 
             es.Consume(new TaskStartedEventArgs("", "", "", "", "Exec"));
@@ -1170,7 +1193,7 @@ namespace Microsoft.Build.UnitTests
                                           + Environment.NewLine +
                 "    " + ResourceUtilities.FormatResourceStringStripCodeAndKeyword("ProjectStartedPrefixForNestedProjectWithDefaultTargets", "fname1", "fname2") + Environment.NewLine +
                 Environment.NewLine + "<reset color>");
-            
+
             sc.Clear();
 
             es.Consume(new ProjectFinishedEventArgs("pf2", null, "fname2", true));
@@ -2312,4 +2335,3 @@ namespace Microsoft.Build.UnitTests
         }
     }
 }
-

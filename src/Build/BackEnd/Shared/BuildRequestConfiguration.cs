@@ -9,7 +9,11 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Collections;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Globbing;
 using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.BackEnd
@@ -673,41 +677,45 @@ namespace Microsoft.Build.BackEnd
             return allTargets;
         }
 
-        /// <summary>
-        /// Returns the list of targets that are AfterTargets (or AfterTargets of the AfterTargets) 
-        /// of the entrypoint targets.  
-        /// </summary>
-        public List<string> GetAfterTargetsForDefaultTargets(BuildRequest request)
+        private Func<string, bool> shouldSkipStaticGraphIsolationOnReference;
+
+        public bool ShouldSkipIsolationConstraintsForReference(string referenceFullPath)
         {
-            // We may not have a project available.  In which case, return nothing -- we simply don't have 
-            // enough information to figure out what the correct answer is.
-            if (!IsCached && Project != null)
+            ErrorUtilities.VerifyThrowInternalNull(Project, nameof(Project));
+            ErrorUtilities.VerifyThrowInternalLength(referenceFullPath, nameof(referenceFullPath));
+            ErrorUtilities.VerifyThrow(Path.IsPathRooted(referenceFullPath), "Method does not treat path normalization cases");
+
+            if (shouldSkipStaticGraphIsolationOnReference == null)
             {
-                var afterTargetsFound = new HashSet<string>();
-
-                var targetsToCheckForAfterTargets = new Queue<string>((request.Targets.Count == 0) ? ProjectDefaultTargets : request.Targets);
-
-                while (targetsToCheckForAfterTargets.Count > 0)
-                {
-                    string targetToCheck = targetsToCheckForAfterTargets.Dequeue();
-
-                    IList<TargetSpecification> targetsWhichRunAfter = Project.GetTargetsWhichRunAfter(targetToCheck);
-
-                    foreach (TargetSpecification targetWhichRunsAfter in targetsWhichRunAfter)
-                    {
-                        if (afterTargetsFound.Add(targetWhichRunsAfter.TargetName))
-                        {
-                            // If it's already in there, we've already looked into it so no need to do so again.  Otherwise, add it 
-                            // to the list to check.
-                            targetsToCheckForAfterTargets.Enqueue(targetWhichRunsAfter.TargetName);
-                        }
-                    }
-                }
-
-                return new List<string>(afterTargetsFound);
+                shouldSkipStaticGraphIsolationOnReference = GetReferenceFilter();
             }
 
-            return null;
+            return shouldSkipStaticGraphIsolationOnReference(referenceFullPath);
+
+            Func<string, bool> GetReferenceFilter()
+            {
+                lock (_syncLock)
+                {
+                    if (shouldSkipStaticGraphIsolationOnReference != null)
+                    {
+                        return shouldSkipStaticGraphIsolationOnReference;
+                    }
+
+                    var items = Project.GetItems(ItemTypeNames.GraphIsolationExemptReference);
+
+                    if (items.Count == 0 || items.All(i => string.IsNullOrWhiteSpace(i.EvaluatedInclude)))
+                    {
+                        return _ => false;
+                    }
+
+                    var fragments = items.SelectMany(i => ExpressionShredder.SplitSemiColonSeparatedList(i.EvaluatedInclude));
+                    var glob = new CompositeGlob(
+                        fragments
+                            .Select(s => MSBuildGlob.Parse(Project.Directory, s)));
+
+                    return s => glob.IsMatch(s);
+                }
+            }
         }
 
         /// <summary>

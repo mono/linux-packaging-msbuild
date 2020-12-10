@@ -22,7 +22,7 @@
       </trans-unit>
       <trans-unit id="BadlyCasedSpecialTaskAttribute">
         <source>MSB4003: "{0}" is a reserved attribute of the &lt;{1}&gt; element, and must be spelled with the correct casing. This attribute cannot be used as a parameter to the "{2}" task.</source>
-        <target state="translated">MSB4003: "{0}" è un attributo riservato dell'elemento &lt;{1}&gt; e deve essere scritto con le maiuscole e minuscole corrette. Questo attributo non può essere usato come parametro per l'attività "{2}".</target>
+        <target state="translated">MSB4003: "{0}" è un attributo riservato dell'elemento &lt;{1}&gt; e deve essere scritto con le maiuscole e minuscole corrette. Questo attributo non può essere utilizzato come parametro per l'attività "{2}".</target>
         <note>{StrBegin="MSB4003: "}UE: Tasks are not allowed to use incorrect case for reserved attributes on the task nodes e.g. "continueonerror"
     instead of the "ContinueOnError".</note>
       </trans-unit>
@@ -32,25 +32,33 @@
         <note />
       </trans-unit>
       <trans-unit id="CacheMissesNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4252: Project "{0}" has a reference to "{1}" ({2} target(s)) but the build result for the reference is not in the engine cache. In isolated builds this could mean one of the following:
-    - the reference was not explicitly specified as a ProjectReference item in "{0}"
-    - the reference was not included in the provided input caches
-    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in "{0}"
+        <source>MSB4252: Project "{0}" with global properties
+    ({1})
+    is building project "{2}" with global properties
+    ({3})
+    with the ({4}) target(s) but the build result for the built project is not in the engine cache. In isolated builds this could mean one of the following:
+    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in project "{0}"
+    - the reference was called with global properties that do not match the static graph inferred nodes
+    - the reference was not explicitly specified as a ProjectReference item in project "{0}"
     </source>
-        <target state="translated">MSB4252: il progetto "{0}" contiene un riferimento a "{1}" ({2} destinazione/i), ma il risultato della compilazione per il riferimento non è incluso nella cache del motore. Nelle compilazioni isolate questa condizione indica che:
-    - il riferimento non è stato specificato in modo esplicito come ProjectReference in "{0}"
-    - il riferimento non è stato incluso nelle cache di input specificate
-    - il riferimento è stato chiamato con una destinazione che non è specificata nell'elemento ProjectReferenceTargets in "{0}"
+        <target state="translated">MSB4252: il progetto "{0}" con proprietà globali
+    ({1})
+    sta compilando il progetto "{2}" con proprietà globali
+    ({3})
+    e con le destinazioni ({4}), ma il risultato della compilazione per il progetto compilato non si trova nella cache del motore. Nelle compilazioni isolate questa condizione può indicare che:
+    - il riferimento è stato chiamato con una destinazione che non è stata specificata nell'elemento ProjectReferenceTargets nel progetto "{0}"
+    - il riferimento è stato chiamato con proprietà globali che non corrispondono ai nodi derivati dal grafo statico
+    - il riferimento non è stato specificato in modo esplicito come elemento ProjectReference nel progetto "{0}"
     </target>
         <note>
       {StrBegin="MSB4252:"}
-      LOCALIZATION: Do not localize the following words: ProjectReference.
+      LOCALIZATION: Do not localize the following words: ProjectReference, ProjectReferenceTargets
     </note>
       </trans-unit>
       <trans-unit id="CannotExpandItemMetadata">
         <source>MSB4248: Cannot expand metadata in expression "{0}". {1}</source>
         <target state="translated">MSB4248: non è possibile espandere i metadati nell'espressione "{0}". {1}</target>
-        <note>{StrBegin="MSB4023: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
+        <note>{StrBegin="MSB4248: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
     %(RootDir) to an item-spec that's not a valid path would result in this error.
     LOCALIZATION: "{1}" is a localized message explaining the problem.</note>
       </trans-unit>
@@ -67,6 +75,11 @@
         <target state="translated">MSB4257: il file della cache dei risultati di output specificato è vuoto.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnvironmentVariableRead">
+        <source>Read environment variable "{0}"</source>
+        <target state="translated">Legge la variabile di ambiente "{0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ErrorReadingCacheFile">
         <source>MSB4256: Reading input result cache files from path "{0}" encountered an error: {1}</source>
         <target state="translated">MSB4256: durante la lettura dei file della cache dei risultati di input dal percorso "{0}" è stato rilevato un errore: {1}</target>
@@ -80,6 +93,23 @@
       <trans-unit id="InputCacheFilesDoNotExist">
         <source>MSB4255: The following input result cache files do not exist: "{0}"</source>
         <target state="translated">MSB4255: i file della cache dei risultati di input seguenti non esistono: "{0}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidVersionFormat">
+        <source>Version string was not in a correct format.</source>
+        <target state="translated">Il formato della stringa di versione non è corretto.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LogLoggerVerbosity">
+        <source>Logging verbosity is set to: {0}.</source>
+        <target state="translated">Il livello di dettaglio della registrazione è impostato su: {0}.</target>
+        <note>
+      LOCALIZATION: {0} is an enum value of LoggerVerbosity.
+    </note>
+      </trans-unit>
+      <trans-unit id="LogTaskInputs.Truncated">
+        <source>The parameters have been truncated beyond this point. To view all parameters, clear the MSBUILDTRUNCATETASKINPUTLOGGING environment variable.</source>
+        <target state="translated">I parametri oltre questo punto sono stati troncati. Per visualizzare tutti i parametri, cancellare la variabile di ambiente MSBUILDTRUNCATETASKINPUTLOGGING.</target>
         <note />
       </trans-unit>
       <trans-unit id="MetaprojectGenerated">
@@ -100,6 +130,11 @@
       LOCALIZATION:  Do not localize the following words: ProjectInstanceFactoryFunc.
     </note>
       </trans-unit>
+      <trans-unit id="OM_TargetNameNullOrEmpty">
+        <source>Method {0} cannot be called with a collection containing null or empty target names.</source>
+        <target state="translated">Non è possibile chiamare il metodo {0} con una raccolta contenente nomi di destinazione Null o vuoti.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProjectGraphDoesNotSupportProjectReferenceWithToolset">
         <source>MSB4250: ProjectGraph does not support ProjectReference items with the ToolsVersion metadata set. Found ProjectReference "{0}" with ToolsVersion in file "{1}"</source>
         <target state="translated">MSB4250: ProjectGraph non supporta elementi ProjectReference con metadati ToolsVersion impostati. L'elemento ProjectReference "{0}" con ToolsVersion è stato trovato nel file "{1}"</target>
@@ -108,13 +143,59 @@
       LOCALIZATION:  Do not localize the following words: ProjectGraph, ProjectReference, ToolsVersion.
     </note>
       </trans-unit>
+      <trans-unit id="PropertyAssignment">
+        <source>Property initial value: $({0})="{1}" Source: {2}</source>
+        <target state="translated">Valore iniziale della proprietà: $({0})="{1}". Origine: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedConstraintsOnRequest">
+        <source>MSB4260: Project "{0}" skipped graph isolation constraints on referenced project "{1}"</source>
+        <target state="translated">MSB4260: il progetto "{0}" ha ignorato i vincoli di isolamento del grafico nel progetto di riferimento "{1}"</target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphAcceptsSingleSolutionEntryPoint">
+        <source>MSB4261: Static graph only accepts a solution as the only entry point. Multiple entry points detected: {0}</source>
+        <target state="translated">MSB4261: l'unico punto di ingresso accettato dal grafo statico è una soluzione. Sono stati rilevati più punti di ingresso: {0}</target>
+        <note>
+      LOCALIZATION: {0} is a semicolon delimited list of files
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphDoesNotSupportSlnReferences">
+        <source>MSB4263: Project "{0}" has a reference to solution file "{1}". Referencing solutions is not supported in static graph.
+    </source>
+        <target state="translated">MSB4263: il progetto "{0}" contiene un riferimento al file di soluzione "{1}". Il riferimento a soluzioni non è supportato nel grafo statico.
+    </target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphSolutionLoaderEncounteredSolutionWarningsAndErrors">
+        <source>MSB4262: Solution file "{0}" contains the following warnings and errors:
+           Warnings: {1}
+           Errors: {2}
+    </source>
+        <target state="translated">MSB4262: il file di soluzione "{0}" contiene gli avvisi e gli errori seguenti:
+           Avvisi: {1}
+           Errori {2}
+    </target>
+        <note>
+      LOCALIZATION: {0} is a file, {1} and {2} are semicolon delimited lists of messages
+    </note>
+      </trans-unit>
       <trans-unit id="UndeclaredMSBuildTasksNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4254: The MSBuild task is building project(s) {0} which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
-        <target state="translated">MSB4254: il task MSBuild compila progetti {0} che non sono specificati nell'elemento ProjectReference. Nelle compilazioni isolate questa condizione indica probabilmente che i riferimenti non sono specificati in modo esplicito come elemento ProjectReference in "{1}"</target>
+        <source>MSB4254: The MSBuild task is building project(s) "{0}" which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
+        <target state="translated">MSB4254: l'attività MSBuild compila progetti "{0}" che non sono specificati nell'elemento ProjectReference. Nelle compilazioni isolate questa condizione indica probabilmente che i riferimenti non sono specificati in modo esplicito come elemento ProjectReference in "{1}"</target>
         <note>
       {StrBegin="MSB4254:"}
       LOCALIZATION: Do not localize the following words: ProjectReference, MSBuild, task.
     </note>
+      </trans-unit>
+      <trans-unit id="UninitializedPropertyRead">
+        <source>Read uninitialized property "{0}"</source>
+        <target state="translated">Legge la proprietà non inizializzata "{0}"</target>
+        <note />
       </trans-unit>
       <trans-unit id="UsingInputCaches">
         <source>Using input build results caches: {0}</source>
@@ -165,7 +246,7 @@
       </trans-unit>
       <trans-unit id="BuildTargetCompletelyNoInputsSpecified">
         <source>No input files were specified.</source>
-        <target state="translated">Nessun file di input specificato.</target>
+        <target state="translated">Non è stato specificato alcun file di input.</target>
         <note />
       </trans-unit>
       <trans-unit id="BuildTargetCompletelyInputNewer">
@@ -261,7 +342,7 @@
       </trans-unit>
       <trans-unit id="ChildElementsBelowRemoveNotAllowed">
         <source>MSB4162: &lt;{0}&gt; is not valid. Child elements are not allowed below a item remove element.</source>
-        <target state="translated">MSB4162: &lt;{0}&gt; non è valido. Gli elementi figlio non sono consentiti al di sotto di un elemento rimosso.</target>
+        <target state="translated">MSB4162: &lt;{0}&gt; non è valido. Elementi figlio non consentiti al di sotto di un elemento rimosso.</target>
         <note>{StrBegin="MSB4162: "}</note>
       </trans-unit>
       <trans-unit id="ChildExitedPrematurely">
@@ -545,18 +626,18 @@
         <note>{StrBegin="MSB4101: "}</note>
       </trans-unit>
       <trans-unit id="ImportedProjectNotFound">
-        <source>MSB4019: The imported project "{0}" was not found. Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk.</source>
-        <target state="translated">MSB4019: il progetto importato "{0}" non è stato trovato. Verificare che il percorso nella dichiarazione &lt;Import&gt; sia corretto e che il file sia presente sul disco.</target>
+        <source>MSB4019: The imported project "{0}" was not found. Confirm that the expression in the Import declaration "{1}" is correct, and that the file exists on disk.</source>
+        <target state="translated">MSB4019: il progetto importato "{0}" non è stato trovato. Verificare che l'espressione nella dichiarazione Import "{1}" sia corretta e che il file sia presente sul disco.</target>
         <note>{StrBegin="MSB4019: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFoundFromAppConfig">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . These search paths are defined in "{4}". Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: il progetto importato "{0}" non è stato trovato. È stato anche effettuato un tentativo di trovare "{1}" nei percorsi di ricerca di fallback per {2} - {3}. Questi percorsi di ricerca sono definiti in "{4}". Verificare che il percorso nella dichiarazione &lt;Import&gt; sia corretto e che il file sia presente sul disco in uno dei percorsi di ricerca.</target>
+        <target state="translated">MSB4226: il progetto importato "{0}" non è stato trovato. Si è anche provato a cercare "{1}" nei percorsi di ricerca di fallback per {2} - {3}. Questi percorsi di ricerca sono definiti in "{4}". Verificare che il percorso nella dichiarazione &lt;Import&gt; sia corretto e che il file sia presente in uno dei percorsi di ricerca sul disco.</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFound">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: il progetto importato "{0}" non è stato trovato. È stato anche effettuato un tentativo di trovare "{1}" nei percorsi di ricerca di fallback per {2} - {3} . Verificare che il percorso nella dichiarazione &lt;Import&gt; sia corretto e che il file sia presente sul disco in uno dei percorsi di ricerca.</target>
+        <target state="translated">MSB4226: il progetto importato "{0}" non è stato trovato. Si è anche provato a cercare "{1}" nei percorsi di ricerca di fallback per {2} - {3}. Verificare che il percorso nella dichiarazione &lt;Import&gt; sia corretto e che il file sia presente in uno dei percorsi di ricerca sul disco.</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="IncorrectNumberOfFunctionArguments">
@@ -783,7 +864,7 @@
       </trans-unit>
       <trans-unit id="MissingTaskError">
         <source>MSB4036: The "{0}" task was not found. Check the following: 1.) The name of the task in the project file is the same as the name of the task class. 2.) The task class is "public" and implements the Microsoft.Build.Framework.ITask interface. 3.) The task is correctly declared with &lt;UsingTask&gt; in the project file, or in the *.tasks files located in the "{1}" directory.</source>
-        <target state="translated">MSB4036: l'attività "{0}" non è stata trovata. Verificare quanto segue: 1.) Il nome dell'attività nel file di progetto corrisponde al nome della classe dell'attività. 2.) La classe dell'attività è "public" e implementa l'interfaccia Microsoft.Build.Framework.ITask. 3.) L'attività è stata dichiarata correttamente con &lt;UsingTask&gt; nel file di progetto o nei file *.tasks presenti nella directory "{1}".</target>
+        <target state="translated">MSB4036: attività "{0}" non trovata. Verificare quanto segue: 1.) Il nome dell'attività nel file di progetto corrisponde al nome della classe dell'attività. 2.) La classe dell'attività è "public" e implementa l'interfaccia Microsoft.Build.Framework.ITask. 3.) L'attività è stata dichiarata correttamente con &lt;UsingTask&gt; nel file di progetto o nei file *.tasks presenti nella directory "{1}".</target>
         <note>{StrBegin="MSB4036: "}LOCALIZATION: &lt;UsingTask&gt; and "*.tasks" should not be localized.</note>
       </trans-unit>
       <trans-unit id="MSBuildToolsPathIsNotSpecified">
@@ -898,7 +979,7 @@
       </trans-unit>
       <trans-unit id="ProjectMustBeInMSBuildXmlNamespace">
         <source>MSB4041: The default XML namespace of the project must be the MSBuild XML namespace or no namespace. If the project is authored in the MSBuild 2003 format, please add xmlns="{0}" to the &lt;Project&gt; element. If the project has been authored in the old 1.0 or 1.2 format, please convert it to MSBuild 2003 format.</source>
-        <target state="translated">MSB4041: come spazio dei nomi XML predefinito del progetto è possibile specificare lo spazio dei nomi XML di MSBuild oppure nessuno spazio dei nomi. Se il progetto viene creato in formato MSBuild 2003, aggiungere xmlns="{0}" all'elemento &lt;Project&gt;. Se il progetto è stato creato nel formato precedente 1.0 o 1.2, convertirlo nel formato MSBuild 2003.</target>
+        <target state="translated">MSB4041: lo spazio dei nomi XML predefinito del progetto deve essere impostato sullo spazio dei nomi XML di MSBuild o su nessuno spazio dei nomi. Se il progetto viene modificato nel formato MSBuild 2003, aggiungere xmlns="{0}" all'elemento &lt;Project&gt;. Se il progetto è stato modificato nel formato precedente 1.0 o 1.2, convertirlo al formato MSBuild 2003.</target>
         <note>{StrBegin="MSB4041: "}UE: This is a Beta 1 message only.
       LOCALIZATION: &lt;Project&gt;, "MSBuild" and "xmlns" should not be localized.</note>
       </trans-unit>
@@ -1121,7 +1202,7 @@
       </trans-unit>
       <trans-unit id="SolutionVenusProjectSkipped">
         <source>Skipping because the "$(AspNetConfiguration)" configuration is not supported for this web project.  You can use the AspNetConfiguration property to override the configuration used for building web projects, by adding /p:AspNetConfiguration=&lt;value&gt; to the command line. Currently web projects only support Debug and Release configurations.</source>
-        <target state="translated">L'operazione verrà ignorata. La configurazione "$(AspNetConfiguration)" non è supportata per questo progetto Web. Per eseguire l'override della configurazione usata per la compilazione dei progetti Web, è possibile usare la proprietà AspNetConfiguration, aggiungendo /p:AspNetConfiguration=&lt;valore&gt; alla riga di comando. I progetti Web attualmente supportano solo le configurazioni delle versioni di debug e di rilascio.</target>
+        <target state="translated">Operazione ignorata. La configurazione "$(AspNetConfiguration)" non è supportata per questo progetto Web. Per eseguire l'override della configurazione utilizzata per la compilazione dei progetti Web, è possibile utilizzare la proprietà AspNetConfiguration, aggiungendo /:pAspNetConfiguration=&lt;valore&gt; alla riga di comando. I progetti Web attualmente supportano solo le configurazioni versioni di debug e di rilascio.</target>
         <note>
     UE: This is not an error, so doesn't need an error code.
     LOCALIZATION: Do NOT localize "AspNetConfiguration", "Debug", "Release".
@@ -1517,7 +1598,7 @@
       </trans-unit>
       <trans-unit id="InvalidChildElementDueToDuplication">
         <source>MSB4173: The element &lt;{0}&gt; beneath element &lt;{1}&gt; is invalid because a child element with that name already exists</source>
-        <target state="translated">MSB4173: l'elemento &lt;{0}&gt; sotto l'elemento &lt;{1}&gt; non è valido perché esiste già un elemento figlio con tale nome</target>
+        <target state="translated">MSB4173: l'elemento &lt;{0}&gt; sotto l'elemento &lt;{1}&gt; non è valido perché esiste già un elemento figlio con tale nome.</target>
         <note>{StrBegin="MSB4173: "}</note>
       </trans-unit>
       <trans-unit id="UnrecognizedParentElement">
@@ -1841,7 +1922,7 @@ Utilizzo:          {0} Utilizzo medio: {1:###.0}</target>
       </trans-unit>
       <trans-unit id="OM_NoOtherwiseBeforeWhenOrOtherwise">
         <source>An &lt;Otherwise&gt; element cannot be located before a &lt;When&gt; or &lt;Otherwise&gt; element.</source>
-        <target state="translated">Non è possibile posizionare un elemento &lt;Otherwise&gt; prima di un elemento &lt;When&gt; o &lt;Otherwise&gt;.</target>
+        <target state="translated">Impossibile posizionare un elemento &lt;Otherwise&gt; prima di un elemento &lt;When&gt; o &lt;Otherwise&gt;.</target>
         <note />
       </trans-unit>
       <trans-unit id="OM_MustSetFileNameBeforeSave">
@@ -2027,7 +2108,7 @@ Utilizzo:          {0} Utilizzo medio: {1:###.0}</target>
       </trans-unit>
       <trans-unit id="OM_OneOfAttributeButNotMore">
         <source>The &lt;{0}&gt; element must have either the "{1}" attribute, the "{2}" attribute, or the "{3}" attribute, but not more than one.</source>
-        <target state="translated">L'elemento &lt;{0}&gt; deve includere solo un attributo tra "{1}", "{2}" o "{3}".</target>
+        <target state="translated">L'elemento &lt;{0}&gt; deve includere solo uno tra gli attributi "{1}", "{2}" e "{3}".</target>
         <note />
       </trans-unit>
       <trans-unit id="OM_ItemsOutsideTargetMustHaveIncludeOrUpdateOrRemove">

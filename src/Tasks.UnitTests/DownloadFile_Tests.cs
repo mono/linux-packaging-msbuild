@@ -1,6 +1,5 @@
 ﻿using Microsoft.Build.UnitTests;
 using Microsoft.Build.Utilities;
-using Microsoft.Build.Shared;
 using Shouldly;
 using System;
 using System.IO;
@@ -186,10 +185,7 @@ namespace Microsoft.Build.Tasks.UnitTests
 
             downloadFile.Execute().ShouldBeFalse(() => _mockEngine.Log);
 
-            _mockEngine.Log.ShouldContain(
-                                NativeMethodsShared.IsMono
-                                    ? @"ERROR : MSB3923: Failed to download file ""http://notfound/foo.txt"".  404 (Not Found)"
-                                    : @"ERROR : MSB3923: Failed to download file ""http://notfound/foo.txt"".  Response status code does not indicate success: 404 (Not Found).");
+            _mockEngine.Log.ShouldContain("Response status code does not indicate success: 404 (Not Found).");
         }
 
         [Fact]
@@ -250,13 +246,71 @@ namespace Microsoft.Build.Tasks.UnitTests
         }
 
         [Fact]
+        public void AbortOnTimeout()
+        {
+            CancellationTokenSource timeout = new CancellationTokenSource();
+            timeout.Cancel();
+            DownloadFile downloadFile = new DownloadFile()
+            {
+                BuildEngine = _mockEngine,
+                HttpMessageHandler = new MockHttpMessageHandler((message, token) =>
+                {
+                    // Http timeouts manifest as "OperationCanceledExceptions" from the handler, simulate that
+                    throw new OperationCanceledException(timeout.Token);
+                }),
+                Retries = 1,
+                RetryDelayMilliseconds = 100,
+                SourceUrl = "http://notfound/foo.txt"
+            };
+
+            downloadFile.Execute().ShouldBeFalse(() => _mockEngine.Log);
+
+            _mockEngine.Log.ShouldContain("MSB3923", () => _mockEngine.Log);
+        }
+
+        [Fact]
+        public async Task NoRunawayLoop()
+        {
+            DownloadFile downloadFile = null;
+            bool failed = false;
+            downloadFile = new DownloadFile()
+            {
+                BuildEngine = _mockEngine,
+                HttpMessageHandler = new MockHttpMessageHandler((message, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    downloadFile.Cancel();
+                    if (!failed)
+                    {
+                        failed = true;
+                        return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    }
+
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent("Success!"),
+                        RequestMessage = new HttpRequestMessage(HttpMethod.Get, "http://success/foo.txt")
+                    };
+                }),
+                Retries = 2,
+                RetryDelayMilliseconds = 100,
+                SourceUrl = "http://notfound/foo.txt"
+            };
+
+            var runaway = Task.Run(() => downloadFile.Execute());
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            runaway.IsCompleted.ShouldBeTrue("Task did not cancel");
+
+            var result = await runaway;
+            result.ShouldBeFalse(() => _mockEngine.Log);
+        }
+
+        [Fact]
         public void SkipUnchangedFiles()
         {
             using (TestEnvironment testEnvironment = TestEnvironment.Create())
             {
                 TransientTestFolder folder = testEnvironment.CreateFolder(createFolder: true);
-
-                testEnvironment.CreateFile(folder, "foo.txt", "C197675A3CC64CAA80680128CF4578C9");
 
                 DownloadFile downloadFile = new DownloadFile
                 {
@@ -268,7 +322,7 @@ namespace Microsoft.Build.Tasks.UnitTests
                         {
                             Headers =
                             {
-                                LastModified = DateTimeOffset.UtcNow
+                                LastModified = DateTimeOffset.UtcNow.AddDays(-1)
                             }
                         },
                         RequestMessage = new HttpRequestMessage(HttpMethod.Get, "http://success/foo.txt")
@@ -276,6 +330,8 @@ namespace Microsoft.Build.Tasks.UnitTests
                     SkipUnchangedFiles = true,
                     SourceUrl = "http://success/foo.txt"
                 };
+
+                testEnvironment.CreateFile(folder, "foo.txt", "C197675A3CC64CAA80680128CF4578C9");
 
                 downloadFile.Execute().ShouldBeTrue();
 

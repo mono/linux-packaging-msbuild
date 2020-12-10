@@ -12,6 +12,8 @@ MSBuild requires a stable version of [Mono](http://www.mono-project.com/download
 
 ```make```
 
+If you encounter errors, see [Something's wrong in my build](Something's-wrong-in-my-build.md)
+
 ## Tests ##
 
 ```make test-mono```
@@ -19,6 +21,10 @@ MSBuild requires a stable version of [Mono](http://www.mono-project.com/download
 ## Installing ##
 
 `./install-mono-prefix.sh </your/mono/prefix>`
+
+To pass any extra properties to the build:
+
+`make ARGS="/p:Foo=Bar"`
 
 ## Getting Mono MSBuild binaries without building the code ##
 The best way to get Mono MSBuild for OSX/macOS is to get the official [Mono package](http://www.mono-project.com/download/#download-mac). After installing it, you can run `msbuild`.

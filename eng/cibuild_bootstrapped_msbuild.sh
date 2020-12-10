@@ -1,12 +1,13 @@
-#!/bin/bash
+#! /bin/bash
 
-configuration="debug"
+configuration="Debug"
 host_type="core"
 build_stage1=true
 run_tests="--test"
 run_restore="--restore"
 properties=
 extra_properties=
+use_system_mono=false
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -39,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       host_type=$2
       shift 2
       ;;
+    --use_system_mono)
+      use_system_mono=true
+      shift
+      ;;
     *)
       properties="$properties $1"
       shift 1
@@ -63,55 +68,78 @@ function DownloadMSBuildForMono {
 
 RepoRoot="$ScriptRoot/.."
 artifacts_dir="$RepoRoot/artifacts"
+Stage1Dir="$RepoRoot/stage1"
 
 mono_msbuild_dir="$artifacts_dir/mono-msbuild"
-msbuild_download_url="https://github.com/mono/msbuild/releases/download/0.06/mono_msbuild_xplat-master-3c930fa8.zip"
+msbuild_download_url="https://github.com/mono/msbuild/releases/download/0.08/mono_msbuild_6.4.0.208.zip"
 msbuild_zip="$artifacts_dir/msbuild.zip"
+roslyn_version_to_use=`grep -i MicrosoftNetCompilersVersion $ScriptRoot/Versions.props  | sed -e 's,^.*>\([^<]*\)<.*$,\1,'`
+nuget_version_to_use=`grep -i NuGetBuildTasksVersion $ScriptRoot/Versions.props  | sed -e 's,^.*>\([^<]*\)<.*$,\1,'`
 
 if [ $host_type = "mono" ] ; then
-  DownloadMSBuildForMono
+  if [ -z "$roslyn_version_to_use" ]; then
+      echo  "Unable to find a Roslyn version to use for Microsoft.Net.Compilers.Toolset"
+      exit 1
+  fi
+  if [ -z "$nuget_version_to_use" ]; then
+      echo  "Unable to find a NuGet.Build.Tasks version to use."
+  fi
+  if [ $use_system_mono == false ] ; then
+      DownloadMSBuildForMono
 
-  export _InitializeBuildTool="mono"
-  export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
+      export _InitializeBuildTool="mono"
+      export _InitializeBuildToolCommand="$mono_msbuild_dir/MSBuild.dll"
+      export _InitializeBuildToolFramework="net472"
 
-  configuration="$configuration-MONO"
-  extn_path="$mono_msbuild_dir/Extensions"
 
-  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false"
+      configuration="$configuration-MONO"
+      extn_path="$mono_msbuild_dir/Extensions"
+
+      extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /m /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
+  else
+      export _InitializeBuildTool="msbuild"
+      export _InitializeBuildToolCommand=""
+      export _InitializeBuildToolFramework="net472"
+
+      configuration="$configuration-MONO"
+      extra_properties=" /fl /flp:v=diag /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
+  fi
 fi
+
+pkill -9 -f VBCSCompiler.exe
 
 if [[ $build_stage1 == true ]];
 then
-	/bin/bash "$ScriptRoot/common/build.sh" $run_restore --build --ci --configuration $configuration /p:CreateBootstrap=true $properties $extra_properties
+    "$_InitializeBuildTool" "$_InitializeBuildToolCommand" $extra_properties /bl mono/build/update_bundled_bits.proj || exit $?
+
+	/bin/bash "$ScriptRoot/common/build.sh" $run_restore --build --ci --configuration $configuration /p:CreateBootstrap=true $properties $extra_properties || exit $?
 fi
 
-bootstrapRoot="$artifacts_dir/bin/bootstrap"
-# export to make this available to `eng/common/build.sh`
-export artifacts_dir="$artifacts_dir/2"
+bootstrapRoot="$Stage1Dir/bin/bootstrap"
 
 if [ $host_type = "core" ]
 then
-  . "$ScriptRoot/common/tools.sh"
-
-  InitializeDotNetCli true
-
   _InitializeBuildTool="$_InitializeDotNetCli/dotnet"
   _InitializeBuildToolCommand="$bootstrapRoot/netcoreapp2.1/MSBuild/MSBuild.dll"
+  _InitializeBuildToolFramework="netcoreapp2.1"
 elif [ $host_type = "mono" ]
 then
   export _InitializeBuildTool="mono"
   export _InitializeBuildToolCommand="$bootstrapRoot/net472/MSBuild/Current/Bin/MSBuild.dll"
+  export _InitializeBuildToolFramework="net472"
 
   # FIXME: remove this once we move to a newer version of Arcade with a fix for $MonoTool
   # https://github.com/dotnet/arcade/commit/f6f14c169ba19cd851120e0d572cd1c5619205b3
   export MonoTool=`which mono`
 
   extn_path="$bootstrapRoot/net472/MSBuild"
-  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false"
+  extra_properties=" /p:MSBuildExtensionsPath=$extn_path /p:MSBuildExtensionsPath32=$extn_path /p:MSBuildExtensionsPath64=$extn_path /p:DeterministicSourcePaths=false /fl /flp:v=diag /p:MicrosoftNetCompilersVersion=$roslyn_version_to_use /p:NuGetBuildTasksVersion=$nuget_version_to_use"
 else
   echo "Unsupported hostType ($host_type)"
   exit 1
 fi
+
+mv $artifacts_dir $Stage1Dir
 
 # Ensure that debug bits fail fast, rather than hanging waiting for a debugger attach.
 export MSBUILDDONOTLAUNCHDEBUGGER=true
@@ -125,4 +153,3 @@ export DOTNET_HOST_PATH="$_InitializeDotNetCli/dotnet"
 # - Do run tests
 # - Don't try to create a bootstrap deployment
 . "$ScriptRoot/common/build.sh" $run_restore --build $run_tests --ci --nodereuse false --configuration $configuration /p:CreateBootstrap=false $properties $extra_properties
-

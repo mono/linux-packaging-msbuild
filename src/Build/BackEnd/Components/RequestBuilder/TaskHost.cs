@@ -22,6 +22,7 @@ using TaskLoggingContext = Microsoft.Build.BackEnd.Logging.TaskLoggingContext;
 using System.Threading.Tasks;
 using Microsoft.Build.BackEnd.Components.Caching;
 using System.Reflection;
+using Microsoft.Build.Eventing;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -33,7 +34,7 @@ namespace Microsoft.Build.BackEnd
 #if FEATURE_APPDOMAIN
         MarshalByRefObject,
 #endif
-        IBuildEngine5
+        IBuildEngine6
     {
         /// <summary>
         /// True if the "secret" environment variable MSBUILDNOINPROCNODE is set. 
@@ -240,6 +241,8 @@ namespace Microsoft.Build.BackEnd
             }
         }
 
+        public bool BuildRequestsSucceeded { get; private set; } = true;
+
         #region IBuildEngine2 Members
 
         /// <summary>
@@ -285,7 +288,7 @@ namespace Microsoft.Build.BackEnd
 
             // If the caller supplies an array to put the target outputs in, it must have the same length as the array of project file names they provided, too.
             // "MSB3094: "{2}" refers to {0} item(s), and "{3}" refers to {1} item(s). They must have the same number of items."
-            ErrorUtilities.VerifyThrowArgument((targetOutputsPerProject == null) || (projectFileNames.Length == targetOutputsPerProject.Length), "General.TwoVectorsMustHaveSameLength", projectFileNames.Length, targetOutputsPerProject.Length, "projectFileNames", "targetOutputsPerProject");
+            ErrorUtilities.VerifyThrowArgument((targetOutputsPerProject == null) || (projectFileNames.Length == targetOutputsPerProject.Length), "General.TwoVectorsMustHaveSameLength", projectFileNames.Length, targetOutputsPerProject?.Length ?? 0, "projectFileNames", "targetOutputsPerProject");
 
             BuildEngineResult result = BuildProjectFilesInParallel(projectFileNames, targetNames, globalProperties, new List<String>[projectFileNames.Length], toolsVersion, includeTargetOutputs);
 
@@ -306,6 +309,8 @@ namespace Microsoft.Build.BackEnd
                     }
                 }
             }
+
+            BuildRequestsSucceeded = result.Result;
 
             return result.Result;
         }
@@ -336,7 +341,7 @@ namespace Microsoft.Build.BackEnd
         /// <summary>
         /// Requests to yield the node.
         /// Thread safe, however Yield cannot be called unless the
-        /// last call to Yield or Reaquire was Reaquire.
+        /// last call to Yield or Reacquire was Reacquire.
         /// </summary>
         public void Yield()
         {
@@ -345,14 +350,15 @@ namespace Microsoft.Build.BackEnd
                 IRequestBuilderCallback builderCallback = _requestEntry.Builder as IRequestBuilderCallback;
                 ErrorUtilities.VerifyThrow(_yieldThreadId == -1, "Cannot call Yield() while yielding.");
                 _yieldThreadId = Thread.CurrentThread.ManagedThreadId;
+                MSBuildEventSource.Log.ExecuteTaskYieldStart(_taskLoggingContext.TaskName, _taskLoggingContext.BuildEventContext.TaskId);
                 builderCallback.Yield();
             }
         }
 
         /// <summary>
         /// Requests to reacquire the node.
-        /// Thread safe, however Reaquire cannot be called unless the
-        /// last call to Yield or Reaquire was Yield.
+        /// Thread safe, however Reacquire cannot be called unless the
+        /// last call to Yield or Reacquire was Yield.
         /// </summary>
         public void Reacquire()
         {
@@ -361,7 +367,10 @@ namespace Microsoft.Build.BackEnd
                 IRequestBuilderCallback builderCallback = _requestEntry.Builder as IRequestBuilderCallback;
                 ErrorUtilities.VerifyThrow(_yieldThreadId != -1, "Cannot call Reacquire() before Yield().");
                 ErrorUtilities.VerifyThrow(_yieldThreadId == Thread.CurrentThread.ManagedThreadId, "Cannot call Reacquire() on thread {0} when Yield() was called on thread {1}", Thread.CurrentThread.ManagedThreadId, _yieldThreadId);
+                MSBuildEventSource.Log.ExecuteTaskYieldStop(_taskLoggingContext.TaskName, _taskLoggingContext.BuildEventContext.TaskId);
+                MSBuildEventSource.Log.ExecuteTaskReacquireStart(_taskLoggingContext.TaskName, _taskLoggingContext.BuildEventContext.TaskId);
                 builderCallback.Reacquire();
+                MSBuildEventSource.Log.ExecuteTaskReacquireStop(_taskLoggingContext.TaskName, _taskLoggingContext.BuildEventContext.TaskId);
                 _yieldThreadId = -1;
             }
         }
@@ -647,6 +656,19 @@ namespace Microsoft.Build.BackEnd
 
         #endregion
 
+        #region IBuildEngine6 Members
+
+        /// <summary>
+        /// Gets the global properties for the current project.
+        /// </summary>
+        /// <returns>An <see cref="IReadOnlyDictionary{String, String}" /> containing the global properties of the current project.</returns>
+        public IReadOnlyDictionary<string, string> GetGlobalProperties()
+        {
+            return _requestEntry.RequestConfiguration.GlobalProperties.ToDictionary();
+        }
+
+        #endregion
+
         /// <summary>
         /// Called by the internal MSBuild task.
         /// Does not take the lock because it is called by another request builder thread.
@@ -682,6 +704,7 @@ namespace Microsoft.Build.BackEnd
                 }
 
                 result = new BuildEngineResult(overallSuccess, targetOutputsPerProject);
+                BuildRequestsSucceeded = overallSuccess;
             }
             else
             {
@@ -929,10 +952,22 @@ namespace Microsoft.Build.BackEnd
                         {
                             overallSuccess = false;
                         }
+
+                        if (!string.IsNullOrEmpty(results[i].SchedulerInducedError))
+                        {
+                            LoggingContext.LogErrorFromText(
+                                subcategoryResourceName: null,
+                                errorCode: null,
+                                helpKeyword: null,
+                                file: new BuildEventFileInfo(ProjectFileOfTaskNode, LineNumberOfTaskNode, ColumnNumberOfTaskNode),
+                                message: results[i].SchedulerInducedError);
+                        }
                     }
 
                     ErrorUtilities.VerifyThrow(results.Length == projectFileNames.Length || overallSuccess == false, "The number of results returned {0} cannot be less than the number of project files {1} unless one of the results indicated failure.", results.Length, projectFileNames.Length);
                 }
+
+                BuildRequestsSucceeded = overallSuccess;
 
                 return new BuildEngineResult(overallSuccess, targetOutputsPerProject);
             }

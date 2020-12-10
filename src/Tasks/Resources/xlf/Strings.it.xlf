@@ -161,6 +161,11 @@
         <target state="translated">MSB3021: non è possibile copiare il file "{0}" in "{1}". {2}</target>
         <note>{StrBegin="MSB3021: "}</note>
       </trans-unit>
+      <trans-unit id="Copy.ErrorIfLinkFailsSetWithoutLinkOption">
+        <source>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</source>
+        <target state="translated">MSB3892: con ErrorIfLinkFails è richiesta l'impostazione di UseHardlinksIfPossible o UseSymbolicLinksIfPossible.</target>
+        <note>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</note>
+      </trans-unit>
       <trans-unit id="Copy.ExactlyOneTypeOfDestination">
         <source>MSB3022: Both "{0}" and "{1}" were specified as input parameters in the project file. Please choose one or the other.</source>
         <target state="translated">MSB3022: "{0}" e "{1}" sono stati entrambi specificati come parametri di input nel file di progetto. Scegliere uno o l'altro.</target>
@@ -175,6 +180,11 @@
         <source>Creating hard link to copy "{0}" to "{1}".</source>
         <target state="translated">Creazione del collegamento reale per copiare "{0}" in "{1}".</target>
         <note>LOCALIZATION: {0} and {1} are paths.</note>
+      </trans-unit>
+      <trans-unit id="Copy.LinkFailed">
+        <source>MSB3893: Could not use a link to copy "{0}" to "{1}".</source>
+        <target state="translated">MSB3893: non è stato possibile usare un collegamento per copiare "{0}" in "{1}".</target>
+        <note>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</note>
       </trans-unit>
       <trans-unit id="Copy.RetryingAsFileCopy">
         <source>Could not use a link to copy "{0}" to "{1}". Copying the file instead. {2}</source>
@@ -969,10 +979,50 @@
         <target state="translated">MSB3190: ClickOnce non supporta il livello di esecuzione richieste '{0}'.</target>
         <note>{StrBegin="MSB3190: "}</note>
       </trans-unit>
+      <trans-unit id="GenerateResource.CoreSupportsLimitedScenarios">
+        <source>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</source>
+        <target state="translated">MSB3824: per compilare con .NET Core, gli input delle risorse devono essere in formato. txt o. resx.</target>
+        <note>{StrBegin="MSB3824: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputDoesntExist">
+        <source>Input file "{0}" does not exist.</source>
+        <target state="translated">Il file di input "{0}" non esiste.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputNewer">
+        <source>Input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">Il file di input "{0}" è più recente del file di output "{1}".</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputDoesntExist">
+        <source>Linked input file "{0}" does not exist.</source>
+        <target state="translated">Il file di input collegato "{0}" non esiste.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputNewer">
+        <source>Linked input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">Il file di input collegato "{0}" è più recente del file di output "{1}".</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
       <trans-unit id="GenerateResource.MOTW">
         <source>MSB3821: Couldn't process file {0} due to its being in the Internet or Restricted zone or having the mark of the web on the file. Remove the mark of the web if you want to process these files.</source>
         <target state="translated">MSB3821: non è stato possibile elaborare il file {0} perché si trova nell'area Internet o Siti con restrizioni o presenta il contrassegno del Web. Rimuovere il contrassegno del Web se si intende elaborare questi file.</target>
         <note>{StrBegin="MSB3821: "} "Internet zone", "Restricted zone", and "mark of the web" are Windows concepts that may have a specific translation.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.OutputDoesntExist">
+        <source>Output file "{0}" does not exist.</source>
+        <target state="translated">Il file di output "{0}" non esiste.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresExtensions">
+        <source>MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</source>
+        <target state="translated">MSB3822: con le risorse non di stringa è richiesto l'assembly System.Resources.Extensions in fase di esecuzione, che non è stato trovato nei riferimenti di questo progetto.</target>
+        <note>{StrBegin="MSB3822: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresProperty">
+        <source>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</source>
+        <target state="translated">MSB3823: con le risorse non di stringa è necessario impostare su true la proprietà GenerateResourceUsePreserializedResources.</target>
+        <note>{StrBegin="MSB3823: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.ResourceNotFound">
         <source>MSB3552: Resource file "{0}" cannot be found.</source>
@@ -990,9 +1040,9 @@
         <note>{StrBegin="MSB3554: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.CorruptOutput">
-        <source>MSB3555: Output file "{0}" is possibly corrupt.</source>
-        <target state="translated">MSB3555: il file di output "{0}" potrebbe essere danneggiato.</target>
-        <note>{StrBegin="MSB3555: "}</note>
+        <source>Output file "{0}" is possibly corrupt and will be deleted and recreated.</source>
+        <target state="translated">Il file di output "{0}" è probabilmente danneggiato e verrà eliminato e ricreato.</target>
+        <note />
       </trans-unit>
       <trans-unit id="GenerateResource.OnlyStringsSupported">
         <source>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</source>
@@ -1658,7 +1708,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoRedistAssembliesToGenerateExclusionList">
         <source>MSB3256: No assemblies were read in from the redist lists. A TargetFramework profile exclusion list could not be generated. </source>
-        <target state="translated">MSB3256: non sono stati letti assembly dagli elenchi redist. Non è stato possibile generare un elenco di esclusione di profili TargetFramework. </target>
+        <target state="translated">MSB3256: non sono stati letti assembly dagli elenchi di pacchetti ridistribuibili. Non è stato possibile generare un elenco di esclusione di profili TargetFramework. </target>
         <note>{StrBegin="MSB3256: "}</note>
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.PrimaryReferenceOutsideOfFramework">
@@ -1678,7 +1728,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoProfilesFound">
         <source>MSB3260: Could not find any target framework profile redist files in the FullFrameworkFolders locations.</source>
-        <target state="translated">MSB3260: non sono stati trovati file redist del profilo del framework di destinazione nei percorsi FullFrameworkFolders.</target>
+        <target state="translated">MSB3260: non sono stati trovati file di pacchetti ridistribuibili del profilo del framework di destinazione nei percorsi FullFrameworkFolders.</target>
         <note>{StrBegin="MSB3260: "}</note>
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.FrameworkDirectoryOnProfiles">
@@ -1881,7 +1931,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.RemappedReference">
         <source>Due to a remapping entry in the currently targeted framework redist list, reference "{0}" was remapped to "{1}".</source>
-        <target state="translated">A causa di una voce di nuovo mapping nell'elenco redist del framework di destinazione corrente, il riferimento "{0}" è stato rimappato a "{1}".</target>
+        <target state="translated">A causa di una voce di nuovo mapping nell'elenco di pacchetti ridistribuibili del framework di destinazione corrente, il riferimento "{0}" è stato rimappato a "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.UnificationByFrameworkRetarget">
@@ -1941,7 +1991,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.TargetFrameworkRedistLogHeader">
         <source>Redist List File Paths:</source>
-        <target state="translated">Percorsi dei file degli elenchi redist:</target>
+        <target state="translated">Percorsi dei file degli elenchi di pacchetti ridistribuibili:</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.TargetFrameworkExclusionListLogHeader">
@@ -1956,7 +2006,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoSubSetRedistListName">
         <source>The redist list file "{0}" has a null or empty Redist name in the FileList element. Make sure the Redist Name is not null or empty.</source>
-        <target state="translated">Il file di elenco redist "{0}" include un nome Redist Null o vuoto nell'elemento FileList. Verificare che il nome Redist non sia Null o vuoto.</target>
+        <target state="translated">Il file di elenco di pacchetti ridistribuibili "{0}" include un nome di Redist Null o vuoto nell'elemento FileList. Verificare che il nome di Redist non sia Null o vuoto.</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveComReference.TreatingTlbOfActiveXAsNonEmbedded">
@@ -2243,6 +2293,11 @@
         <target state="translated">MSB3473: il percorso di "{0}" non è valido. {1}</target>
         <note>{StrBegin="MSB3473: "}</note>
       </trans-unit>
+      <trans-unit id="SGen.TaskNotSupported">
+        <source>MSB3474: The task "{0}" is not supported on the .NET Core version of MSBuild. Use the Microsoft XML Serializer Generator package instead. See https://go.microsoft.com/fwlink/?linkid=858594 for more information.</source>
+        <target state="translated">MSB3474: l'attività "{0}" non è supportata nella versione .NET Core di MSBuild. Usare il pacchetto dello strumento Microsoft per la generazione di serializzatori XML. Per altre informazioni, vedere https://go.microsoft.com/fwlink/?linkid=858594.</target>
+        <note>{StrBegin="MSB3474: "}</note>
+      </trans-unit>
       <trans-unit id="SignFile.CertNotInStore">
         <source>MSB3481: The signing certificate could not be located. Ensure that it is in the current user's personal store.</source>
         <target state="translated">MSB3481: non è stato possibile trovare il certificato di firma. Verificare che si trovi nell'archivio personale dell'utente corrente.</target>
@@ -2464,8 +2519,8 @@
         <note>{StrBegin="MSB3643: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound">
-        <source>MSB3644: The reference assemblies for framework "{0}" were not found. To resolve this, install the SDK or Targeting Pack for this framework version or retarget your application to a version of the framework for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your assembly may not be correctly targeted for the framework you intend.</source>
-        <target state="translated">MSB3644: gli assembly di riferimento per il framework "{0}" non sono stati trovati. Per risolvere il problema, installare l'SDK o il Targeting Pack per questa versione del framework oppure reindirizzare l'applicazione a una versione del framework per la quale è installato l'SDK o il Targeting Pack. Gli assembly verranno risolti dalla Global Assembly Cache e verranno usati in sostituzione degli assembly di riferimento. Di conseguenza, gli assembly potrebbero non essere indirizzati correttamente al framework desiderato.</target>
+        <source>MSB3644: The reference assemblies for {0} were not found. To resolve this, install the Developer Pack (SDK/Targeting Pack) for this framework version or retarget your application. You can download .NET Framework Developer Packs at https://aka.ms/msbuild/developerpacks</source>
+        <target state="translated">MSB3644: gli assembly di riferimento per {0} non sono stati trovati. Per risolvere il problema, installare Developer Pack (SDK/Targeting Pack) per questa versione del framework o ridestinare l'applicazione. È possibile scaricare .NET Framework Developer Pack all'indirizzo https://aka.ms/msbuild/developerpacks</target>
         <note>{StrBegin="MSB3644: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NETFX35SP1NotIntstalled">
@@ -2477,6 +2532,11 @@
         <source>MSB3762: No references were passed to the task. References to at least mscorlib and Windows.Foundation are required.</source>
         <target state="translated">MSB3762: non sono stati passati riferimenti all'attività. Sono necessari almeno i riferimenti a mscorlib e Windows.Foundation.</target>
         <note>{StrBegin="MSB3762: "}</note>
+      </trans-unit>
+      <trans-unit id="Xaml.DuplicatePropertyName">
+        <source>MSB3724: Unable to create Xaml task.  Duplicate property name '{0}'.</source>
+        <target state="translated">MSB3724: non è possibile creare l'attività XAML. Il nome di proprietà '{0}' è duplicato.</target>
+        <note>{StrBegin="MSB3724: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.TaskCreationFailed">
         <source>MSB3686: Unable to create Xaml task.  Compilation failed.  {0}</source>
@@ -2510,7 +2570,7 @@
       </trans-unit>
       <trans-unit id="Xaml.MissingTaskBody">
         <source>MSB3692: Unable to create Xaml task.  The &lt;UsingTask&gt; does not contain a &lt;Task&gt; definition.</source>
-        <target state="translated">MSB3692: non è possibile creare l'attività XAML.  &lt;UsingTask&gt; non contiene una definizione di &lt;Task&gt;.</target>
+        <target state="translated">MSB3692: non è possibile creare l'attività XAML. &lt;UsingTask&gt; non contiene una definizione di &lt;Task&gt;.</target>
         <note>{StrBegin="MSB3692: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.ArgumentOutOfRange">
@@ -2542,6 +2602,11 @@
         <source>MSB3701: Unable to load arguments for the XslTransformation task. {0}</source>
         <target state="translated">MSB3701: non è possibile caricare argomenti per l'attività XslTransformation. {0}</target>
         <note>{StrBegin="MSB3701: "}</note>
+      </trans-unit>
+      <trans-unit id="XslTransform.PrecompiledXsltError">
+        <source>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</source>
+        <target state="translated">MSB3705: XslCompiledDllPath non è supportato quando si compila con .NET Core.</target>
+        <note>{StrBegin="MSB3705: "}</note>
       </trans-unit>
       <trans-unit id="XslTransform.XsltArgumentsError">
         <source>MSB3702: Unable to process the XsltParameters argument for the XslTransformation task. {0}</source>
@@ -2630,7 +2695,7 @@
       </trans-unit>
       <trans-unit id="XmlPeekPoke.InputFileError">
         <source>MSB3733: Input file "{0}" cannot be opened. {1}</source>
-        <target state="translated">MSB3733: non è possibile aprire il file "{0}" di input. {1}</target>
+        <target state="translated">MSB3733: non è possibile aprire il file di input "{0}". {1}</target>
         <note>{StrBegin="MSB3733: "}</note>
       </trans-unit>
       <trans-unit id="XmlPeekPoke.XPathError">
@@ -2725,7 +2790,7 @@
       </trans-unit>
       <trans-unit id="CodeTaskFactory.CodeElementIsMissing">
         <source>MSB3751: The &lt;Code&gt; element is missing for the "{0}" task. This element is required.</source>
-        <target state="translated">MSB3751: l'elemento &lt;Code&gt; non è presente per l'attività "{0}". Questo elemento è obbligatorio.</target>
+        <target state="translated">MSB3751: elemento &lt;Code&gt; mancante per l'attività "{0}". Tale elemento è obbligatorio.</target>
         <note>{StrBegin="MSB3751: "} &lt;Code&gt; should not be localized it is the name of an xml element</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.AttributeEmpty">
@@ -2860,7 +2925,7 @@
       </trans-unit>
       <trans-unit id="ResolveSDKReference.SDKReferenceIncorrectFormat">
         <source>MSB3776: The SDK Reference "{0}" is incorrectly formatted. It must be in the following format "&lt;SDKName&gt;, Version=&lt;SDKVersion&gt;. For example: "MySDK, Version=2.0"</source>
-        <target state="translated">MSB3776: il formato del riferimento SDK "{0}" non corretto. Il formato corretto è: "&lt;NomeSDK&gt;, Version=&lt;VersioneSDK&gt;, ad esempio: "MySDK, versione=2.0"</target>
+        <target state="translated">MSB3776: formato del riferimento SDK "{0}" non corretto. Il formato corretto è: "&lt;NomeSDK&gt;, Version=&lt;VersioneSDK&gt;, ad esempio: "MySDK, Version=2.0"</target>
         <note>{StrBegin="MSB3776: "}</note>
       </trans-unit>
       <trans-unit id="ResolveSDKReference.NoMatchingFrameworkIdentity">
@@ -2965,7 +3030,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ExpandRedistFrom">
         <source>Looking for redist files under "{0}".</source>
-        <target state="translated">Ricerca dei file redist in "{0}".</target>
+        <target state="translated">Ricerca dei file di pacchetti ridistribuibili in "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.NotExpanding">
@@ -2980,17 +3045,17 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.AddingRedistFile">
         <source>Adding file "{0}" from redist folder with target path "{1}".</source>
-        <target state="translated">Aggiunta del file "{0}" dalla cartella redist con percorso di destinazione "{1}".</target>
+        <target state="translated">Aggiunta del file "{0}" dalla cartella dei pacchetti ridistribuibili con percorso di destinazione "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistSameSDK">
         <source>There was a conflict between two redist files going to the same target path "{0}" within the "{1}" SDK. Choosing "{2}" over "{3}" because it was resolved first.</source>
-        <target state="translated">Conflitto tra due file redist con lo stesso percorso di destinazione "{0}" all'interno dell'SDK "{1}". Viene scelto "{2}" invece di "{3}" perché è stato risolto per primo.</target>
+        <target state="translated">Conflitto tra due file di pacchetti ridistribuibili con lo stesso percorso di destinazione "{0}" all'interno dell'SDK "{1}". Verrà scelto "{2}" invece di "{3}" perché è stato risolto per primo.</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistDifferentSDK">
         <source>There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.</source>
-        <target state="translated">Conflitto tra due file della cartella redist che hanno lo stesso percorso di destinazione "{0}" tra gli SDK "{1}" e "{2}". Viene scelto "{3}" invece di "{4}" perché è stato risolto per primo.</target>
+        <target state="translated">Conflitto tra due file della cartella dei pacchetti ridistribuibili che hanno lo stesso percorso di destinazione "{0}" tra gli SDK "{1}" e "{2}". Verrà scelto "{3}" invece di "{4}" perché è stato risolto per primo.</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictReferenceSameSDK">
@@ -3045,12 +3110,12 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetConfiguration">
         <source>MSB3797: The targeted configuration for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted configuration.</source>
-        <target state="translated">MSB3797: la configurazione di destinazione per il riferimento SDK risolto "{0}" è vuota. Non è possibile trovare i file redist o di riferimento senza una configurazione di destinazione.</target>
+        <target state="translated">MSB3797: la configurazione di destinazione per il riferimento SDK risolto "{0}" è vuota. Non è possibile trovare i file di pacchetti ridistribuibili o di riferimento senza una configurazione di destinazione.</target>
         <note>{StrBegin="MSB3797: "}</note>
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetArchitecture">
         <source>MSB3798: The targeted architecture for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted architecture.</source>
-        <target state="translated">MSB3798: l'architettura di destinazione per il riferimento SDK risolto "{0}" è vuota. Non è possibile trovare i file redist o di riferimento senza un'architettura di destinazione.</target>
+        <target state="translated">MSB3798: l'architettura di destinazione per il riferimento SDK risolto "{0}" è vuota. Non è possibile trovare i file di pacchetti ridistribuibili o di riferimento senza un'architettura di destinazione.</target>
         <note>{StrBegin="MSB3798: "}</note>
       </trans-unit>
       <trans-unit id="FindInvalidProjectReferences.WarnWhenVersionIsIncompatible">
@@ -3086,12 +3151,12 @@
       <trans-unit id="WriteLinesToFile.ErrorReadingFile">
         <source>MSB3492: Could not read existing file "{0}" to determine whether its contents are up to date. Overwriting it.</source>
         <target state="translated">MSB3492: non è stato possibile leggere il file esistente "{0}" per determinare se il relativo contenuto è aggiornato. Verrà sovrascritto.</target>
-        <note>{StrBegin="MSB3491: "}</note>
+        <note>{StrBegin="MSB3492: "}</note>
       </trans-unit>
       <trans-unit id="WriteLinesToFile.SkippingUnchangedFile">
-        <source>MSB3493: Skipping write to file "{0}" because content would not change.</source>
-        <target state="translated">MSB3493: l'operazione di scrittura nel file "{0}" non è stata eseguita perché non avrebbe comportato la modifica del contenuto.</target>
-        <note>{StrBegin="MSB3493: "}</note>
+        <source>Skipping write to file "{0}" because content would not change.</source>
+        <target state="translated">L'operazione di scrittura nel file "{0}" non è stata eseguita perché non avrebbe comportato la modifica del contenuto.</target>
+        <note />
       </trans-unit>
       <trans-unit id="Telemetry.IllegalEventDataString">
         <source>The property "{0}" in the telemetry event data property list "{1}" is malformed.  Please only pass in a semicolon-delimited list of constant string values separated by "=", e.g., "Property1=Value1;Property2=Value2".</source>

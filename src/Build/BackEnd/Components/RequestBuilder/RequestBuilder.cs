@@ -1,37 +1,24 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Globalization;
-using Microsoft.Build.BackEnd;
 using Microsoft.Build.BackEnd.Logging;
 using Microsoft.Build.BackEnd.SdkResolution;
-using Microsoft.Build.Shared;
-using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Exceptions;
-using Microsoft.Build.Evaluation;
 using Microsoft.Build.Collections;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Eventing;
+using Microsoft.Build.Exceptions;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
-using Microsoft.Build.Utilities;
-#if (!STANDALONEBUILD)
-using Microsoft.Internal.Performance;
-#if MSBUILDENABLEVSPROFILING 
-using Microsoft.VisualStudio.Profiler;
-#endif
-#endif
-using ReservedPropertyNames = Microsoft.Build.Internal.ReservedPropertyNames;
+using Microsoft.Build.Shared;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NodeLoggingContext = Microsoft.Build.BackEnd.Logging.NodeLoggingContext;
 using ProjectLoggingContext = Microsoft.Build.BackEnd.Logging.ProjectLoggingContext;
 
@@ -355,8 +342,14 @@ namespace Microsoft.Build.BackEnd
 
                 BuildRequestConfiguration config = new BuildRequestConfiguration(data, _componentHost.BuildParameters.DefaultToolsVersion);
 
-                requests[i] = new FullyQualifiedBuildRequest(config, targets, waitForResults,
-                    flags: skipNonexistentTargets ? BuildRequestDataFlags.SkipNonexistentTargets : BuildRequestDataFlags.None);
+                requests[i] = new FullyQualifiedBuildRequest(
+                    config: config,
+                    targets: targets,
+                    resultsNeeded: waitForResults,
+                    skipStaticGraphIsolationConstraints: _componentHost.BuildParameters.IsolateProjects && _requestEntry.RequestConfiguration.ShouldSkipIsolationConstraintsForReference(config.ProjectFullPath),
+                    flags: skipNonexistentTargets
+                        ? BuildRequestDataFlags.SkipNonexistentTargets
+                        : BuildRequestDataFlags.None);
             }
 
             // Send the requests off
@@ -693,36 +686,16 @@ namespace Microsoft.Build.BackEnd
                 {
                     SetCommonWorkerThreadParameters();
                 }
-#if (!STANDALONEBUILD)
-                using (new CodeMarkerStartEnd(CodeMarkerEvent.perfMSBuildEngineBuildProjectBegin, CodeMarkerEvent.perfMSBuildEngineBuildProjectEnd))
-                {
-#if MSBUILDENABLEVSPROFILING
-                try
-                {
-                    string beginProjectBuild = String.Format(CultureInfo.CurrentCulture, "Build Project {0} - Start", requestEntry.RequestConfiguration.ProjectFullPath);
-                    DataCollection.CommentMarkProfile(8802, beginProjectBuild);
-#endif
-#endif
+                MSBuildEventSource.Log.RequestThreadProcStart();
                 await BuildAndReport();
-#if (!STANDALONEBUILD)
-#if MSBUILDENABLEVSPROFILING 
-                }
-                finally
-                {
-                    DataCollection.CommentMarkProfile(8803, "Build Project - End");
-                }
-#endif
-                }
-#endif
+                MSBuildEventSource.Log.RequestThreadProcStop();
             }
-#if FEATURE_VARIOUS_EXCEPTIONS
             catch (ThreadAbortException)
             {
                 // Do nothing.  This will happen when the thread is forcibly terminated because we are shutting down, for example
                 // when the unit test framework terminates.
                 throw;
             }
-#endif
             catch (Exception e)
             {
                 // Dump all engine exceptions to a temp file
@@ -994,12 +967,7 @@ namespace Microsoft.Build.BackEnd
         /// <param name="requests">The requests to be fulfilled.</param>
         private void RaiseOnNewBuildRequests(FullyQualifiedBuildRequest[] requests)
         {
-            NewBuildRequestsDelegate newRequestDelegate = OnNewBuildRequests;
-
-            if (null != newRequestDelegate)
-            {
-                newRequestDelegate(_requestEntry, requests);
-            }
+            OnNewBuildRequests?.Invoke(_requestEntry, requests);
         }
 
         /// <summary>
@@ -1007,12 +975,7 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private void RaiseBuildRequestCompleted(BuildRequestEntry entryToComplete)
         {
-            BuildRequestCompletedDelegate completeRequestDelegate = OnBuildRequestCompleted;
-
-            if (null != completeRequestDelegate)
-            {
-                completeRequestDelegate(entryToComplete);
-            }
+            OnBuildRequestCompleted?.Invoke(entryToComplete);
         }
 
         /// <summary>
@@ -1020,12 +983,7 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private void RaiseOnBlockedRequest(int blockingGlobalRequestId, string blockingTarget, BuildResult partialBuildResult = null)
         {
-            BuildRequestBlockedDelegate blockedRequestDelegate = OnBuildRequestBlocked;
-
-            if (null != blockedRequestDelegate)
-            {
-                blockedRequestDelegate(_requestEntry, blockingGlobalRequestId, blockingTarget, partialBuildResult);
-            }
+            OnBuildRequestBlocked?.Invoke(_requestEntry, blockingGlobalRequestId, blockingTarget, partialBuildResult);
         }
 
         /// <summary>
@@ -1054,6 +1012,8 @@ namespace Microsoft.Build.BackEnd
             // we do not wand to have an invalid projectLoggingContext floating around. Also if this is null the error will be 
             // logged with the node logging context
             _projectLoggingContext = null;
+
+            MSBuildEventSource.Log.BuildProjectStart(_requestEntry.RequestConfiguration.ProjectFullPath);
 
             try
             {
@@ -1118,6 +1078,12 @@ namespace Microsoft.Build.BackEnd
 
             // Build the targets
             BuildResult result = await _targetBuilder.BuildTargets(_projectLoggingContext, _requestEntry, this, allTargets, _requestEntry.RequestConfiguration.BaseLookup, _cancellationTokenSource.Token);
+
+            if (MSBuildEventSource.Log.IsEnabled())
+            {
+                MSBuildEventSource.Log.BuildProjectStop(_requestEntry.RequestConfiguration.ProjectFullPath, allTargets.Aggregate((f, s) => f + ", " + s));
+            }
+
             return result;
         }
 

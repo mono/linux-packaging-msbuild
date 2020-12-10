@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -2201,6 +2202,152 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 /// <summary>
+                /// Intrinsic function that returns the subset of items that actually exist on disk.
+                /// </summary>
+                internal static IEnumerable<Pair<string, S>> Exists(Expander<P, I> expander, IElementLocation elementLocation, bool includeNullEntries, string functionName, IEnumerable<Pair<string, S>> itemsOfType, string[] arguments)
+                {
+                    ProjectErrorUtilities.VerifyThrowInvalidProject(arguments == null || arguments.Length == 0, elementLocation, "InvalidItemFunctionSyntax", functionName, (arguments == null ? 0 : arguments.Length));
+
+                    foreach (Pair<string, S> item in itemsOfType)
+                    {
+                        if (String.IsNullOrEmpty(item.Key))
+                        {
+                            continue;
+                        }
+
+                        // Unescape as we are passing to the file system
+                        string unescapedPath = EscapingUtilities.UnescapeAll(item.Key);
+
+                        string rootedPath = null;
+                        try
+                        {
+                            // If we're a projectitem instance then we need to get
+                            // the project directory and be relative to that
+                            if (Path.IsPathRooted(unescapedPath))
+                            {
+                                rootedPath = unescapedPath;
+                            }
+                            else
+                            {
+                                // If we're not a ProjectItem or ProjectItemInstance, then ProjectDirectory will be null.
+                                // In that case, we're safe to get the current directory as we'll be running on TaskItems which
+                                // only exist within a target where we can trust the current directory
+                                string baseDirectoryToUse = item.Value.ProjectDirectory ?? String.Empty;
+                                rootedPath = Path.Combine(baseDirectoryToUse, unescapedPath);
+                            }
+                        }
+                        catch (Exception e) when (ExceptionHandling.IsIoRelatedException(e))
+                        {
+                            ProjectErrorUtilities.ThrowInvalidProject(elementLocation, "InvalidItemFunctionExpression", functionName, item.Key, e.Message);
+                        }
+
+                        if (File.Exists(rootedPath) || Directory.Exists(rootedPath))
+                        {
+                            yield return item;
+                        }
+                    }
+                }
+
+                /// <summary>
+                /// Intrinsic function that combines the existing paths of the input items with a given relative path.
+                /// </summary>
+                internal static IEnumerable<Pair<string, S>> Combine(Expander<P, I> expander, IElementLocation elementLocation, bool includeNullEntries, string functionName, IEnumerable<Pair<string, S>> itemsOfType, string[] arguments)
+                {
+                    ProjectErrorUtilities.VerifyThrowInvalidProject(arguments != null && arguments.Length == 1, elementLocation, "InvalidItemFunctionSyntax", functionName, (arguments == null ? 0 : arguments.Length));
+
+                    string relativePath = arguments[0];
+
+                    foreach (Pair<string, S> item in itemsOfType)
+                    {
+                        if (String.IsNullOrEmpty(item.Key))
+                        {
+                            continue;
+                        }
+
+                        // Unescape as we are passing to the file system
+                        string unescapedPath = EscapingUtilities.UnescapeAll(item.Key);
+                        string combinedPath = Path.Combine(unescapedPath, relativePath);
+                        string escapedPath = EscapingUtilities.Escape(combinedPath);
+                        yield return new Pair<string, S>(escapedPath, null);
+                    }
+                }
+
+                /// <summary>
+                /// Intrinsic function that returns all ancestor directories of the given items.
+                /// </summary>
+                internal static IEnumerable<Pair<string, S>> GetPathsOfAllDirectoriesAbove(Expander<P, I> expander, IElementLocation elementLocation, bool includeNullEntries, string functionName, IEnumerable<Pair<string, S>> itemsOfType, string[] arguments)
+                {
+                    ProjectErrorUtilities.VerifyThrowInvalidProject(arguments == null || arguments.Length == 0, elementLocation, "InvalidItemFunctionSyntax", functionName, (arguments == null ? 0 : arguments.Length));
+
+                    // Phase 1: find all the applicable directories.
+
+                    SortedSet<string> directories = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (Pair<string, S> item in itemsOfType)
+                    {
+                        if (String.IsNullOrEmpty(item.Key))
+                        {
+                            continue;
+                        }
+
+                        string directoryName = null;
+
+                        // Unescape as we are passing to the file system
+                        string unescapedPath = EscapingUtilities.UnescapeAll(item.Key);
+
+                        try
+                        {
+                            string rootedPath;
+
+                            // If we're a projectitem instance then we need to get
+                            // the project directory and be relative to that
+                            if (Path.IsPathRooted(unescapedPath))
+                            {
+                                rootedPath = unescapedPath;
+                            }
+                            else
+                            {
+                                // If we're not a ProjectItem or ProjectItemInstance, then ProjectDirectory will be null.
+                                // In that case, we're safe to get the current directory as we'll be running on TaskItems which
+                                // only exist within a target where we can trust the current directory
+                                string baseDirectoryToUse = item.Value.ProjectDirectory ?? String.Empty;
+                                rootedPath = Path.Combine(baseDirectoryToUse, unescapedPath);
+                            }
+
+                            // Normalize the path to remove elements like "..".
+                            // Otherwise we run the risk of returning two or more different paths that represent the
+                            // same directory.
+                            rootedPath = FileUtilities.NormalizePath(rootedPath);
+                            directoryName = Path.GetDirectoryName(rootedPath);
+                        }
+                        catch (Exception e) when (ExceptionHandling.IsIoRelatedException(e))
+                        {
+                            ProjectErrorUtilities.ThrowInvalidProject(elementLocation, "InvalidItemFunctionExpression", functionName, item.Key, e.Message);
+                        }
+
+                        while (!String.IsNullOrEmpty(directoryName))
+                        {
+                            if (directories.Contains(directoryName))
+                            {
+                                // We've already got this directory (and all its ancestors) in the set.
+                                break;
+                            }
+
+                            directories.Add(directoryName);
+                            directoryName = Path.GetDirectoryName(directoryName);
+                        }
+                    }
+
+                    // Phase 2: Go through the directories and return them in order
+
+                    foreach (string directoryPath in directories)
+                    {
+                        string escapedDirectoryPath = EscapingUtilities.Escape(directoryPath);
+                        yield return new Pair<string, S>(escapedDirectoryPath, null);
+                    }
+                }
+
+                /// <summary>
                 /// Intrinsic function that returns the DirectoryName of the items in itemsOfType
                 /// UNDONE: This can be removed in favor of a built-in %(DirectoryName) metadata in future.
                 /// </summary>
@@ -2974,7 +3121,7 @@ namespace Microsoft.Build.Evaluation
                 FunctionBuilder<T> functionBuilder = new FunctionBuilder<T> {FileSystem = fileSystem};
 
                 // By default the expression root is the whole function expression
-                var expressionRoot = expressionFunction;
+                ReadOnlySpan<char> expressionRoot = expressionFunction == null ? ReadOnlySpan<char>.Empty : expressionFunction.AsSpan();
 
                 // The arguments for this function start at the first '('
                 // If there are no arguments, then we're a property getter
@@ -2983,11 +3130,11 @@ namespace Microsoft.Build.Evaluation
                 // If we have arguments, then we only want the content up to but not including the '('
                 if (argumentStartIndex > -1)
                 {
-                    expressionRoot = expressionFunction.Substring(0, argumentStartIndex);
+                    expressionRoot = expressionRoot.Slice(0, argumentStartIndex);
                 }
 
                 // In case we ended up with something we don't understand
-                ProjectErrorUtilities.VerifyThrowInvalidProject(!String.IsNullOrEmpty(expressionRoot), elementLocation, "InvalidFunctionPropertyExpression", expressionFunction, String.Empty);
+                ProjectErrorUtilities.VerifyThrowInvalidProject(!(expressionRoot.IsEmpty), elementLocation, "InvalidFunctionPropertyExpression", expressionFunction, String.Empty);
 
                 functionBuilder.Expression = expressionFunction;
                 functionBuilder.UsedUninitializedProperties = usedUnInitializedProperties;
@@ -2996,7 +3143,7 @@ namespace Microsoft.Build.Evaluation
                 // A static method is the content that follows the last "::", the rest being the type
                 if (propertyValue == null && expressionRoot[0] == '[')
                 {
-                    var typeEndIndex = expressionRoot.IndexOf(']', 1);
+                    var typeEndIndex = expressionRoot.IndexOf(']');
 
                     if (typeEndIndex < 1)
                     {
@@ -3004,7 +3151,7 @@ namespace Microsoft.Build.Evaluation
                         ProjectErrorUtilities.ThrowInvalidProject(elementLocation, "InvalidFunctionStaticMethodSyntax", expressionFunction, String.Empty);
                     }
 
-                    var typeName = expressionRoot.Substring(1, typeEndIndex - 1);
+                    var typeName = expressionRoot.Slice(1, typeEndIndex - 1).ToString();
                     var methodStartIndex = typeEndIndex + 1;
 
                     if (expressionRoot.Length > methodStartIndex + 2 && expressionRoot[methodStartIndex] == ':' && expressionRoot[methodStartIndex + 1] == ':')
@@ -3062,7 +3209,7 @@ namespace Microsoft.Build.Evaluation
                     var rootEndIndex = expressionRoot.IndexOf('.');
 
                     // If this is an instance function rather than a static, then we'll capture the name of the property referenced
-                    var functionReceiver = expressionRoot.Substring(0, rootEndIndex).Trim();
+                    var functionReceiver = expressionRoot.Slice(0, rootEndIndex).Trim().ToString();
 
                     // If propertyValue is null (we're not recursing), then we're expecting a valid property name
                     if (propertyValue == null && !IsValidPropertyName(functionReceiver))
@@ -3387,6 +3534,42 @@ namespace Microsoft.Build.Evaluation
                             return true;
                         }
                     }
+                    else if (string.Equals(_methodMethodName, nameof(string.IndexOfAny), StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (TryGetArg(args, out string arg0))
+                        {
+                            returnVal = text.IndexOfAny(arg0.ToCharArray());
+                            return true;
+                        }
+                    }
+                    else if (string.Equals(_methodMethodName, nameof(string.LastIndexOf), StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (TryGetArg(args, out string arg0))
+                        {
+                            returnVal = text.LastIndexOf(arg0);
+                            return true;
+                        }
+                        else if (TryGetArgs(args, out arg0, out int startIndex))
+                        {
+                            returnVal = text.LastIndexOf(arg0, startIndex);
+                            return true;
+                        }
+                        else if (TryGetArgs(args, out arg0, out string arg1))
+                        {
+                            string comparisonType = arg1;
+
+                            // Allow fully-qualified enum, e.g. "System.StringComparison.OrdinalIgnoreCase"
+                            if (comparisonType.Contains("."))
+                            {
+                                comparisonType = arg1.Replace("System.StringComparison.", "").Replace("StringComparison.", "");
+                            }
+                            if (Enum.TryParse<StringComparison>(comparisonType, out StringComparison comparison))
+                            {
+                                returnVal = text.LastIndexOf(arg0, comparison);
+                                return true;
+                            }
+                        }
+                    }
                     else if (string.Equals(_methodMethodName, nameof(string.Length), StringComparison.OrdinalIgnoreCase))
                     {
                         if (args.Length == 0)
@@ -3479,7 +3662,7 @@ namespace Microsoft.Build.Evaluation
                         }
                     }
                 }
-                else if (objectInstance == null)
+                else if (objectInstance == null) // Calling a well-known static function
                 {
                     if (_receiverType == typeof(string))
                     {
@@ -3496,6 +3679,14 @@ namespace Microsoft.Build.Evaluation
                             if (TryGetArg(args, out string arg0))
                             {
                                 returnVal = string.IsNullOrEmpty(arg0);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(string.Copy), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArg(args, out string arg0))
+                            {
+                                returnVal = arg0;
                                 return true;
                             }
                         }
@@ -3580,7 +3771,7 @@ namespace Microsoft.Build.Evaluation
                         }
                         else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetPathOfFileAbove), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (TryGetArgs(args, out string arg0, out var arg1))
+                            if (TryGetArgs(args, out string arg0, out string arg1))
                             {
                                 returnVal = IntrinsicFunctions.GetPathOfFileAbove(arg0, arg1, _fileSystem);
                                 return true;
@@ -3588,7 +3779,7 @@ namespace Microsoft.Build.Evaluation
                         }
                         else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.Add), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (TryGetArgs(args, out double arg0, out var arg1))
+                            if (TryGetArgs(args, out double arg0, out double arg1))
                             {
                                 returnVal = arg0 + arg1;
                                 return true;
@@ -3596,7 +3787,7 @@ namespace Microsoft.Build.Evaluation
                         }
                         else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.Subtract), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (TryGetArgs(args, out double arg0, out var arg1))
+                            if (TryGetArgs(args, out double arg0, out double arg1))
                             {
                                 returnVal = arg0 - arg1;
                                 return true;
@@ -3604,7 +3795,7 @@ namespace Microsoft.Build.Evaluation
                         }
                         else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.Multiply), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (TryGetArgs(args, out double arg0, out var arg1))
+                            if (TryGetArgs(args, out double arg0, out double arg1))
                             {
                                 returnVal = arg0 * arg1;
                                 return true;
@@ -3612,9 +3803,113 @@ namespace Microsoft.Build.Evaluation
                         }
                         else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.Divide), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (TryGetArgs(args, out double arg0, out var arg1))
+                            if (TryGetArgs(args, out double arg0, out double arg1))
                             {
                                 returnVal = arg0 / arg1;
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetCurrentToolsDirectory), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetCurrentToolsDirectory();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetToolsDirectory32), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetToolsDirectory32();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetToolsDirectory64), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetToolsDirectory64();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetMSBuildSDKsPath), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetMSBuildSDKsPath();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetVsInstallRoot), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetVsInstallRoot();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetMSBuildExtensionsPath), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetMSBuildExtensionsPath();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.GetProgramFiles32), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = IntrinsicFunctions.GetProgramFiles32();
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionEquals), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionEquals(arg0, arg1);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionNotEquals), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionNotEquals(arg0, arg1);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionGreaterThan), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionGreaterThan(arg0, arg1);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionGreaterThanOrEquals), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionGreaterThanOrEquals(arg0, arg1);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionLessThan), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionLessThan(arg0, arg1);
+                                return true;
+                            }
+                        }
+                        else if (string.Equals(_methodMethodName, nameof(IntrinsicFunctions.VersionLessThanOrEquals), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArgs(args, out string arg0, out string arg1))
+                            {
+                                returnVal = IntrinsicFunctions.VersionLessThanOrEquals(arg0, arg1);
                                 return true;
                             }
                         }
@@ -3712,6 +4007,28 @@ namespace Microsoft.Build.Evaluation
                             if (TryGetArg(args, out string arg0))
                             {
                                 returnVal = Path.GetDirectoryName(arg0);
+                                return true;
+                            }
+                        }
+                    }
+                    else if (_receiverType == typeof(Version))
+                    {
+                        if (string.Equals(_methodMethodName, nameof(Version.Parse), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryGetArg(args, out string arg0))
+                            {
+                                returnVal = Version.Parse(arg0);
+                                return true;
+                            }
+                        }
+                    }
+                    else if (_receiverType == typeof(System.Guid))
+                    {
+                        if (string.Equals(_methodMethodName, nameof(Guid.NewGuid), StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (args.Length == 0)
+                            {
+                                returnVal = Guid.NewGuid();
                                 return true;
                             }
                         }
@@ -3853,6 +4170,9 @@ namespace Microsoft.Build.Evaluation
             {
                 switch (value)
                 {
+                    case double d:
+                        arg0 = Convert.ToInt32(d);
+                        return arg0 == d;
                     case int i:
                         arg0 = i;
                         return true;
@@ -3861,6 +4181,22 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 arg0 = 0;
+                return false;
+            }
+
+            private static bool TryConvertToDouble(object value, out double arg)
+            {
+                if (value is double unboxed)
+                {
+                    arg = unboxed;
+                    return true;
+                }
+                else if (value is string str && double.TryParse(str, out arg))
+                {
+                    return true;
+                }
+
+                arg = 0;
                 return false;
             }
 
@@ -3900,15 +4236,8 @@ namespace Microsoft.Build.Evaluation
                     return false;
                 }
 
-                if (args[0] is string value0 &&
-                    args[1] is string value1 &&
-                    double.TryParse(value0, out arg0) &&
-                    double.TryParse(value1, out arg1))
-                {
-                    return true;
-                }
-
-                return false;
+                return TryConvertToDouble(args[0], out arg0) &&
+                       TryConvertToDouble(args[1], out arg1);
             }
 
             private static bool TryGetArgs(object[] args, out int arg0, out string arg1)
@@ -3921,11 +4250,36 @@ namespace Microsoft.Build.Evaluation
                     return false;
                 }
 
-                var value0 = args[0] as string;
                 arg1 = args[1] as string;
-                if (value0 != null &&
-                    arg1 != null &&
-                    int.TryParse(value0, out arg0))
+                if (arg1 == null && args[1] is char ch)
+                {
+                    arg1 = ch.ToString();
+                }
+
+                if (TryConvertToInt(args[0], out arg0) &&
+                    arg1 != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            private static bool TryGetArgs(object[] args, out string arg0, out int arg1)
+            {
+                arg0 = null;
+                arg1 = 0;
+
+                if (args.Length != 2)
+                {
+                    return false;
+                }
+
+                var value1 = args[1] as string;
+                arg0 = args[0] as string;
+                if (value1 != null &&
+                    arg0 != null &&
+                    int.TryParse(value1, out arg1))
                 {
                     return true;
                 }
@@ -4170,21 +4524,25 @@ namespace Microsoft.Build.Evaluation
                 string[] functionArguments;
 
                 // The name of the function that will be invoked
-                string functionName;
+                ReadOnlySpan<char> functionName;
 
                 // What's left of the expression once the function has been constructed
-                string remainder = String.Empty;
+                ReadOnlySpan<char> remainder = ReadOnlySpan<char>.Empty;
 
                 // The binding flags that we will use for this function's execution
                 BindingFlags defaultBindingFlags = BindingFlags.IgnoreCase | BindingFlags.Public;
 
+                ReadOnlySpan<char> expressionFunctionAsSpan = expressionFunction.AsSpan();
+                
+                ReadOnlySpan<char> expressionSubstringAsSpan = argumentStartIndex > -1 ? expressionFunctionAsSpan.Slice(methodStartIndex, argumentStartIndex - methodStartIndex) : ReadOnlySpan<char>.Empty;
+
                 // There are arguments that need to be passed to the function
-                if (argumentStartIndex > -1 && !expressionFunction.Substring(methodStartIndex, argumentStartIndex - methodStartIndex).Contains("."))
+                if (argumentStartIndex > -1 && !expressionSubstringAsSpan.Contains(".".AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
                     string argumentsContent;
 
                     // separate the function and the arguments
-                    functionName = expressionFunction.Substring(methodStartIndex, argumentStartIndex - methodStartIndex).Trim();
+                    functionName = expressionSubstringAsSpan.Trim();
 
                     // Skip the '('
                     argumentStartIndex++;
@@ -4222,7 +4580,7 @@ namespace Microsoft.Build.Evaluation
                             functionArguments = ExtractFunctionArguments(elementLocation, expressionFunction, argumentsContent);
                         }
 
-                        remainder = expressionFunction.Substring(argumentsEndIndex + 1).Trim();
+                        remainder = expressionFunctionAsSpan.Slice(argumentsEndIndex + 1).Trim();
                     }
                 }
                 else
@@ -4242,10 +4600,10 @@ namespace Microsoft.Build.Evaluation
                     if (nextMethodIndex > 0)
                     {
                         methodLength = nextMethodIndex - methodStartIndex;
-                        remainder = expressionFunction.Substring(nextMethodIndex).Trim();
+                        remainder = expressionFunctionAsSpan.Slice(nextMethodIndex).Trim();
                     }
 
-                    string netPropertyName = expressionFunction.Substring(methodStartIndex, methodLength).Trim();
+                    ReadOnlySpan<char> netPropertyName = expressionFunctionAsSpan.Slice(methodStartIndex, methodLength).Trim();
 
                     ProjectErrorUtilities.VerifyThrowInvalidProject(netPropertyName.Length > 0, elementLocation, "InvalidFunctionPropertyExpression", expressionFunction, String.Empty);
 
@@ -4256,12 +4614,12 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 // either there are no functions left or what we have is another function or an indexer
-                if (String.IsNullOrEmpty(remainder) || remainder[0] == '.' || remainder[0] == '[')
+                if (remainder.IsEmpty || remainder[0] == '.' || remainder[0] == '[')
                 {
-                    functionBuilder.Name = functionName;
+                    functionBuilder.Name = functionName.ToString();
                     functionBuilder.Arguments = functionArguments;
                     functionBuilder.BindingFlags = defaultBindingFlags;
-                    functionBuilder.Remainder = remainder;
+                    functionBuilder.Remainder = remainder.ToString();
                 }
                 else
                 {

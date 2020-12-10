@@ -161,6 +161,11 @@
         <target state="translated">MSB3021: не удалось скопировать файл "{0}" в "{1}". {2}</target>
         <note>{StrBegin="MSB3021: "}</note>
       </trans-unit>
+      <trans-unit id="Copy.ErrorIfLinkFailsSetWithoutLinkOption">
+        <source>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</source>
+        <target state="translated">MSB3892: для ErrorIfLinkFails требуется задать UseHardlinksIfPossible или UseSymbolicLinksIfPossible.</target>
+        <note>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</note>
+      </trans-unit>
       <trans-unit id="Copy.ExactlyOneTypeOfDestination">
         <source>MSB3022: Both "{0}" and "{1}" were specified as input parameters in the project file. Please choose one or the other.</source>
         <target state="translated">MSB3022: "{0}" и "{1}" были одновременно указаны как входные параметры в файле проекта. Выберите один из них.</target>
@@ -175,6 +180,11 @@
         <source>Creating hard link to copy "{0}" to "{1}".</source>
         <target state="translated">Создание жесткой связи для копирования "{0}" в "{1}".</target>
         <note>LOCALIZATION: {0} and {1} are paths.</note>
+      </trans-unit>
+      <trans-unit id="Copy.LinkFailed">
+        <source>MSB3893: Could not use a link to copy "{0}" to "{1}".</source>
+        <target state="translated">MSB3893: не удалось использовать связь для копирования "{0}" в "{1}".</target>
+        <note>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</note>
       </trans-unit>
       <trans-unit id="Copy.RetryingAsFileCopy">
         <source>Could not use a link to copy "{0}" to "{1}". Copying the file instead. {2}</source>
@@ -488,7 +498,7 @@
       </trans-unit>
       <trans-unit id="General.InvalidPropertyError">
         <source>MSB3100: Syntax for "{0}" parameter is not valid ({1}). Correct syntax is {0}="&lt;name&gt;=&lt;value&gt;".</source>
-        <target state="translated">MSB3100: синтаксис параметра "{0}" недопустим ({1}). Правильный синтаксис: {0}="&lt;имя&gt;=&lt;значение&gt;".</target>
+        <target state="translated">MSB3100: синтаксис параметра "{0}" не является допустимым ({1}). Правильный синтаксис: {0}="&lt;имя&gt;=&lt;значение&gt;".</target>
         <note>{StrBegin="MSB3100: "}This error is shown if the user does any of the following:
     Properties="foo"              (missing property value)
     Properties="=4"               (missing property name)
@@ -969,10 +979,50 @@
         <target state="translated">MSB3190: ClickOnce не поддерживает уровень выполнения запроса "{0}".</target>
         <note>{StrBegin="MSB3190: "}</note>
       </trans-unit>
+      <trans-unit id="GenerateResource.CoreSupportsLimitedScenarios">
+        <source>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</source>
+        <target state="translated">MSB3824: для сборки с использованием .NET Core входные данные ресурсов должны быть в формате TXT или RESX.</target>
+        <note>{StrBegin="MSB3824: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputDoesntExist">
+        <source>Input file "{0}" does not exist.</source>
+        <target state="translated">Входной файл "{0}" не существует.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputNewer">
+        <source>Input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">Входной файл "{0}" новее выходного файла "{1}".</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputDoesntExist">
+        <source>Linked input file "{0}" does not exist.</source>
+        <target state="translated">Связанный входной файл "{0}" не существует.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputNewer">
+        <source>Linked input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">Связанный входной файл "{0}" создан или изменен позже выходного файла "{1}".</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
       <trans-unit id="GenerateResource.MOTW">
         <source>MSB3821: Couldn't process file {0} due to its being in the Internet or Restricted zone or having the mark of the web on the file. Remove the mark of the web if you want to process these files.</source>
         <target state="translated">MSB3821: не удалось обработать файл "{0}", так как он находится в Интернете или ограниченной зоне либо имеет веб-метку. Чтобы обрабатывать такие файлы, следует удалить веб-метку.</target>
         <note>{StrBegin="MSB3821: "} "Internet zone", "Restricted zone", and "mark of the web" are Windows concepts that may have a specific translation.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.OutputDoesntExist">
+        <source>Output file "{0}" does not exist.</source>
+        <target state="translated">Выходной файл "{0}" не существует.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresExtensions">
+        <source>MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</source>
+        <target state="translated">MSB3822: для ресурсов, не являющихся строковыми, во время выполнения требуется сборка System.Resources.Extensions, однако она не была найдена в ссылках этого проекта.</target>
+        <note>{StrBegin="MSB3822: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresProperty">
+        <source>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</source>
+        <target state="translated">MSB3823: для ресурсов, не являющихся строковыми, требуется установить значение true для свойства GenerateResourceUsePreserializedResources.</target>
+        <note>{StrBegin="MSB3823: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.ResourceNotFound">
         <source>MSB3552: Resource file "{0}" cannot be found.</source>
@@ -990,9 +1040,9 @@
         <note>{StrBegin="MSB3554: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.CorruptOutput">
-        <source>MSB3555: Output file "{0}" is possibly corrupt.</source>
-        <target state="translated">MSB3555: Выходной файл "{0}", вероятно, поврежден.</target>
-        <note>{StrBegin="MSB3555: "}</note>
+        <source>Output file "{0}" is possibly corrupt and will be deleted and recreated.</source>
+        <target state="translated">Возможно, выходной файл "{0}" поврежден. Он будет удален и создан повторно.</target>
+        <note />
       </trans-unit>
       <trans-unit id="GenerateResource.OnlyStringsSupported">
         <source>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</source>
@@ -1359,7 +1409,7 @@
       </trans-unit>
       <trans-unit id="MSBuild.NoStopOnFirstFailure">
         <source>StopOnFirstFailure will have no effect when the following conditions are all present: 1) The system is running in multiple process mode 2) The BuildInParallel property is true. 3) The RunEachTargetSeparately property is false.</source>
-        <target state="translated">StopOnFirstFailure будет игнорироваться при одновременном соблюдении следующих условий: 1) система выполняется в режиме с несколькими процессами; 2) свойство BuildInParallel имеет значение true; 3) Свойство RunEachTargetSeparately имеет значение false.</target>
+        <target state="translated">StopOnFirstFailure будет игнорироваться при одновременном соблюдении следующих условий: 1) система выполняется в режиме с несколькими процессами; 2) свойство BuildInParallel имеет значение true; 3) свойство RunEachTargetSeparately имеет значение false.</target>
         <note>LOCALIZATION:  Do not localize the words "RunEachTargetSeparately", "BuildingInParallel", or "StopOnFirstFailure".</note>
       </trans-unit>
       <trans-unit id="ReadLinesFromFile.ErrorOrWarning">
@@ -1658,7 +1708,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoRedistAssembliesToGenerateExclusionList">
         <source>MSB3256: No assemblies were read in from the redist lists. A TargetFramework profile exclusion list could not be generated. </source>
-        <target state="translated">MSB3256: сборки из списков распространяемых пакетов не считывались. Не удалось создать список исключений профиля TargetFramework. </target>
+        <target state="translated">MSB3256: сборки из списков распространяемого пакета не считывались. Не удалось создать список исключений профиля TargetFramework. </target>
         <note>{StrBegin="MSB3256: "}</note>
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.PrimaryReferenceOutsideOfFramework">
@@ -1678,7 +1728,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.NoProfilesFound">
         <source>MSB3260: Could not find any target framework profile redist files in the FullFrameworkFolders locations.</source>
-        <target state="translated">MSB3260: Не удалось найти какие-либо файлы перераспределения профиля структуры в местоположениях FullFrameworkFolders.</target>
+        <target state="translated">MSB3260: не удалось найти файлы распространяемого пакета для профиля целевой платформы в расположениях FullFrameworkFolders.</target>
         <note>{StrBegin="MSB3260: "}</note>
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.FrameworkDirectoryOnProfiles">
@@ -1881,7 +1931,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.RemappedReference">
         <source>Due to a remapping entry in the currently targeted framework redist list, reference "{0}" was remapped to "{1}".</source>
-        <target state="translated">В результате изменения сопоставления записи в списке redist целевой версии .NET Framework ссылка "{0}" была пересопоставлена "{1}".</target>
+        <target state="translated">В результате изменения сопоставления записи в списке распространяемого пакета текущей целевой платформы ссылка "{0}" была пересопоставлена на "{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.UnificationByFrameworkRetarget">
@@ -1941,7 +1991,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.TargetFrameworkRedistLogHeader">
         <source>Redist List File Paths:</source>
-        <target state="translated">Пути к файлам списков Redist:</target>
+        <target state="translated">Пути к файлам списка распространяемого пакета:</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.TargetFrameworkExclusionListLogHeader">
@@ -2243,6 +2293,11 @@
         <target state="translated">MSB3473: Путь для "{0}" является недопустимым. {1}</target>
         <note>{StrBegin="MSB3473: "}</note>
       </trans-unit>
+      <trans-unit id="SGen.TaskNotSupported">
+        <source>MSB3474: The task "{0}" is not supported on the .NET Core version of MSBuild. Use the Microsoft XML Serializer Generator package instead. See https://go.microsoft.com/fwlink/?linkid=858594 for more information.</source>
+        <target state="translated">MSB3474: задача "{0}" не поддерживается в версии .NET Core MSBuild. Используйте вместо нее пакет Microsoft XML Serializer Generator. Дополнительные сведения см. на странице https://go.microsoft.com/fwlink/?linkid=858594.</target>
+        <note>{StrBegin="MSB3474: "}</note>
+      </trans-unit>
       <trans-unit id="SignFile.CertNotInStore">
         <source>MSB3481: The signing certificate could not be located. Ensure that it is in the current user's personal store.</source>
         <target state="translated">MSB3481: не удалось обнаружить сертификат для подписи. Убедитесь, что объект находится в личном хранилище текущего пользователя.</target>
@@ -2464,8 +2519,8 @@
         <note>{StrBegin="MSB3643: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound">
-        <source>MSB3644: The reference assemblies for framework "{0}" were not found. To resolve this, install the SDK or Targeting Pack for this framework version or retarget your application to a version of the framework for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your assembly may not be correctly targeted for the framework you intend.</source>
-        <target state="translated">MSB3644: ссылочные сборки для платформы "{0}" не найдены. Чтобы устранить эту ошибку, установите пакет SDK или пакет нацеливания для этой версии платформы или измените целевую платформу приложения на версию, для которой установлен SDK или пакет нацеливания. Учтите, что сборки будут разрешаться из глобального кэша сборок (GAC) и использоваться вместо ссылочных сборок. Поэтому они могут неправильно использовать выбранную платформу в качестве целевой.</target>
+        <source>MSB3644: The reference assemblies for {0} were not found. To resolve this, install the Developer Pack (SDK/Targeting Pack) for this framework version or retarget your application. You can download .NET Framework Developer Packs at https://aka.ms/msbuild/developerpacks</source>
+        <target state="translated">MSB3644: не найдены ссылочные сборки для {0}. Чтобы устранить эту проблему, установите пакет разработчика (пакет SDK или пакет нацеливания) для этой версии платформы или перенацельте приложение. Пакеты разработчика для платформы .NET Framework можно скачать на странице https://aka.ms/msbuild/developerpacks.</target>
         <note>{StrBegin="MSB3644: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NETFX35SP1NotIntstalled">
@@ -2477,6 +2532,11 @@
         <source>MSB3762: No references were passed to the task. References to at least mscorlib and Windows.Foundation are required.</source>
         <target state="translated">MSB3762: в задачу не переданы ссылки. Требуются ссылки как минимум на mscorlib и Windows.Foundation.</target>
         <note>{StrBegin="MSB3762: "}</note>
+      </trans-unit>
+      <trans-unit id="Xaml.DuplicatePropertyName">
+        <source>MSB3724: Unable to create Xaml task.  Duplicate property name '{0}'.</source>
+        <target state="translated">MSB3724: не удалось создать задачу XAML. Повторяющееся имя свойства "{0}".</target>
+        <note>{StrBegin="MSB3724: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.TaskCreationFailed">
         <source>MSB3686: Unable to create Xaml task.  Compilation failed.  {0}</source>
@@ -2510,7 +2570,7 @@
       </trans-unit>
       <trans-unit id="Xaml.MissingTaskBody">
         <source>MSB3692: Unable to create Xaml task.  The &lt;UsingTask&gt; does not contain a &lt;Task&gt; definition.</source>
-        <target state="translated">MSB3692: не удается создать задачу XAML.  Параметр &lt;UsingTask&gt; не содержит определение &lt;Task&gt;.</target>
+        <target state="translated">MSB3692: Не удается создать задачу Xaml.  Параметр &lt;UsingTask&gt; не содержит определение &lt;Task&gt;.</target>
         <note>{StrBegin="MSB3692: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.ArgumentOutOfRange">
@@ -2542,6 +2602,11 @@
         <source>MSB3701: Unable to load arguments for the XslTransformation task. {0}</source>
         <target state="translated">MSB3701: Не удалось загрузить аргументы для задачи XslTransformation. {0}</target>
         <note>{StrBegin="MSB3701: "}</note>
+      </trans-unit>
+      <trans-unit id="XslTransform.PrecompiledXsltError">
+        <source>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</source>
+        <target state="translated">MSB3705: XslCompiledDllPath не поддерживается при сборке с использованием .NET Core.</target>
+        <note>{StrBegin="MSB3705: "}</note>
       </trans-unit>
       <trans-unit id="XslTransform.XsltArgumentsError">
         <source>MSB3702: Unable to process the XsltParameters argument for the XslTransformation task. {0}</source>
@@ -2750,12 +2815,12 @@
       </trans-unit>
       <trans-unit id="CodeTaskFactory.InvalidElementLocation">
         <source>MSB3756: The element &lt;{0}&gt; is not a valid child of the &lt;{1}&gt; element.  Valid child elements are &lt;Code&gt;, &lt;Reference&gt;, and &lt;Using&gt;.</source>
-        <target state="translated">MSB3756: элемент &lt;{0}&gt; не является допустимым дочерним элементом &lt;{1}&gt;. Допустимые дочерние элементы — &lt;Code&gt;, &lt;Reference&gt; и &lt;Using&gt;.</target>
+        <target state="translated">MSB3756: элемент &lt;{0}&gt; не является допустимым дочерним объектом элемента &lt;{1}&gt;.  Допустимыми дочерними объектами являются &lt;Code&gt;, &lt;Reference&gt; и &lt;Using&gt;.</target>
         <note>{StrBegin="MSB3756: "}</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.MultipleCodeNodes">
         <source>MSB3757: Only one &lt;Code&gt; element can be specified.</source>
-        <target state="translated">MSB3757: может быть указан только один элемент &lt;Code&gt;.</target>
+        <target state="translated">MSB3757: можно указать только один элемент &lt;Code&gt;.</target>
         <note>{StrBegin="MSB3757: "}</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.CompilerError">
@@ -2860,7 +2925,7 @@
       </trans-unit>
       <trans-unit id="ResolveSDKReference.SDKReferenceIncorrectFormat">
         <source>MSB3776: The SDK Reference "{0}" is incorrectly formatted. It must be in the following format "&lt;SDKName&gt;, Version=&lt;SDKVersion&gt;. For example: "MySDK, Version=2.0"</source>
-        <target state="translated">MSB3776: неверный формат ссылки на пакет SDK "{0}". Ссылка должна указываться в следующем формате: &lt;имя_пакета_SDK&gt;, Version=&lt;версия_пакета_SDK&gt;. Пример: "MySDK, Version=2.0"</target>
+        <target state="translated">MSB3776: неверный формат ссылки на пакет SDK "{0}". Ссылка должна указываться в следующем формате: "&lt;имя_пакета_SDK&gt;, Version=&lt;версия_пакета_SDK&gt;. Пример: "MySDK, Version=2.0"</target>
         <note>{StrBegin="MSB3776: "}</note>
       </trans-unit>
       <trans-unit id="ResolveSDKReference.NoMatchingFrameworkIdentity">
@@ -2965,7 +3030,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ExpandRedistFrom">
         <source>Looking for redist files under "{0}".</source>
-        <target state="translated">Поиск распространяемых файлов в "{0}".</target>
+        <target state="translated">Идет поиск файлов распространяемого пакета в "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.NotExpanding">
@@ -2985,7 +3050,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistSameSDK">
         <source>There was a conflict between two redist files going to the same target path "{0}" within the "{1}" SDK. Choosing "{2}" over "{3}" because it was resolved first.</source>
-        <target state="translated">Конфликт между двумя распространяемыми файлами, которые разрешаются в один целевой путь "{0}" в пакете SDK "{1}". Выбирается "{2}", а не "{3}", поскольку он был разрешен первым.</target>
+        <target state="translated">Конфликт между двумя файлами распространяемого пакета, которые разрешаются в один целевой путь "{0}" в пакете SDK "{1}". Выбирается "{2}", а не "{3}", поскольку он был разрешен первым.</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistDifferentSDK">
@@ -3045,12 +3110,12 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetConfiguration">
         <source>MSB3797: The targeted configuration for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted configuration.</source>
-        <target state="translated">MSB3797: целевая конфигурация для разрешенной ссылки на пакет SDK "{0}" была пустой. Без целевой конфигурации невозможно найти ссылку или распространяемые файлы.</target>
+        <target state="translated">MSB3797: целевая конфигурация для разрешенной ссылки на пакет SDK "{0}" была пустой. Без целевой конфигурации невозможно найти ссылку или файлы распространяемого пакета.</target>
         <note>{StrBegin="MSB3797: "}</note>
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetArchitecture">
         <source>MSB3798: The targeted architecture for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted architecture.</source>
-        <target state="translated">MSB3798: целевая архитектура для разрешенной ссылки на пакет SDK "{0}" была пустой. Без целевой архитектуры невозможно найти ссылку или распространяемые файлы.</target>
+        <target state="translated">MSB3798: целевая архитектура для разрешенной ссылки на пакет SDK "{0}" не была указана. Без указания целевой архитектуры невозможно найти ссылку или файлы распространяемого пакета.</target>
         <note>{StrBegin="MSB3798: "}</note>
       </trans-unit>
       <trans-unit id="FindInvalidProjectReferences.WarnWhenVersionIsIncompatible">
@@ -3086,12 +3151,12 @@
       <trans-unit id="WriteLinesToFile.ErrorReadingFile">
         <source>MSB3492: Could not read existing file "{0}" to determine whether its contents are up to date. Overwriting it.</source>
         <target state="translated">MSB3492: не удалось считать данные из существующего файла ("{0}") и определить, актуально ли его содержимое. Файл перезаписывается.</target>
-        <note>{StrBegin="MSB3491: "}</note>
+        <note>{StrBegin="MSB3492: "}</note>
       </trans-unit>
       <trans-unit id="WriteLinesToFile.SkippingUnchangedFile">
-        <source>MSB3493: Skipping write to file "{0}" because content would not change.</source>
-        <target state="translated">MSB3493: пропускается запись в файл "{0}", так как содержимое не изменяется.</target>
-        <note>{StrBegin="MSB3493: "}</note>
+        <source>Skipping write to file "{0}" because content would not change.</source>
+        <target state="translated">Пропускается запись в файл "{0}", так как содержимое не изменяется.</target>
+        <note />
       </trans-unit>
       <trans-unit id="Telemetry.IllegalEventDataString">
         <source>The property "{0}" in the telemetry event data property list "{1}" is malformed.  Please only pass in a semicolon-delimited list of constant string values separated by "=", e.g., "Property1=Value1;Property2=Value2".</source>
@@ -3140,12 +3205,12 @@
       </trans-unit>
       <trans-unit id="CodeTaskFactory.InvalidCodeElementAttribute">
         <source>MSB3756: The attribute "{0}" is not valid for the &lt;Code&gt; element.  Valid attributes are "Language", "Source", and "Type".</source>
-        <target state="translated">MSB3756: атрибут "{0}" недопустим для элемента &lt;Code&gt;. Допустимые атрибуты — Language, Source и Type.</target>
+        <target state="translated">MSB3756: атрибут "{0}" не является допустимым для элемента &lt;Code&gt;. Допустимыми атрибутами являются "Language", "Source" и "Type".</target>
         <note>{StrBegin="MSB3756: "}</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.AttributeEmptyWithElement">
         <source>MSB3752: The "{0}" attribute of the &lt;{1}&gt; element has been set but is empty. If the "{0}" attribute is set it must not be empty.</source>
-        <target state="translated">MSB3752: атрибут "{0}" элемента &lt;{1}&gt; задан, но пуст. Если атрибут "{0}" задан, он не может быть пустым.</target>
+        <target state="translated">MSB3752: атрибут "{0}" элемента &lt;{1}&gt; задан, однако является пустым. Если атрибут "{0}" задан, он не должен быть пустым.</target>
         <note>{StrBegin="MSB3752: "}</note>
       </trans-unit>
       <trans-unit id="ZipDirectory.Comment">

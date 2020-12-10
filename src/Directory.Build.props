@@ -4,14 +4,21 @@
 
   <PropertyGroup>
       <LangVersion>latest</LangVersion>
+      <DiscoverEditorConfigFiles>true</DiscoverEditorConfigFiles>
   </PropertyGroup>
 
   <Import Project="$(BUILD_STAGINGDIRECTORY)\MicroBuild\Plugins\MicroBuild.Plugins.IBCMerge.*\**\build\MicroBuild.Plugins.*.props" Condition="'$(ShouldUseIBCOptimization)' == 'true'" />
 
   <!-- Override project defaults provided by Repo toolset -->
   <PropertyGroup>
+    <!-- Ensure that compiler errors emit full paths so that files
+         can be correctly annotated in GitHub. -->
+    <GenerateFullPaths>true</GenerateFullPaths>
+
     <!-- Do not mangle paths for test assemblies, because Shoudly assertions want actual on-disk paths. -->
     <DeterministicSourcePaths Condition="'$(IsTestProject)' == 'true'">false</DeterministicSourcePaths>
+
+    <ProduceReferenceAssembly Condition="'$(IsTestProject)' != 'true'">true</ProduceReferenceAssembly>
 
     <!-- Set up BeforeCommon.targets -->
     <CustomBeforeMicrosoftCommonTargets>$(MSBuildThisFileDirectory)Directory.BeforeCommon.targets</CustomBeforeMicrosoftCommonTargets>
@@ -20,12 +27,13 @@
     
     <!-- Defaults for target frameworks and architecture -->
     <LibraryTargetFrameworks>$(FullFrameworkTFM);netstandard2.0</LibraryTargetFrameworks>
+    <LibraryTargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">netstandard2.0</LibraryTargetFrameworks>
     <LibraryTargetFrameworks Condition="'$(MonoBuild)'=='true'">$(FullFrameworkTFM)</LibraryTargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- Target frameworks for Exe and unit test projects (ie projects with runtime output) -->
     <RuntimeOutputTargetFrameworks>netcoreapp2.1</RuntimeOutputTargetFrameworks>
-    <RuntimeOutputTargetFrameworks Condition="'$(OsEnvironment)'=='windows'">$(FullFrameworkTFM);$(RuntimeOutputTargetFrameworks)</RuntimeOutputTargetFrameworks>
+    <RuntimeOutputTargetFrameworks Condition="'$(OsEnvironment)'=='windows' and '$(DotNetBuildFromSource)' != 'true'">$(FullFrameworkTFM);$(RuntimeOutputTargetFrameworks)</RuntimeOutputTargetFrameworks>
     <RuntimeOutputTargetFrameworks Condition="'$(MonoBuild)' == 'true'">$(FullFrameworkTFM)</RuntimeOutputTargetFrameworks>
 
     <!-- Don't automatically append target framework to output path, since we want to put the Platform Target beforehand, if it's not AnyCPU -->
@@ -34,7 +42,6 @@
     <!-- Create English satellite assemblies (which shouldn't be required, but preserves previous build behavior) -->
     <XlfLanguages>en;cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
 
-    <UpdateXlfOnBuild>true</UpdateXlfOnBuild>
     <ErrorOnOutOfDateXlf>true</ErrorOnOutOfDateXlf>
 
     <!-- Workaround that can be removed when we update machines to 15.6.
@@ -56,7 +63,7 @@
     <GenAPIAdditionalParameters>$(GenAPIAdditionalParameters) -excludeAttributesList:&quot;$(RepoRoot)ref\ExcludeAttributeList.txt&quot;</GenAPIAdditionalParameters>
     <GenAPIAdditionalParameters>$(GenAPIAdditionalParameters) -headerFile:&quot;$(RepoRoot)ref\LicenseHeader.txt&quot;</GenAPIAdditionalParameters>
 
-    <PackageLicenseUrl>http://go.microsoft.com/fwlink/?LinkId=329770</PackageLicenseUrl>
+    <PackageLicenseUrl Condition="'$(PackageLicenseExpression)' == ''">http://go.microsoft.com/fwlink/?LinkId=329770</PackageLicenseUrl>
     <PackageProjectUrl>http://go.microsoft.com/fwlink/?LinkId=624683</PackageProjectUrl>
     <PackageIconUrl>https://go.microsoft.com/fwlink/?linkid=825694</PackageIconUrl>
 

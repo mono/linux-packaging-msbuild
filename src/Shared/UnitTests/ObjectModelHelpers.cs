@@ -11,24 +11,16 @@ using System.Text;
 using System.Xml;
 
 using Microsoft.Build.Construction;
-using Microsoft.Build.Definition;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Experimental.Graph;
+using Microsoft.Build.Graph;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
-using Microsoft.Build.UnitTests;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
-
-// Microsoft.Build.Tasks has MSBuildConstants compiled into it under a different namespace otherwise
-// there are collisions with the one compiled into Microsoft.Build.Framework
-#if MICROSOFT_BUILD_TASKS_UNITTESTS
-using MSBuildConstants = Microsoft.Build.Tasks.MSBuildConstants;
-#endif
 
 namespace Microsoft.Build.UnitTests
 {
@@ -428,11 +420,14 @@ namespace Microsoft.Build.UnitTests
 
         internal static void AssertItemHasMetadata(Dictionary<string, string> expected, TestItem item)
         {
-            Assert.Equal(expected.Keys.Count, item.DirectMetadataCount);
+            expected ??= new Dictionary<string, string>();
+
+            item.DirectMetadataCount.ShouldBe(expected.Keys.Count);
 
             foreach (var key in expected.Keys)
             {
-                Assert.Equal(expected[key], item.GetMetadataValue(key));
+                item.GetMetadataValue(key).ShouldBe(expected[key]);
+
             }
         }
 
@@ -444,12 +439,10 @@ namespace Microsoft.Build.UnitTests
             if (expected == null)
             {
                 Assert.Null(actual); // "Expected a null array"
-            }
-            else
-            {
-                Assert.NotNull(actual); // "Result should be non-null."
+                return;
             }
 
+            Assert.NotNull(actual); // "Result should be non-null."
             Assert.Equal(expected.Length, actual.Length); // "Expected array length of <" + expected.Length + "> but was <" + actual.Length + ">.");
 
             // Now that we've verified they're both non-null and of the same length, compare each item in the array.
@@ -705,10 +698,11 @@ namespace Microsoft.Build.UnitTests
         /// <returns></returns>
         internal static MockLogger BuildProjectExpectSuccess
             (
-            string projectContents
+            string projectContents,
+            ITestOutputHelper testOutputHelper = null
             )
         {
-            MockLogger logger = new MockLogger();
+            MockLogger logger = new MockLogger(testOutputHelper);
             BuildProjectExpectSuccess(projectContents, logger);
             return logger;
         }
@@ -720,8 +714,7 @@ namespace Microsoft.Build.UnitTests
             )
         {
             Project project = CreateInMemoryProject(projectContents, logger: null); // logger is null so we take care of loggers ourselves
-            bool success = project.Build(loggers);
-            Assert.True(success);
+            project.Build(loggers).ShouldBeTrue();
         }
 
         /// <summary>
@@ -750,7 +743,7 @@ namespace Microsoft.Build.UnitTests
             Project project = CreateInMemoryProject(projectContents, logger);
 
             bool success = project.Build(logger);
-            Assert.False(success); // "Build succeeded, but shouldn't have.  See Standard Out tab for details"
+            Assert.False(success); // "Build succeeded, but shouldn't have.  See test output (Attachments in Azure Pipelines) for details"
         }
 
         /// <summary>
@@ -910,48 +903,27 @@ namespace Microsoft.Build.UnitTests
         /// </summary>
         /// <param name="projectFileRelativePath"></param>
         /// <returns></returns>
-        internal static MockLogger BuildTempProjectFileExpectSuccess(string projectFileRelativePath)
+        internal static void BuildTempProjectFileExpectSuccess(string projectFileRelativePath, MockLogger logger)
         {
-            return BuildTempProjectFileWithTargetsExpectSuccess(projectFileRelativePath, null, null);
+            BuildTempProjectFileWithTargetsExpectSuccess(projectFileRelativePath, null, null, logger);
         }
 
         /// <summary>
         /// Builds a project file from disk, and asserts if the build does not succeed.
         /// </summary>
-        internal static MockLogger BuildTempProjectFileWithTargetsExpectSuccess(string projectFileRelativePath, string[] targets, IDictionary<string, string> additionalProperties)
+        internal static void BuildTempProjectFileWithTargetsExpectSuccess(string projectFileRelativePath, string[] targets, IDictionary<string, string> additionalProperties, MockLogger logger)
         {
-            MockLogger logger = new MockLogger();
-            bool success = BuildTempProjectFileWithTargets(projectFileRelativePath, targets, additionalProperties, logger);
-
-            Assert.True(success); // "Build failed.  See Standard Out tab for details"
-
-            return logger;
+            BuildTempProjectFileWithTargets(projectFileRelativePath, targets, additionalProperties, logger)
+                .ShouldBeTrue("Build failed.  See test output (Attachments in Azure Pipelines) for details");
         }
 
         /// <summary>
         /// Builds a project file from disk, and asserts if the build succeeds.
         /// </summary>
-        internal static MockLogger BuildTempProjectFileExpectFailure(string projectFileRelativePath)
+        internal static void BuildTempProjectFileExpectFailure(string projectFileRelativePath, MockLogger logger)
         {
-            MockLogger logger = new MockLogger();
-            bool success = BuildTempProjectFileWithTargets(projectFileRelativePath, null, null, logger);
-
-            Assert.False(success); // "Build unexpectedly succeeded.  See Standard Out tab for details"
-
-            return logger;
-        }
-
-        /// <summary>
-        /// Builds a project file from disk, and asserts if the build succeeds.
-        /// </summary>
-        internal static MockLogger BuildTempProjectFileWithTargetsExpectFailure(string projectFileRelativePath, string[] targets, IDictionary<string, string> additionalProperties)
-        {
-            MockLogger logger = new MockLogger();
-            bool success = BuildTempProjectFileWithTargets(projectFileRelativePath, targets, additionalProperties, logger);
-
-            Assert.False(success); // "Build unexpectedly succeeded.  See Standard Out tab for details"
-
-            return logger;
+            BuildTempProjectFileWithTargets(projectFileRelativePath, null, null, logger)
+                .ShouldBeFalse("Build unexpectedly succeeded.  See test output (Attachments in Azure Pipelines) for details");
         }
 
         /// <summary>
@@ -1112,6 +1084,13 @@ namespace Microsoft.Build.UnitTests
     /// </summary>
     internal static partial class Helpers
     {
+        internal static string Format(this string s, params object[] formatItems)
+        {
+            ErrorUtilities.VerifyThrowArgumentNull(s, nameof(s));
+
+            return string.Format(s, formatItems);
+        }
+
         internal static string GetOSPlatformAsString()
         {
             var currentPlatformString = string.Empty;
@@ -1269,6 +1248,26 @@ namespace Microsoft.Build.UnitTests
                 });
         }
 
+        internal static void ShouldBeEquivalentTo<K, V>(this IDictionary<K, V> a, IReadOnlyDictionary<K, V> b)
+        {
+            a.ShouldBeSubsetOf(b);
+            b.ShouldBeSubsetOf(a);
+            a.Count.ShouldBe(b.Count);
+        }
+
+        internal static void ShouldBeEquivalentTo<K>(this IEnumerable<K> a, IEnumerable<K> b)
+        {
+            a.ShouldBeSubsetOf(b);
+            b.ShouldBeSubsetOf(a);
+            a.Count().ShouldBe(b.Count());
+        }
+
+        internal static void ShouldBeSetEquivalentTo<K>(this IEnumerable<K> a, IEnumerable<K> b)
+        {
+            a.ShouldBeSubsetOf(b);
+            b.ShouldBeSubsetOf(a);
+        }
+
         /// <summary>
         /// Verify that the two enumerables are value identical
         /// </summary>
@@ -1294,11 +1293,11 @@ namespace Microsoft.Build.UnitTests
         /// Build a project with the provided content in memory.
         /// Assert that it succeeded, and return the mock logger with the output.
         /// </summary>
-        internal static MockLogger BuildProjectWithNewOMExpectSuccess(string content)
+        internal static MockLogger BuildProjectWithNewOMExpectSuccess(string content, Dictionary<string, string> globalProperties = null)
         {
             MockLogger logger;
             bool result;
-            BuildProjectWithNewOM(content, out logger, out result, false);
+            BuildProjectWithNewOM(content, out logger, out result, false, globalProperties);
             Assert.True(result);
 
             return logger;
@@ -1307,12 +1306,12 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// Build a project in memory using the new OM
         /// </summary>
-        private static void BuildProjectWithNewOM(string content, out MockLogger logger, out bool result, bool allowTaskCrash)
+        private static void BuildProjectWithNewOM(string content, out MockLogger logger, out bool result, bool allowTaskCrash, Dictionary<string, string> globalProperties = null)
         {
             // Replace the crazy quotes with real ones
             content = ObjectModelHelpers.CleanupFileContents(content);
 
-            Project project = new Project(XmlReader.Create(new StringReader(content)));
+            Project project = new Project(XmlReader.Create(new StringReader(content)), globalProperties, toolsVersion: null);
             logger = new MockLogger();
             logger.AllowTaskCrashes = allowTaskCrash;
             List<ILogger> loggers = new List<ILogger>();
@@ -1571,8 +1570,11 @@ namespace Microsoft.Build.UnitTests
         internal static ProjectGraph CreateProjectGraph(
             TestEnvironment env,
             // direct dependencies that the kvp.key node has on the nodes represented by kvp.value
-            Dictionary<int, int[]> dependencyEdges,
-            CreateProjectFileDelegate createProjectFile = null)
+            IDictionary<int, int[]> dependencyEdges,
+            IDictionary<string, string> globalProperties = null,
+            CreateProjectFileDelegate createProjectFile = null,
+            IEnumerable<int> entryPoints = null,
+            ProjectCollection projectCollection = null)
         {
             createProjectFile = createProjectFile ?? CreateProjectFile;
 
@@ -1608,9 +1610,16 @@ namespace Microsoft.Build.UnitTests
                 }
             }
 
+            var entryProjectFiles = entryPoints != null
+                            ? nodes.Where(n => entryPoints.Contains(n.Key)).Select(n => n.Value.ProjectPath)
+                            : nodes.Where(n => n.Value.IsRoot).Select(n => n.Value.ProjectPath);
+
             return new ProjectGraph(
-                nodes.Where(nodeEntry => nodeEntry.Value.IsRoot)
-                    .Select(nodeEntry => nodeEntry.Value.ProjectPath));
+                entryProjectFiles,
+                globalProperties ?? new Dictionary<string, string>(),
+                projectCollection ?? env.CreateProjectCollection()
+                    .Collection
+                );
 
             bool IsRoot(int node)
             {
@@ -1848,6 +1857,58 @@ namespace Microsoft.Build.UnitTests
             public int GetHashCode(ElementLocation obj)
             {
                 return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.File.GetHashCode();
+            }
+        }
+
+        internal class BuildManagerSession : IDisposable
+        {
+            private readonly TestEnvironment _env;
+            private readonly BuildManager _buildManager;
+
+            public MockLogger Logger { get; set; }
+
+
+            public BuildManagerSession(
+                TestEnvironment env,
+                BuildParameters buildParametersPrototype = null,
+                bool enableNodeReuse = false,
+                bool shutdownInProcNode = true,
+                IEnumerable<BuildManager.DeferredBuildMessage> deferredMessages = null)
+            {
+                _env = env;
+
+                Logger = new MockLogger(_env.Output);
+                var loggers = new[] {Logger};
+
+                var actualBuildParameters = buildParametersPrototype?.Clone() ?? new BuildParameters();
+
+                actualBuildParameters.Loggers = actualBuildParameters.Loggers == null
+                    ? loggers
+                    : actualBuildParameters.Loggers.Concat(loggers).ToArray();
+
+                actualBuildParameters.ShutdownInProcNodeOnBuildFinish = shutdownInProcNode;
+                actualBuildParameters.EnableNodeReuse = enableNodeReuse;
+
+                _buildManager = new BuildManager();
+                _buildManager.BeginBuild(actualBuildParameters, deferredMessages);
+            }
+
+            public BuildResult BuildProjectFile(string projectFile, string[] entryTargets = null)
+            {
+                var buildResult = _buildManager.BuildRequest(
+                    new BuildRequestData(projectFile,
+                        new Dictionary<string, string>(),
+                        MSBuildConstants.CurrentToolsVersion,
+                        entryTargets ?? new string[0],
+                        null));
+
+                return buildResult;
+            }
+
+            public void Dispose()
+            {
+                _buildManager.EndBuild();
+                _buildManager.Dispose();
             }
         }
     }

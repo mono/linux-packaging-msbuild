@@ -6,7 +6,7 @@
     <RestoreSources>$(DotNetRestoreSources)</RestoreSources>
     <RestoreSources Condition="'$(DotNetBuildOffline)' != 'true'">
         $(RestoreSources);
-        https://api.nuget.org/v3/index.json;
+        https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
         https://dotnet.myget.org/F/roslyn/api/v3/index.json;
         https://dotnet.myget.org/F/nuget-build/api/v3/index.json;
         https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json;
@@ -14,14 +14,18 @@
     </RestoreSources>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
-  <!-- Repo Version Information (these versions shouldn't actually be used because NerdBank.GitVersioning should
-       override the versions set by Repo Toolset) -->
   <PropertyGroup>
-    <VersionBase>15.1.0</VersionBase>
-    <PreReleaseVersionLabel>servicing</PreReleaseVersionLabel>
-    <UseShippingAssemblyVersion>true</UseShippingAssemblyVersion>
-
+    <VersionPrefix>16.6.0</VersionPrefix>
+    <AssemblyVersion>15.1.0.0</AssemblyVersion>
+    <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
+    <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
+    <DotNetUseShippingVersions>true</DotNetUseShippingVersions>
+    <!-- Workaround for https://github.com/dotnet/roslyn/issues/35793 -->
+    <SemanticVersioningV1>true</SemanticVersioningV1>
+    <MicroBuildPluginsSwixBuildVersion>1.0.672</MicroBuildPluginsSwixBuildVersion>
     <MonoBuild Condition="'$(Configuration)' == 'Debug-MONO' or '$(Configuration)' == 'Release-MONO'">true</MonoBuild>
+    <MicrosoftDotnetToolsetInternalVersion>3.1.300-preview.20227.3</MicrosoftDotnetToolsetInternalVersion>
+    <MicrosoftNetCompilersVersion>3.6.0-4.20224.5</MicrosoftNetCompilersVersion>
   </PropertyGroup>
   <!-- Repo Toolset Features -->
   <PropertyGroup Condition="'$(MonoBuild)' != 'true'">
@@ -32,6 +36,29 @@
   </PropertyGroup>
   <!-- Toolset Dependencies -->
   <PropertyGroup>
-    <DotNetCliVersion>2.1.401</DotNetCliVersion>
+    <MicrosoftNETSdkVersion>3.1.300-preview.20214.15</MicrosoftNETSdkVersion>
+    <MicrosoftNETSdkRazorVersion>3.1.2</MicrosoftNETSdkRazorVersion>
+    <MicrosoftNETSdkWebVersion>3.1.300-servicing.20216.7</MicrosoftNETSdkWebVersion>
+    <NuGetBuildTasksVersion>5.6.0-rtm.6591</NuGetBuildTasksVersion>
+    <ILLinkTasksVersion>0.1.6-prerelease.19380.1</ILLinkTasksVersion>
+    <MicrosoftNETCoreAppVersion>3.1.2-servicing.20067.4</MicrosoftNETCoreAppVersion>
+    <MicrosoftDotNetCliRuntimeVersion>3.1.300-preview.20227.1</MicrosoftDotNetCliRuntimeVersion>
+    <DotNetCliVersion>3.1.100</DotNetCliVersion>
   </PropertyGroup>
+  <Target Name="OverrideArcadeFileVersion" AfterTargets="_InitializeAssemblyVersion">
+    <!-- See https://github.com/dotnet/arcade/issues/3386
+
+         Arcade doesn't support this directly; AutoGenerateAssemblyVersion
+         set to false means that FileVersion=$(AssemblyVersion), but that's
+         not ok for MSBuild because we have a fixed AssemblyVersion for
+         compat (15.1.0.0), but varied FileVersion, which is user-visible
+         via $(MSBuildVersion) and msbuild -version.
+
+         So: we want this to match the NuGet package version and also the
+         AssemblyInformationalVersion. Jump through hoops to do so.
+         -->
+    <PropertyGroup>
+      <FileVersion>$(VersionPrefix).$(FileVersion.Split('.')[3])</FileVersion>
+    </PropertyGroup>
+  </Target>
 </Project>

@@ -161,6 +161,11 @@
         <target state="translated">MSB3021: "{0}" dosyası "{1}" üzerine kopyalanamıyor. {2}</target>
         <note>{StrBegin="MSB3021: "}</note>
       </trans-unit>
+      <trans-unit id="Copy.ErrorIfLinkFailsSetWithoutLinkOption">
+        <source>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</source>
+        <target state="translated">MSB3892: ErrorIfLinkFails için UseHardlinksIfPossible veya UseSymbolicLinksIfPossible ayarlanmalıdır.</target>
+        <note>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</note>
+      </trans-unit>
       <trans-unit id="Copy.ExactlyOneTypeOfDestination">
         <source>MSB3022: Both "{0}" and "{1}" were specified as input parameters in the project file. Please choose one or the other.</source>
         <target state="translated">MSB3022: Proje dosyasında giriş parametresi olarak hem "{0}" hem de "{1}" belirtilmiş. Lütfen ikisinden birini seçin.</target>
@@ -175,6 +180,11 @@
         <source>Creating hard link to copy "{0}" to "{1}".</source>
         <target state="translated">"{0}" yolunu "{1}" yoluna kopyalamak için sabit bağlantı oluşturuluyor.</target>
         <note>LOCALIZATION: {0} and {1} are paths.</note>
+      </trans-unit>
+      <trans-unit id="Copy.LinkFailed">
+        <source>MSB3893: Could not use a link to copy "{0}" to "{1}".</source>
+        <target state="translated">MSB3893: "{0}" dosyasını "{1}" yoluna kopyalama bağlantısı kullanılamadı.</target>
+        <note>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</note>
       </trans-unit>
       <trans-unit id="Copy.RetryingAsFileCopy">
         <source>Could not use a link to copy "{0}" to "{1}". Copying the file instead. {2}</source>
@@ -488,7 +498,7 @@
       </trans-unit>
       <trans-unit id="General.InvalidPropertyError">
         <source>MSB3100: Syntax for "{0}" parameter is not valid ({1}). Correct syntax is {0}="&lt;name&gt;=&lt;value&gt;".</source>
-        <target state="translated">MSB3100: "{0}" parametresinin söz dizimi geçerli değil ({1}). Doğru söz dizimi: {0}="&lt;ad&gt;=&lt;değer&gt;".</target>
+        <target state="translated">MSB3100: "{0}" parametresinin sözdizimi geçerli değil ({1}). Doğru sözdizimi: {0}="&lt;ad&gt;=&lt;değer&gt;".</target>
         <note>{StrBegin="MSB3100: "}This error is shown if the user does any of the following:
     Properties="foo"              (missing property value)
     Properties="=4"               (missing property name)
@@ -969,10 +979,50 @@
         <target state="translated">MSB3190: ClickOnce, '{0}' istek yürütme düzeyini desteklemiyor.</target>
         <note>{StrBegin="MSB3190: "}</note>
       </trans-unit>
+      <trans-unit id="GenerateResource.CoreSupportsLimitedScenarios">
+        <source>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</source>
+        <target state="translated">MSB3824: .NET Core ile derlemek için kaynak girişleri .txt veya .resx biçiminde olmalıdır.</target>
+        <note>{StrBegin="MSB3824: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputDoesntExist">
+        <source>Input file "{0}" does not exist.</source>
+        <target state="translated">"{0}" giriş dosyası yok.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.InputNewer">
+        <source>Input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">"{0}" giriş dosyası, "{1}" çıkış dosyasından daha yeni.</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputDoesntExist">
+        <source>Linked input file "{0}" does not exist.</source>
+        <target state="translated">"{0}" bağlı giriş dosyası yok.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.LinkedInputNewer">
+        <source>Linked input file "{0}" is newer than output file "{1}".</source>
+        <target state="translated">"{0}" bağlı giriş dosyası, "{1}" çıkış dosyasından daha yeni.</target>
+        <note>{0} and {1} are filenames on disk.</note>
+      </trans-unit>
       <trans-unit id="GenerateResource.MOTW">
         <source>MSB3821: Couldn't process file {0} due to its being in the Internet or Restricted zone or having the mark of the web on the file. Remove the mark of the web if you want to process these files.</source>
         <target state="translated">MSB3821: {0} dosyası İnternet’te veya Kısıtlı bölgede olduğu ya da dosyada web işaretine sahip olduğu için işlenemedi. Bu dosyaları işlemek istiyorsanız web işaretlerini kaldırın.</target>
         <note>{StrBegin="MSB3821: "} "Internet zone", "Restricted zone", and "mark of the web" are Windows concepts that may have a specific translation.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.OutputDoesntExist">
+        <source>Output file "{0}" does not exist.</source>
+        <target state="translated">"{0}" çıkış dosyası yok.</target>
+        <note>{0} is a filename on disk.</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresExtensions">
+        <source>MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</source>
+        <target state="translated">MSB3822: Dize olmayan kaynaklar için çalışma zamanında System.Resources.Extensions bütünleştirilmiş kodu gerekiyor, ancak bu projenin başvurularında bulunamadı.</target>
+        <note>{StrBegin="MSB3822: "}</note>
+      </trans-unit>
+      <trans-unit id="GenerateResource.PreserializedResourcesRequiresProperty">
+        <source>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</source>
+        <target state="translated">MSB3823: Dize olmayan kaynaklar için GenerateResourceUsePreserializedResources özelliğinin true olarak ayarlanması gerekiyor.</target>
+        <note>{StrBegin="MSB3823: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.ResourceNotFound">
         <source>MSB3552: Resource file "{0}" cannot be found.</source>
@@ -990,9 +1040,9 @@
         <note>{StrBegin="MSB3554: "}</note>
       </trans-unit>
       <trans-unit id="GenerateResource.CorruptOutput">
-        <source>MSB3555: Output file "{0}" is possibly corrupt.</source>
-        <target state="translated">MSB3555: "{0}" çıkış dosyası bozulmuş olabilir.</target>
-        <note>{StrBegin="MSB3555: "}</note>
+        <source>Output file "{0}" is possibly corrupt and will be deleted and recreated.</source>
+        <target state="translated">"{0}" çıkış dosyası bozuk olabilir ve silinip yeniden oluşturulacak.</target>
+        <note />
       </trans-unit>
       <trans-unit id="GenerateResource.OnlyStringsSupported">
         <source>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</source>
@@ -1881,7 +1931,7 @@
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.RemappedReference">
         <source>Due to a remapping entry in the currently targeted framework redist list, reference "{0}" was remapped to "{1}".</source>
-        <target state="translated">Şu anda hedeflenen çerçevedeki yeniden eşleştirme girişi nedeniyle "{0}" başvurusu "{1}" ile yeniden eşleştirildi.</target>
+        <target state="translated">Şu anda hedeflenen çerçeve yeniden dağıtım listesindeki yeniden eşleştirme girişi nedeniyle "{0}" başvurusu "{1}" ile yeniden eşleştirildi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ResolveAssemblyReference.UnificationByFrameworkRetarget">
@@ -1981,7 +2031,7 @@
       </trans-unit>
       <trans-unit id="ResolveComReference.BadAssemblyImage">
         <source>MSB3281: The assembly "{0}" is not a valid assembly file.</source>
-        <target state="translated">MSB3281: MSB3281: "{0}" derlemesi geçerli bir derleme dosyası değil.</target>
+        <target state="translated">MSB3281: "{0}" derlemesi geçerli bir derleme dosyası değil.</target>
         <note>{StrBegin="MSB3281: "}</note>
       </trans-unit>
       <trans-unit id="ResolveComReference.CannotAccessTypeLibName">
@@ -2243,6 +2293,11 @@
         <target state="translated">MSB3473: "{0}" yolu geçersiz. {1}</target>
         <note>{StrBegin="MSB3473: "}</note>
       </trans-unit>
+      <trans-unit id="SGen.TaskNotSupported">
+        <source>MSB3474: The task "{0}" is not supported on the .NET Core version of MSBuild. Use the Microsoft XML Serializer Generator package instead. See https://go.microsoft.com/fwlink/?linkid=858594 for more information.</source>
+        <target state="translated">MSB3474: "{0}" görevi, MSBuild'in .NET Core sürümünde desteklenmiyor. Bunun yerine Microsoft XML Serileştiricisi Oluşturma paketini kullanın. Daha fazla bilgi için bkz. https://go.microsoft.com/fwlink/?linkid=858594.</target>
+        <note>{StrBegin="MSB3474: "}</note>
+      </trans-unit>
       <trans-unit id="SignFile.CertNotInStore">
         <source>MSB3481: The signing certificate could not be located. Ensure that it is in the current user's personal store.</source>
         <target state="translated">MSB3481: İmza sertifikası bulunamadı. Sertifikanın geçerli kullanıcının kişisel deposunda olduğunu doğrulayın.</target>
@@ -2464,8 +2519,8 @@
         <note>{StrBegin="MSB3643: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound">
-        <source>MSB3644: The reference assemblies for framework "{0}" were not found. To resolve this, install the SDK or Targeting Pack for this framework version or retarget your application to a version of the framework for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your assembly may not be correctly targeted for the framework you intend.</source>
-        <target state="translated">MSB3644: "{0}" çerçevesinin başvuru bütünleştirilmiş kodları bulunamadı. Bu sorunu gidermek için, bu çerçeve sürümüne yönelik SDK’yı veya Hedefleme Paketi’ni yükleyin ya da uygulamanızın hedefini SDK’sı veya Hedefleme Paketi yüklenmiş olan bir çerçeve sürümüne değiştirin. Bütünleştirilmiş kodların Genel Bütünleştirilmiş Kod Önbelleği’nden (GAC) çözümleneceğini ve başvuru bütünleştirilmiş kodlarının yerine kullanılacağını unutmayın. Bu nedenle, bütünleştirilmiş kodunuz hedeflediğiniz çerçeve için doğru şekilde hedeflenemeyebilir.</target>
+        <source>MSB3644: The reference assemblies for {0} were not found. To resolve this, install the Developer Pack (SDK/Targeting Pack) for this framework version or retarget your application. You can download .NET Framework Developer Packs at https://aka.ms/msbuild/developerpacks</source>
+        <target state="translated">MSB3644: {0} için başvuru bütünleştirilmiş kodları bulunamadı. Bunu çözmek için, bu çerçeve sürümü için Geliştirici Paketi'ni (SDK/Hedefleme Paketi) yükleyin veya uygulamanızı yeniden hedefleyin. .NET Framework Geliştirici Paketleri'ni https://aka.ms/msbuild/developerpacks adresinden indirebilirsiniz</target>
         <note>{StrBegin="MSB3644: "}</note>
       </trans-unit>
       <trans-unit id="GetReferenceAssemblyPaths.NETFX35SP1NotIntstalled">
@@ -2477,6 +2532,11 @@
         <source>MSB3762: No references were passed to the task. References to at least mscorlib and Windows.Foundation are required.</source>
         <target state="translated">MSB3762: Göreve hiçbir başvuru geçirilmedi. En azından mscorlib ve Windows.Foundation başvuruları gereklidir.</target>
         <note>{StrBegin="MSB3762: "}</note>
+      </trans-unit>
+      <trans-unit id="Xaml.DuplicatePropertyName">
+        <source>MSB3724: Unable to create Xaml task.  Duplicate property name '{0}'.</source>
+        <target state="translated">MSB3724: XAML görevi oluşturulamıyor. Yinelenen özellik adı: '{0}'.</target>
+        <note>{StrBegin="MSB3724: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.TaskCreationFailed">
         <source>MSB3686: Unable to create Xaml task.  Compilation failed.  {0}</source>
@@ -2510,7 +2570,7 @@
       </trans-unit>
       <trans-unit id="Xaml.MissingTaskBody">
         <source>MSB3692: Unable to create Xaml task.  The &lt;UsingTask&gt; does not contain a &lt;Task&gt; definition.</source>
-        <target state="translated">MSB3692: Xaml görevi oluşturulamıyor.  &lt;UsingTask&gt; bir &lt;Task&gt; tanımı içermiyor.</target>
+        <target state="translated">MSB3692: Xaml görevi oluşturulamıyor. &lt;UsingTask&gt; bir &lt;Task&gt; tanımı içermiyor.</target>
         <note>{StrBegin="MSB3692: "}</note>
       </trans-unit>
       <trans-unit id="Xaml.ArgumentOutOfRange">
@@ -2542,6 +2602,11 @@
         <source>MSB3701: Unable to load arguments for the XslTransformation task. {0}</source>
         <target state="translated">MSB3701: XslTransformation görevi için bağımsız değişkenler yüklenemiyor. {0}</target>
         <note>{StrBegin="MSB3701: "}</note>
+      </trans-unit>
+      <trans-unit id="XslTransform.PrecompiledXsltError">
+        <source>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</source>
+        <target state="translated">MSB3705: .NET Core ile derlenirken XslCompiledDllPath desteklenmez.</target>
+        <note>{StrBegin="MSB3705: "}</note>
       </trans-unit>
       <trans-unit id="XslTransform.XsltArgumentsError">
         <source>MSB3702: Unable to process the XsltParameters argument for the XslTransformation task. {0}</source>
@@ -2750,7 +2815,7 @@
       </trans-unit>
       <trans-unit id="CodeTaskFactory.InvalidElementLocation">
         <source>MSB3756: The element &lt;{0}&gt; is not a valid child of the &lt;{1}&gt; element.  Valid child elements are &lt;Code&gt;, &lt;Reference&gt;, and &lt;Using&gt;.</source>
-        <target state="translated">MSB3756: &lt;{0}&gt; öğesi, &lt;{1}&gt; öğesinin geçerli bir alt öğesi değil.  Geçerli alt öğeler şunlardır: &lt;Code&gt;, &lt;Reference&gt; ve &lt;Using&gt;.</target>
+        <target state="translated">MSB3756: &lt;{0}&gt;, &lt;{1}&gt; öğesinin bir alt öğesi değil.  Geçerli alt öğeler: &lt;Code&gt;, &lt;Reference&gt; ve &lt;Using&gt;.</target>
         <note>{StrBegin="MSB3756: "}</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.MultipleCodeNodes">
@@ -2860,7 +2925,7 @@
       </trans-unit>
       <trans-unit id="ResolveSDKReference.SDKReferenceIncorrectFormat">
         <source>MSB3776: The SDK Reference "{0}" is incorrectly formatted. It must be in the following format "&lt;SDKName&gt;, Version=&lt;SDKVersion&gt;. For example: "MySDK, Version=2.0"</source>
-        <target state="translated">MSB3776: "{0}" SDK Başvurusu yanlış biçimlendirilmiş. "&lt;SDKAdı&gt;, Version=&lt;SDKSürümü&gt;” biçiminde olması gerekiyor. Örnek: "BenimSDK, Version=2.0"</target>
+        <target state="translated">MSB3776: SDK Başvurusu "{0}" yanlış biçimlendirilmiş. "&lt;SDKAdı&gt;, Version=&lt;SDKSürümü&gt; biçiminde olması gerekiyor. Örnek: "BenimSDK, Version=2.0"</target>
         <note>{StrBegin="MSB3776: "}</note>
       </trans-unit>
       <trans-unit id="ResolveSDKReference.NoMatchingFrameworkIdentity">
@@ -2980,7 +3045,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.AddingRedistFile">
         <source>Adding file "{0}" from redist folder with target path "{1}".</source>
-        <target state="translated">"{1}" hedef yolu ile yeniden dağıtım klasöründen "{0}" dosyası ekleniyor.</target>
+        <target state="translated">"{1}" hedef yolundaki yeniden dağıtım klasöründen "{0}" dosyası ekleniyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.ConflictRedistSameSDK">
@@ -3050,7 +3115,7 @@
       </trans-unit>
       <trans-unit id="GetSDKReferenceFiles.CannotHaveEmptyTargetArchitecture">
         <source>MSB3798: The targeted architecture for the resolved sdk reference "{0}" was empty. Cannot find reference or redist files without a targeted architecture.</source>
-        <target state="translated">MSB3798: Çözümlenen "{0}" SDK başvurusunun hedeflenen mimarisi boştu. Hedeflenen bir mimari olmadan başvuru veya yeniden dağıtım dosyaları bulunamaz.</target>
+        <target state="translated">MSB3798: Çözümlenen "{0}" SDK başvurusunun hedeflenen mimarisi boştu. Hedeflenen mimari olmadan başvuru veya yeniden dağıtım dosyaları bulunamaz.</target>
         <note>{StrBegin="MSB3798: "}</note>
       </trans-unit>
       <trans-unit id="FindInvalidProjectReferences.WarnWhenVersionIsIncompatible">
@@ -3086,12 +3151,12 @@
       <trans-unit id="WriteLinesToFile.ErrorReadingFile">
         <source>MSB3492: Could not read existing file "{0}" to determine whether its contents are up to date. Overwriting it.</source>
         <target state="translated">MSB3492: İçeriğinin güncel olup olmadığını belirlemek üzere "{0}" adlı mevcut dosya okunamadı. Dosyanın üzerine yazılıyor.</target>
-        <note>{StrBegin="MSB3491: "}</note>
+        <note>{StrBegin="MSB3492: "}</note>
       </trans-unit>
       <trans-unit id="WriteLinesToFile.SkippingUnchangedFile">
-        <source>MSB3493: Skipping write to file "{0}" because content would not change.</source>
-        <target state="translated">MSB3493: İçerik değiştirilemediği için "{0}" dosyası üzerine yazma işlemi atlanacak.</target>
-        <note>{StrBegin="MSB3493: "}</note>
+        <source>Skipping write to file "{0}" because content would not change.</source>
+        <target state="translated">İçerik değişmeyeceğinden "{0}" dosyası üzerine yazma işlemi atlanacak.</target>
+        <note />
       </trans-unit>
       <trans-unit id="Telemetry.IllegalEventDataString">
         <source>The property "{0}" in the telemetry event data property list "{1}" is malformed.  Please only pass in a semicolon-delimited list of constant string values separated by "=", e.g., "Property1=Value1;Property2=Value2".</source>
@@ -3140,7 +3205,7 @@
       </trans-unit>
       <trans-unit id="CodeTaskFactory.InvalidCodeElementAttribute">
         <source>MSB3756: The attribute "{0}" is not valid for the &lt;Code&gt; element.  Valid attributes are "Language", "Source", and "Type".</source>
-        <target state="translated">MSB3756: &lt;Code&gt; öğesi için "{0}" özniteliği geçersiz.  Geçerli öznitelikler şunlardır: "Language", "Source" ve "Type".</target>
+        <target state="translated">MSB3756: "{0}" özniteliği &lt;Code&gt; öğesi için geçerli değil.  Geçerli öznitelikler: "Dil", "Kaynak" ve "Tür".</target>
         <note>{StrBegin="MSB3756: "}</note>
       </trans-unit>
       <trans-unit id="CodeTaskFactory.AttributeEmptyWithElement">

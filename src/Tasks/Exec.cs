@@ -43,10 +43,6 @@ namespace Microsoft.Build.Tasks
 
         #region Fields
 
-        private const string UseUtf8Always = "ALWAYS";
-        private const string UseUtf8Never = "NEVER";
-        private const string UseUtf8Detect = "DETECT";
-
         // Are the encodings for StdErr and StdOut streams valid
         private bool _encodingParametersValid = true;
         private string _workingDirectory;
@@ -202,7 +198,7 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         private void CreateTemporaryBatchFile()
         {
-            var encoding = BatchFileEncoding();
+            var encoding = EncodingUtilities.BatchFileEncoding(Command + WorkingDirectory, UseUtf8Encoding);
 
             // Temporary file with the extension .Exec.bat
             _batchFile = FileUtilities.GetTemporaryFile(".exec.cmd");
@@ -479,7 +475,7 @@ namespace Microsoft.Build.Tasks
                 : Directory.GetCurrentDirectory();
 
             // check if the working directory we're going to use for the exec command is a UNC path
-            workingDirectoryIsUNC = FileUtilitiesRegex.StartsWithUncPattern.IsMatch(_workingDirectory);
+            workingDirectoryIsUNC = FileUtilitiesRegex.StartsWithUncPattern(_workingDirectory);
 
             // if the working directory is a UNC path, and all drive letters are mapped, bail out, because the pushd command
             // will not be able to auto-map to the UNC path
@@ -649,83 +645,5 @@ namespace Microsoft.Build.Tasks
         protected override MessageImportance StandardOutputLoggingImportance => MessageImportance.High;
 
         #endregion
-
-        private static readonly Encoding s_utf8WithoutBom = new UTF8Encoding(false);
-
-        /// <summary>
-        /// Find the encoding for the batch file.
-        /// </summary>
-        /// <remarks>
-        /// The "best" encoding is the current OEM encoding, unless it's not capable of representing
-        /// the characters we plan to put in the file. If it isn't, we can fall back to UTF-8.
-        ///
-        /// Why not always UTF-8? Because tools don't always handle it well. See
-        /// https://github.com/Microsoft/msbuild/issues/397
-        /// </remarks>
-        private Encoding BatchFileEncoding()
-        {
-            if (!NativeMethodsShared.IsWindows)
-            {
-                return s_utf8WithoutBom;
-            }
-
-            var defaultEncoding = EncodingUtilities.CurrentSystemOemEncoding;
-            string useUtf8 = string.IsNullOrEmpty(UseUtf8Encoding) ? UseUtf8Detect : UseUtf8Encoding;
-
-#if FEATURE_OSVERSION
-            // UTF8 is only supposed in Windows 7 (6.1) or greater.
-            var windows7 = new Version(6, 1);
-
-            if (Environment.OSVersion.Version < windows7)
-            {
-                useUtf8 = UseUtf8Never;
-            }
-#endif
-
-            switch (useUtf8.ToUpperInvariant())
-            {
-                case UseUtf8Always:
-                    return s_utf8WithoutBom;
-                case UseUtf8Never:
-                    return EncodingUtilities.CurrentSystemOemEncoding;
-                default:
-                    return CanEncodeString(defaultEncoding.CodePage, Command + WorkingDirectory)
-                        ? defaultEncoding
-                        : s_utf8WithoutBom;
-            }
-        }
-
-        /// <summary>
-        /// Checks to see if a string can be encoded in a specified code page.
-        /// </summary>
-        /// <remarks>Internal for testing purposes.</remarks>
-        /// <param name="codePage">Code page for encoding.</param>
-        /// <param name="stringToEncode">String to encode.</param>
-        /// <returns>True if the string can be encoded in the specified code page.</returns>
-        internal static bool CanEncodeString(int codePage, string stringToEncode)
-        {
-            // We have a System.String that contains some characters. Get a lossless representation
-            // in byte-array form.
-            var unicodeEncoding = new UnicodeEncoding();
-            var unicodeBytes = unicodeEncoding.GetBytes(stringToEncode);
-
-            // Create an Encoding using the desired code page, but throws if there's a
-            // character that can't be represented.
-            var systemEncoding = Encoding.GetEncoding(codePage, EncoderFallback.ExceptionFallback,
-                DecoderFallback.ExceptionFallback);
-
-            try
-            {
-                var oemBytes = Encoding.Convert(unicodeEncoding, systemEncoding, unicodeBytes);
-
-                // If Convert didn't throw, we can represent everything in the desired encoding.
-                return true;
-            }
-            catch (EncoderFallbackException)
-            {
-                // If a fallback encoding was attempted, we need to go to Unicode.
-                return false;
-            }
-        }
     }
 }

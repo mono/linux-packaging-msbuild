@@ -1,6 +1,7 @@
 <Project DefaultTargets="Install">
     <!-- Using this as a kinda config file -->
-    <Import Project="..\..\Directory.Build.props" />
+    <Import Project="$(MSBuildThisFileDirectory)\common.props" />
+    <Import Project="$(RepoRoot)\Directory.Build.props" />
 
     <Target Name="Install">
         <Error Text="%24(MonoInstallPrefix) cannot be empty. Set with /p:MonoInstallPrefix=&lt;directory&gt;" Condition="'$(MonoInstallPrefix)' == ''" />
@@ -15,7 +16,7 @@
 
             <XBuildDir>$(MonoInstallPrefix)\lib\mono\xbuild</XBuildDir>
 
-            <MSBuildBinSrcDir>$(RepoRoot)artifacts\2\bin\MSBuild.Bootstrap\$(Configuration)\net472\</MSBuildBinSrcDir>
+            <MSBuildBinSrcDir>$(RepoRoot)artifacts\bin\MSBuild.Bootstrap\$(Configuration)\net472\</MSBuildBinSrcDir>
 
             <AllInstalledFiles_FileCanonical>$(MSBuildThisFileDirectory)\all_files.canon.txt</AllInstalledFiles_FileCanonical>
             <AllInstalledFiles_File>$(MSBuildThisFileDirectory)\all_files.new.txt</AllInstalledFiles_File>
@@ -31,7 +32,6 @@
         <ItemGroup>
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\Microsoft.Build.*" />
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\MSBuild.dll*" />
-            <MSBuildFiles Include="$(MSBuildBinSrcDir)\MSBuild.pdb" />
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\MSBuild.rsp" />
 
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\Microsoft.*props" />
@@ -48,9 +48,9 @@
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\Newtonsoft*" />
 
             <MSBuildFiles Include="$(MSBuildBinSrcDir)\*.dll*" />
+            <MSBuildFiles Include="$(MSBuildBinSrcDir)\RuntimeIdentifierGraph.json" />
 
-            <!-- nuget tasks/targets that are now installed to bin dir -->
-            <MSBuildFiles Include="$(RepoRoot)\nuget-support\tasks-targets\*" />
+            <MSBuildFiles Include="$(DotNetOverlayDirectory)\nuget-support\msbuild-bin\*" />
 
             <MSBuildFiles Remove="$(MSBuildBinSrcDir)\TestTask*" />
             <MSBuildFiles Remove="$(MSBuildBinSrcDir)\Mono.Build.Tasks.*" />
@@ -64,14 +64,18 @@
 
             <SdksFiles Include="$(MSBuildBinSrcDir)\Sdks\**\*" />
 
-            <SdkResolverFiles Include="$(MSBuildBinSrcDir)\SdkResolvers\**\*" />
-            <SdkResolverFiles Include="$(RepoRoot)\mono\SdkResolvers\**\*" />
+            <SdksFiles Remove="$(MSBuildBinSrcDir)\Sdks\**\*.nupkg.metadata" />
+            <RemainingMSBuildBinFiles Include="$(MSBuildBinSrcDir)\Sdks\**\*.nupkg.metadata" />
 
-            <ExtensionsPathFiles Include="$(RepoRoot)\mono\ExtensionsPath\**\*" />
+            <SdkResolverFiles Include="$(MSBuildBinSrcDir)\SdkResolvers\**\*" />
+            <SdkResolverFiles Include="$(DotNetOverlayDirectory)\msbuild-bin\SdkResolvers\**\*" />
+
+            <ExtensionsPathFiles Include="$(RepoRoot)\mono\layout\ExtensionsPath\**\*" />
+            <ExtensionsPathFiles Include="$(DotNetOverlayDirectory)\ExtensionsPath\**\*" />
             <ExtensionsPathFiles Include="$(MSBuildBinSrcDir)\Mono.Build.Tasks.*" />
 
-            <ExtensionsPathToolsVersionFiles Include="$(RepoRoot)\mono\ExtensionsPath-ToolsVersion\**\*" />
-            <NuGetToolsVersionFiles Include="$(RepoRoot)\nuget-support\tv\**\*" />
+            <ExtensionsPathToolsVersionFiles Include="$(RepoRoot)\mono\layout\ExtensionsPath-ToolsVersion\**\*" />
+            <ExtensionsPathToolsVersionFiles Include="$(DotNetOverlayDirectory)\ExtensionsPath-ToolsVersion\**\*" />
 
             <ExtensionsPathToolsVersionFiles Include="$(MSBuildBinSrcDir)\Microsoft.Common.props" />
             <ExtensionsPathToolsVersionFiles Include="$(MSBuildBinSrcDir)\Microsoft.VisualStudioVersion.v*props" />
@@ -100,7 +104,7 @@
 
         <Exec
             WorkingDirectory="$(XBuildDir)"
-            Command="ln -sfh Current 15.0" />
+            Command="ln -sfn Current 15.0" />
         <Exec
             WorkingDirectory="$(MonoInstallPrefix)\lib\mono\msbuild"
             Command="ln -s Current 15.0" />
@@ -110,6 +114,10 @@
         </ItemGroup>
 
         <Copy SourceFiles="@(MSBuildFiles)" DestinationFolder="$(MSBuildInstallBinDir)">
+            <Output TaskParameter="CopiedFiles" ItemName="CopiedFiles" />
+        </Copy>
+
+        <Copy SourceFiles="$(RepoRoot)\eng\Version.Details.xml" DestinationFiles="$(MSBuildInstallBinDir)\SdkVersions.Details.xml">
             <Output TaskParameter="CopiedFiles" ItemName="CopiedFiles" />
         </Copy>
 

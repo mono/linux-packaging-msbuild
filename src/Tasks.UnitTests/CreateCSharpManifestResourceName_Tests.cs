@@ -8,12 +8,21 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
+using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.Build.UnitTests
 {
     sealed public class CreateCSharpManifestResourceName_Tests
     {
+
+        private readonly ITestOutputHelper _testOutput;
+
+        public CreateCSharpManifestResourceName_Tests(ITestOutputHelper output)
+        {
+            _testOutput = output;
+        }
         /// <summary>
         /// Test the basic functionality.
         /// </summary>
@@ -375,6 +384,246 @@ namespace Microsoft.Build.UnitTests
 
             Assert.Single(resourceNames);
             Assert.Equal(@"CustomToolTest.SR1", resourceNames[0].ItemSpec);
+        }
+
+        /// <summary>
+        /// Opt into DependentUpon convention and load the expected file properly.
+        /// </summary>
+        [Fact]
+        public void DependentUponConvention_FindsMatch()
+        {
+            using (var env = TestEnvironment.Create(_testOutput))
+            {
+                var csFile = env.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                var resXFile = env.CreateFile("SR1.resx", "");
+
+                ITaskItem i = new TaskItem(resXFile.Path);
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                // Don't set DependentUpon so it goes by convention
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("MyStuff.Namespace.Class", "Expecting to find the namespace & class name from SR1.cs");
+            }
+        }
+
+        /// <summary>
+        /// Opt into DependentUpon convention but don't expect it to be used for this file.
+        /// </summary>
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DependentUponConvention_DoesNotApplyToNonResx(bool explicitlySpecifyType)
+        {
+            using (var env = TestEnvironment.Create())
+            {
+                var csFile = env.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                const string ResourceFileName = "SR1.txt";
+                var resourceFile = env.CreateFile(ResourceFileName, "");
+
+                // Default resource naming is based on the item include, so use a relative
+                // path here instead of a full path.
+                env.SetCurrentDirectory(Path.GetDirectoryName(resourceFile.Path));
+                ITaskItem i = new TaskItem(ResourceFileName);
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                if (explicitlySpecifyType)
+                {
+                    i.SetMetadata("Type", "Non-Resx");
+                }
+                // Don't set DependentUpon so it goes by convention
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe(ResourceFileName, "Expecting to find the namespace & class name from SR1.cs");
+            }
+        }
+
+
+        /// <summary>
+        /// Opt into DependentUpon convention and load the expected file properly when the file is in a subfolder.
+        /// </summary>
+        [Fact]
+        public void DependentUponConvention_FindsMatchInSubfolder()
+        {
+            using (var env = TestEnvironment.Create())
+            {
+                var subfolder = env.DefaultTestDirectory.CreateDirectory("SR1");
+                var csFile = subfolder.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                var resXFile = subfolder.CreateFile("SR1.resx", "");
+
+                env.SetCurrentDirectory(env.DefaultTestDirectory.Path);
+
+                ITaskItem i = new TaskItem(@"SR1\SR1.resx");
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                // Don't set DependentUpon so it goes by convention
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("MyStuff.Namespace.Class", "Expecting to find the namespace & class name from SR1.cs");
+            }
+        }
+
+        /// <summary>
+        /// Opt into DependentUpon convention without creating the equivalent .cs file for our resource file.
+        /// </summary>
+        [Fact]
+        public void DependentUpon_UseConventionFileDoesNotExist()
+        {
+            using (var env = TestEnvironment.Create())
+            {
+                // cs file doesn't exist for this case.
+                var resXFile = env.CreateFile("SR1.resx", "");
+
+                ITaskItem i = new TaskItem(Path.GetFileName(resXFile.Path));
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                // Don't set DependentUpon so it goes by convention
+
+                // Use relative paths to ensure short manifest name based on the path to the resx.
+                // See CreateManifestNameImpl
+                env.SetCurrentDirectory(Path.GetDirectoryName(resXFile.Path));
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("SR1", "Expected only the file name.");
+            }
+        }
+
+        /// <summary>
+        /// Opt into DependentUponConvention, but include DependentUpon metadata with different name.
+        /// </summary>
+        [Fact]
+        public void DependentUpon_SpecifyNewFile()
+        {
+            using (var env = TestEnvironment.Create())
+            {
+                var conventionCSFile = env.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                var nonConventionCSFile = env.CreateFile("SR2.cs", "namespace MyStuff2.Namespace { class Class2 { } }");
+                var resXFile = env.CreateFile("SR1.resx", "");
+
+                ITaskItem i = new TaskItem(resXFile.Path);
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                i.SetMetadata("DependentUpon", "SR2.cs");
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("MyStuff2.Namespace.Class2", "Expected the namespace & class of SR2.");
+            }
+        }
+
+        /// <summary>
+        /// When disabling UseDependentUponConvention it will find no .cs file and default to filename.
+        /// </summary>
+        [Fact]
+        public void DependentUponConvention_ConventionDisabledDoesNotReadConventionFile()
+        {
+            using (var env = TestEnvironment.Create())
+            {
+                var csFile = env.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                var resXFile = env.CreateFile("SR1.resx", "");
+
+                ITaskItem i = new TaskItem(Path.GetFileName(resXFile.Path));
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+                // No need to set DependentUpon
+
+                // Use relative paths to ensure short manifest name based on the path to the resx.
+                // See CreateManifestNameImpl
+                env.SetCurrentDirectory(Path.GetDirectoryName(resXFile.Path));
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(_testOutput),
+                    UseDependentUponConvention = false,
+                    ResourceFiles = new ITaskItem[] { i }
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed.");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("SR1", "Expected only the file name.");
+            }
+        }
+
+        /// <summary>
+        /// If we have a resource file that has a culture within it's name (resourceFile.de.cs), find it by convention.
+        /// </summary>
+        [Fact]
+        public void CulturedResourceFileFindByConvention()
+        {
+            using (var env = TestEnvironment.Create(_testOutput))
+            {
+                var csFile = env.CreateFile("SR1.cs", "namespace MyStuff.Namespace { class Class { } }");
+                var resXFile = env.CreateFile("SR1.de.resx", "");
+
+                ITaskItem i = new TaskItem(resXFile.Path);
+
+                i.SetMetadata("BuildAction", "EmbeddedResource");
+
+                // this data is set automatically through the AssignCulture task, so we manually set it here
+                i.SetMetadata("WithCulture", "true");
+                i.SetMetadata("Culture", "de");
+
+                env.SetCurrentDirectory(Path.GetDirectoryName(resXFile.Path));
+
+                CreateCSharpManifestResourceName t = new CreateCSharpManifestResourceName
+                {
+                    BuildEngine = new MockEngine(),
+                    UseDependentUponConvention = true,
+                    ResourceFiles = new ITaskItem[] { i },
+                };
+
+                t.Execute().ShouldBeTrue("Expected the task to succeed");
+
+                t.ManifestResourceNames.ShouldHaveSingleItem();
+
+                // CreateManifestNameImpl appends culture to the end of the convention
+                t.ManifestResourceNames[0].ItemSpec.ShouldBe("MyStuff.Namespace.Class.de", "Expected Namespace.Class.Culture");
+            }
         }
 
         /// <summary>

@@ -329,7 +329,13 @@ namespace Microsoft.Build.Shared
 
         private static string GetMSBuildExeFromVsRoot(string visualStudioRoot)
         {
-            return FileUtilities.CombinePaths(visualStudioRoot, "MSBuild", CurrentToolsVersion, "Bin", "MSBuild.exe");
+            return FileUtilities.CombinePaths(
+                visualStudioRoot,
+                "MSBuild",
+                CurrentToolsVersion,
+                "Bin",
+                IntPtr.Size == 8 ? "amd64" : string.Empty,
+                "MSBuild.exe");
         }
 
         private static bool? _runningTests;
@@ -383,6 +389,13 @@ namespace Microsoft.Build.Shared
         private static string GetProcessFromRunningProcess()
         {
 #if RUNTIME_TYPE_NETCORE
+            // The EntryAssembly property can return null when a managed assembly has been loaded from
+            // an unmanaged application (for example, using custom CLR hosting).
+            if (AssemblyUtilities.EntryAssembly == null)
+            {
+                return Process.GetCurrentProcess().MainModule.FileName;
+            }
+
             return AssemblyUtilities.GetAssemblyLocation(AssemblyUtilities.EntryAssembly);
 #else
             return Process.GetCurrentProcess().MainModule.FileName;
