@@ -4,19 +4,18 @@
 using Microsoft.Build.BackEnd.Logging;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Framework;
+using Microsoft.Build.Evaluation.Context;
+using Microsoft.Build.Eventing;
+using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.FileSystem;
+using Microsoft.Build.Utilities;
+
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using Microsoft.Build.Evaluation.Context;
-using Microsoft.Build.Internal;
-using Microsoft.Build.Shared.FileSystem;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Evaluation
 {
@@ -87,6 +86,7 @@ namespace Microsoft.Build.Evaluation
             {
                 return true;
             }
+            MSBuildEventSource.Log.EvaluateConditionStart(condition);
 
             using (lazyEvaluator._evaluationProfiler.TrackCondition(element.ConditionLocation, condition))
             {
@@ -102,6 +102,7 @@ namespace Microsoft.Build.Evaluation
                     lazyEvaluator._loggingContext.BuildEventContext,
                     lazyEvaluator.FileSystem
                     );
+                MSBuildEventSource.Log.EvaluateConditionStop(condition, result);
 
                 return result;
             }
@@ -526,10 +527,9 @@ namespace Microsoft.Build.Evaluation
         {
             builder.ItemSpec = new ItemSpec<P, I>(itemSpec, _outerExpander, itemSpecLocation, rootDirectory);
 
-            foreach (ItemFragment fragment in builder.ItemSpec.Fragments)
+            foreach (ItemSpecFragment fragment in builder.ItemSpec.Fragments)
             {
-                ItemExpressionFragment<P, I> itemExpression = fragment as ItemExpressionFragment<P, I>;
-                if (itemExpression != null)
+                if (fragment is ItemSpec<P, I>.ItemExpressionFragment itemExpression)
                 {
                     AddReferencedItemLists(builder, itemExpression.Capture);
                 }

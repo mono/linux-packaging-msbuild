@@ -16,15 +16,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-   <!-- 
-        We are doing a cross-targeting build if there is no list of target frameworks specified
-        nor is there a current target framework being built individually. In that case, this import is
-        redirected to Microsoft.CSharp.CrossTargeting.targets.
-   -->
-   <PropertyGroup Condition="'$(TargetFrameworks)' != '' and '$(TargetFramework)' == ''">
-      <IsCrossTargetingBuild>true</IsCrossTargetingBuild>
-   </PropertyGroup>
-
    <!--
         In VS 2010 SP1 and VS 2012, both supported for asset compatibility, the MSBuild installed 
         as part of them did not enforce using the local ToolsVersion (4.0) in all cases, but instead 
@@ -165,9 +156,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Import Project="$(MSBuildExtensionsPath)\4.0\Microsoft.NETFramework.props\ImportBefore\*" Condition="'$(ImportByWildcardBefore40MicrosoftNetFrameworkProps)' == 'true' and exists('$(MSBuildExtensionsPath)\4.0\Microsoft.NETFramework.props\ImportBefore')"/>
    </ImportGroup> 
 
+   <Import Project="$(MSBuildToolsPath)\Microsoft.Managed.Before.targets" />
+
    <Import Project="$(CSharpTargetsPath)" />
 
-   <!-- Really should be imported right after Microsoft.NETFramework.props, but because Microsoft.CSharp.targets imports 
+   <Import Project="$(MSBuildToolsPath)\Microsoft.Managed.After.targets" />
+
+   <!-- Really should be imported right after Microsoft.NETFramework.props, but because Microsoft.CSharp.targets imports
         Microsoft.Common.targets from the current directory rather than using MSBuildToolsPath (which would redirect to our
         targets), and Microsoft.Common.targets does likewise with Microsoft.NETFramework.props, we're stuck doing it this 
         way instead. --> 

@@ -233,6 +233,7 @@ namespace Microsoft.Build.Construction
         public Microsoft.Build.Construction.ElementLocation DefaultTargetsLocation { get { throw null; } }
         public string DirectoryPath { get { throw null; } }
         public System.Text.Encoding Encoding { get { throw null; } }
+        public string EscapedFullPath { get { throw null; } }
         public string FullPath { get { throw null; } set { } }
         public bool HasUnsavedChanges { get { throw null; } }
         public System.Collections.Generic.ICollection<Microsoft.Build.Construction.ProjectImportGroupElement> ImportGroups { get { throw null; } }
@@ -645,6 +646,7 @@ namespace Microsoft.Build.Evaluation
         public int Count { get { throw null; } }
         public string DefaultToolsVersion { get { throw null; } set { } }
         public bool DisableMarkDirty { get { throw null; } set { } }
+        public static string DisplayVersion { get { throw null; } }
         public static Microsoft.Build.Evaluation.ProjectCollection GlobalProjectCollection { get { throw null; } }
         public System.Collections.Generic.IDictionary<string, string> GlobalProperties { get { throw null; } }
         public Microsoft.Build.Execution.HostServices HostServices { get { throw null; } set { } }
@@ -921,19 +923,27 @@ namespace Microsoft.Build.Execution
         public BuildManager(string hostName) { }
         public static Microsoft.Build.Execution.BuildManager DefaultBuildManager { get { throw null; } }
         public void BeginBuild(Microsoft.Build.Execution.BuildParameters parameters) { }
+        public void BeginBuild(Microsoft.Build.Execution.BuildParameters parameters, System.Collections.Generic.IEnumerable<Microsoft.Build.Execution.BuildManager.DeferredBuildMessage> deferredBuildMessages) { }
         public Microsoft.Build.Execution.BuildResult Build(Microsoft.Build.Execution.BuildParameters parameters, Microsoft.Build.Execution.BuildRequestData requestData) { throw null; }
-        public Microsoft.Build.Experimental.Graph.GraphBuildResult Build(Microsoft.Build.Execution.BuildParameters parameters, Microsoft.Build.Experimental.Graph.GraphBuildRequestData requestData) { throw null; }
+        public Microsoft.Build.Graph.GraphBuildResult Build(Microsoft.Build.Execution.BuildParameters parameters, Microsoft.Build.Graph.GraphBuildRequestData requestData) { throw null; }
         public Microsoft.Build.Execution.BuildResult BuildRequest(Microsoft.Build.Execution.BuildRequestData requestData) { throw null; }
-        public Microsoft.Build.Experimental.Graph.GraphBuildResult BuildRequest(Microsoft.Build.Experimental.Graph.GraphBuildRequestData requestData) { throw null; }
+        public Microsoft.Build.Graph.GraphBuildResult BuildRequest(Microsoft.Build.Graph.GraphBuildRequestData requestData) { throw null; }
         public void CancelAllSubmissions() { }
         public void Dispose() { }
         public void EndBuild() { }
         ~BuildManager() { }
         public Microsoft.Build.Execution.ProjectInstance GetProjectInstanceForBuild(Microsoft.Build.Evaluation.Project project) { throw null; }
         public Microsoft.Build.Execution.BuildSubmission PendBuildRequest(Microsoft.Build.Execution.BuildRequestData requestData) { throw null; }
-        public Microsoft.Build.Experimental.Graph.GraphBuildSubmission PendBuildRequest(Microsoft.Build.Experimental.Graph.GraphBuildRequestData requestData) { throw null; }
+        public Microsoft.Build.Graph.GraphBuildSubmission PendBuildRequest(Microsoft.Build.Graph.GraphBuildRequestData requestData) { throw null; }
         public void ResetCaches() { }
         public void ShutdownAllNodes() { }
+        [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        public partial struct DeferredBuildMessage
+        {
+            public DeferredBuildMessage(string text, Microsoft.Build.Framework.MessageImportance importance) { throw null;}
+            public Microsoft.Build.Framework.MessageImportance Importance { get { throw null; } }
+            public string Text { get { throw null; } }
+        }
     }
     public partial class BuildParameters
     {
@@ -944,6 +954,7 @@ namespace Microsoft.Build.Execution
         public string DefaultToolsVersion { get { throw null; } set { } }
         public bool DetailedSummary { get { throw null; } set { } }
         public bool DisableInProcNode { get { throw null; } set { } }
+        public bool DiscardBuildResults { get { throw null; } set { } }
         public bool EnableNodeReuse { get { throw null; } set { } }
         public System.Collections.Generic.IDictionary<string, string> EnvironmentProperties { get { throw null; } }
         public System.Collections.Generic.IEnumerable<Microsoft.Build.Logging.ForwardingLoggerRecord> ForwardingLoggers { get { throw null; } set { } }
@@ -956,6 +967,7 @@ namespace Microsoft.Build.Execution
         public System.Collections.Generic.IEnumerable<Microsoft.Build.Framework.ILogger> Loggers { get { throw null; } set { } }
         public bool LogInitialPropertiesAndItems { get { throw null; } set { } }
         public bool LogTaskInputs { get { throw null; } set { } }
+        public bool LowPriority { get { throw null; } set { } }
         public int MaxNodeCount { get { throw null; } set { } }
         public int MemoryUseLimit { get { throw null; } set { } }
         public string NodeExeLocation { get { throw null; } set { } }
@@ -1074,6 +1086,7 @@ namespace Microsoft.Build.Execution
     public partial class OutOfProcNode
     {
         public OutOfProcNode() { }
+        public Microsoft.Build.Execution.NodeEngineShutdownReason Run(bool enableReuse, bool lowPriority, out System.Exception shutdownException) { shutdownException = default(System.Exception); throw null; }
         public Microsoft.Build.Execution.NodeEngineShutdownReason Run(bool enableReuse, out System.Exception shutdownException) { shutdownException = default(System.Exception); throw null; }
         public Microsoft.Build.Execution.NodeEngineShutdownReason Run(out System.Exception shutdownException) { shutdownException = default(System.Exception); throw null; }
     }
@@ -1092,6 +1105,8 @@ namespace Microsoft.Build.Execution
         public int EvaluationId { get { throw null; } set { } }
         public string FullPath { get { throw null; } }
         public System.Collections.Generic.IDictionary<string, string> GlobalProperties { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyList<string> ImportPaths { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyList<string> ImportPathsIncludingDuplicates { get { throw null; } }
         public System.Collections.Generic.List<string> InitialTargets { get { throw null; } }
         public bool IsImmutable { get { throw null; } }
         public System.Collections.Generic.IDictionary<string, Microsoft.Build.Execution.ProjectItemDefinitionInstance> ItemDefinitions { get { throw null; } }
@@ -1118,6 +1133,8 @@ namespace Microsoft.Build.Execution
         public bool EvaluateCondition(string condition) { throw null; }
         public string ExpandString(string unexpandedValue) { throw null; }
         public Microsoft.Build.Execution.ProjectInstance FilteredCopy(Microsoft.Build.Execution.RequestedProjectState filter) { throw null; }
+        public static Microsoft.Build.Execution.ProjectInstance FromFile(string file, Microsoft.Build.Definition.ProjectOptions options) { throw null; }
+        public static Microsoft.Build.Execution.ProjectInstance FromProjectRootElement(Microsoft.Build.Construction.ProjectRootElement rootElement, Microsoft.Build.Definition.ProjectOptions options) { throw null; }
         public static string GetEvaluatedItemIncludeEscaped(Microsoft.Build.Execution.ProjectItemDefinitionInstance item) { throw null; }
         public static string GetEvaluatedItemIncludeEscaped(Microsoft.Build.Execution.ProjectItemInstance item) { throw null; }
         public System.Collections.Generic.ICollection<Microsoft.Build.Execution.ProjectItemInstance> GetItems(string itemType) { throw null; }
@@ -1263,7 +1280,9 @@ namespace Microsoft.Build.Execution
     public sealed partial class ProjectTargetInstance
     {
         internal ProjectTargetInstance() { }
+        public string AfterTargets { get { throw null; } }
         public Microsoft.Build.Construction.ElementLocation AfterTargetsLocation { get { throw null; } }
+        public string BeforeTargets { get { throw null; } }
         public Microsoft.Build.Construction.ElementLocation BeforeTargetsLocation { get { throw null; } }
         public System.Collections.Generic.IList<Microsoft.Build.Execution.ProjectTargetInstanceChild> Children { get { throw null; } }
         public string Condition { get { throw null; } }
@@ -1358,89 +1377,6 @@ namespace Microsoft.Build.Execution
         Success = (byte)1,
     }
 }
-namespace Microsoft.Build.Experimental.Graph
-{
-    public sealed partial class GraphBuildRequestData
-    {
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild) { }
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild) { }
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
-        public GraphBuildRequestData(Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
-        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild) { }
-        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
-        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
-        public GraphBuildRequestData(string projectFullPath, System.Collections.Generic.IDictionary<string, string> globalProperties, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
-        public GraphBuildRequestData(string projectFullPath, System.Collections.Generic.IDictionary<string, string> globalProperties, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
-        public Microsoft.Build.Execution.BuildRequestDataFlags Flags { get { throw null; } }
-        public Microsoft.Build.Execution.HostServices HostServices { get { throw null; } }
-        public Microsoft.Build.Experimental.Graph.ProjectGraph ProjectGraph { get { throw null; } }
-        public System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> ProjectGraphEntryPoints { get { throw null; } }
-        public System.Collections.Generic.ICollection<string> TargetNames { get { throw null; } }
-    }
-    public sealed partial class GraphBuildResult
-    {
-        internal GraphBuildResult() { }
-        public bool CircularDependency { get { throw null; } }
-        public System.Exception Exception { get { throw null; } }
-        public Microsoft.Build.Execution.BuildResult this[Microsoft.Build.Experimental.Graph.ProjectGraphNode node] { get { throw null; } }
-        public Microsoft.Build.Execution.BuildResultCode OverallResult { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyDictionary<Microsoft.Build.Experimental.Graph.ProjectGraphNode, Microsoft.Build.Execution.BuildResult> ResultsByNode { get { throw null; } }
-        public int SubmissionId { get { throw null; } }
-    }
-    public partial class GraphBuildSubmission
-    {
-        internal GraphBuildSubmission() { }
-        public object AsyncContext { get { throw null; } }
-        public Microsoft.Build.Execution.BuildManager BuildManager { get { throw null; } }
-        public Microsoft.Build.Experimental.Graph.GraphBuildResult BuildResult { get { throw null; } }
-        public bool IsCompleted { get { throw null; } }
-        public int SubmissionId { get { throw null; } }
-        public System.Threading.WaitHandle WaitHandle { get { throw null; } }
-        public Microsoft.Build.Experimental.Graph.GraphBuildResult Execute() { throw null; }
-        public void ExecuteAsync(Microsoft.Build.Experimental.Graph.GraphBuildSubmissionCompleteCallback callback, object context) { }
-    }
-    public delegate void GraphBuildSubmissionCompleteCallback(Microsoft.Build.Experimental.Graph.GraphBuildSubmission submission);
-    public sealed partial class ProjectGraph
-    {
-        public ProjectGraph(Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint entryPoint) { }
-        public ProjectGraph(Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint entryPoint, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> entryPoints) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Experimental.Graph.ProjectGraphEntryPoint> entryPoints, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Experimental.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, System.Collections.Generic.IDictionary<string, string> globalProperties) { }
-        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, System.Collections.Generic.IDictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
-        public ProjectGraph(string entryProjectFile) { }
-        public ProjectGraph(string entryProjectFile, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
-        public ProjectGraph(string entryProjectFile, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Experimental.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory) { }
-        public ProjectGraph(string entryProjectFile, System.Collections.Generic.IDictionary<string, string> globalProperties) { }
-        public ProjectGraph(string entryProjectFile, System.Collections.Generic.IDictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> EntryPointNodes { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> GraphRoots { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> ProjectNodes { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> ProjectNodesTopologicallySorted { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyDictionary<Microsoft.Build.Experimental.Graph.ProjectGraphNode, System.Collections.Immutable.ImmutableList<string>> GetTargetLists(System.Collections.Generic.ICollection<string> entryProjectTargets) { throw null; }
-        public delegate Microsoft.Build.Execution.ProjectInstance ProjectInstanceFactoryFunc(string projectPath, System.Collections.Generic.Dictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection);
-    }
-    [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
-    public partial struct ProjectGraphEntryPoint
-    {
-        public ProjectGraphEntryPoint(string projectFile) { throw null;}
-        public ProjectGraphEntryPoint(string projectFile, System.Collections.Generic.IDictionary<string, string> globalProperties) { throw null;}
-        public System.Collections.Generic.IDictionary<string, string> GlobalProperties { get { throw null; } }
-        public string ProjectFile { get { throw null; } }
-    }
-    public sealed partial class ProjectGraphNode
-    {
-        internal ProjectGraphNode() { }
-        public System.Collections.Generic.IReadOnlyDictionary<string, string> GlobalProperties { get { throw null; } }
-        public Microsoft.Build.Execution.ProjectInstance ProjectInstance { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> ProjectReferences { get { throw null; } }
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Experimental.Graph.ProjectGraphNode> ReferencingProjects { get { throw null; } }
-    }
-}
 namespace Microsoft.Build.Globbing
 {
     public partial class CompositeGlob : Microsoft.Build.Globbing.IMSBuildGlob
@@ -1488,6 +1424,90 @@ namespace Microsoft.Build.Globbing.Extensions
     public static partial class MSBuildGlobExtensions
     {
         public static System.Collections.Generic.IEnumerable<Microsoft.Build.Globbing.MSBuildGlob> GetParsedGlobs(this Microsoft.Build.Globbing.IMSBuildGlob glob) { throw null; }
+    }
+}
+namespace Microsoft.Build.Graph
+{
+    public sealed partial class GraphBuildRequestData
+    {
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild) { }
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraph projectGraph, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild) { }
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
+        public GraphBuildRequestData(Microsoft.Build.Graph.ProjectGraphEntryPoint projectGraphEntryPoint, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
+        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild) { }
+        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
+        public GraphBuildRequestData(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> projectGraphEntryPoints, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
+        public GraphBuildRequestData(string projectFullPath, System.Collections.Generic.IDictionary<string, string> globalProperties, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices) { }
+        public GraphBuildRequestData(string projectFullPath, System.Collections.Generic.IDictionary<string, string> globalProperties, System.Collections.Generic.ICollection<string> targetsToBuild, Microsoft.Build.Execution.HostServices hostServices, Microsoft.Build.Execution.BuildRequestDataFlags flags) { }
+        public Microsoft.Build.Execution.BuildRequestDataFlags Flags { get { throw null; } }
+        public Microsoft.Build.Execution.HostServices HostServices { get { throw null; } }
+        public Microsoft.Build.Graph.ProjectGraph ProjectGraph { get { throw null; } }
+        public System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> ProjectGraphEntryPoints { get { throw null; } }
+        public System.Collections.Generic.ICollection<string> TargetNames { get { throw null; } }
+    }
+    public sealed partial class GraphBuildResult
+    {
+        internal GraphBuildResult() { }
+        public bool CircularDependency { get { throw null; } }
+        public System.Exception Exception { get { throw null; } }
+        public Microsoft.Build.Execution.BuildResult this[Microsoft.Build.Graph.ProjectGraphNode node] { get { throw null; } }
+        public Microsoft.Build.Execution.BuildResultCode OverallResult { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyDictionary<Microsoft.Build.Graph.ProjectGraphNode, Microsoft.Build.Execution.BuildResult> ResultsByNode { get { throw null; } }
+        public int SubmissionId { get { throw null; } }
+    }
+    public partial class GraphBuildSubmission
+    {
+        internal GraphBuildSubmission() { }
+        public object AsyncContext { get { throw null; } }
+        public Microsoft.Build.Execution.BuildManager BuildManager { get { throw null; } }
+        public Microsoft.Build.Graph.GraphBuildResult BuildResult { get { throw null; } }
+        public bool IsCompleted { get { throw null; } }
+        public int SubmissionId { get { throw null; } }
+        public System.Threading.WaitHandle WaitHandle { get { throw null; } }
+        public Microsoft.Build.Graph.GraphBuildResult Execute() { throw null; }
+        public void ExecuteAsync(Microsoft.Build.Graph.GraphBuildSubmissionCompleteCallback callback, object context) { }
+    }
+    public delegate void GraphBuildSubmissionCompleteCallback(Microsoft.Build.Graph.GraphBuildSubmission submission);
+    public sealed partial class ProjectGraph
+    {
+        public ProjectGraph(Microsoft.Build.Graph.ProjectGraphEntryPoint entryPoint) { }
+        public ProjectGraph(Microsoft.Build.Graph.ProjectGraphEntryPoint entryPoint, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> entryPoints) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> entryPoints, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> entryPoints, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory, int degreeOfParallelism, System.Threading.CancellationToken cancellationToken) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<Microsoft.Build.Graph.ProjectGraphEntryPoint> entryPoints, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory, System.Threading.CancellationToken cancellationToken) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, System.Collections.Generic.IDictionary<string, string> globalProperties) { }
+        public ProjectGraph(System.Collections.Generic.IEnumerable<string> entryProjectFiles, System.Collections.Generic.IDictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
+        public ProjectGraph(string entryProjectFile) { }
+        public ProjectGraph(string entryProjectFile, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
+        public ProjectGraph(string entryProjectFile, Microsoft.Build.Evaluation.ProjectCollection projectCollection, Microsoft.Build.Graph.ProjectGraph.ProjectInstanceFactoryFunc projectInstanceFactory) { }
+        public ProjectGraph(string entryProjectFile, System.Collections.Generic.IDictionary<string, string> globalProperties) { }
+        public ProjectGraph(string entryProjectFile, System.Collections.Generic.IDictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection) { }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> EntryPointNodes { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> GraphRoots { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> ProjectNodes { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> ProjectNodesTopologicallySorted { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyDictionary<Microsoft.Build.Graph.ProjectGraphNode, System.Collections.Immutable.ImmutableList<string>> GetTargetLists(System.Collections.Generic.ICollection<string> entryProjectTargets) { throw null; }
+        public delegate Microsoft.Build.Execution.ProjectInstance ProjectInstanceFactoryFunc(string projectPath, System.Collections.Generic.Dictionary<string, string> globalProperties, Microsoft.Build.Evaluation.ProjectCollection projectCollection);
+    }
+    [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    public partial struct ProjectGraphEntryPoint
+    {
+        public ProjectGraphEntryPoint(string projectFile) { throw null;}
+        public ProjectGraphEntryPoint(string projectFile, System.Collections.Generic.IDictionary<string, string> globalProperties) { throw null;}
+        public System.Collections.Generic.IDictionary<string, string> GlobalProperties { get { throw null; } }
+        public string ProjectFile { get { throw null; } }
+    }
+    public sealed partial class ProjectGraphNode
+    {
+        internal ProjectGraphNode() { }
+        public Microsoft.Build.Execution.ProjectInstance ProjectInstance { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> ProjectReferences { get { throw null; } }
+        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Graph.ProjectGraphNode> ReferencingProjects { get { throw null; } }
     }
 }
 namespace Microsoft.Build.Logging
@@ -1605,6 +1625,8 @@ namespace Microsoft.Build.Logging
     public partial class LoggerDescription
     {
         public LoggerDescription(string loggerClassName, string loggerAssemblyName, string loggerAssemblyFile, string loggerSwitchParameters, Microsoft.Build.Framework.LoggerVerbosity verbosity) { }
+        public LoggerDescription(string loggerClassName, string loggerAssemblyName, string loggerAssemblyFile, string loggerSwitchParameters, Microsoft.Build.Framework.LoggerVerbosity verbosity, bool isOptional) { }
+        public bool IsOptional { get { throw null; } }
         public string LoggerSwitchParameters { get { throw null; } }
         public Microsoft.Build.Framework.LoggerVerbosity Verbosity { get { throw null; } }
         public Microsoft.Build.Framework.ILogger CreateLogger() { throw null; }
@@ -1619,4 +1641,356 @@ namespace Microsoft.Build.Logging
         public void Shutdown() { }
     }
     public delegate void WriteHandler(string message);
+}
+namespace Microsoft.Build.ObjectModelRemoting
+{
+    public abstract partial class ExternalProjectsProvider
+    {
+        protected ExternalProjectsProvider() { }
+        public virtual void Disconnected(Microsoft.Build.Evaluation.ProjectCollection collection) { }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.Project> GetLoadedProjects(string filePath);
+        public static void SetExternalProjectsProvider(Microsoft.Build.Evaluation.ProjectCollection collection, Microsoft.Build.ObjectModelRemoting.ExternalProjectsProvider link) { }
+    }
+    public partial class LinkedObjectsFactory
+    {
+        internal LinkedObjectsFactory() { }
+        public Microsoft.Build.Evaluation.ProjectCollection Collection { get { throw null; } }
+        public Microsoft.Build.Evaluation.ResolvedImport Create(Microsoft.Build.Construction.ProjectImportElement importingElement, Microsoft.Build.Construction.ProjectRootElement importedProject, int versionEvaluated, Microsoft.Build.Framework.SdkResult sdkResult, bool isImported) { throw null; }
+        public Microsoft.Build.Construction.ProjectChooseElement Create(Microsoft.Build.ObjectModelRemoting.ProjectChooseElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectExtensionsElement Create(Microsoft.Build.ObjectModelRemoting.ProjectExtensionsElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectImportElement Create(Microsoft.Build.ObjectModelRemoting.ProjectImportElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectImportGroupElement Create(Microsoft.Build.ObjectModelRemoting.ProjectImportGroupElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectItemDefinitionElement Create(Microsoft.Build.ObjectModelRemoting.ProjectItemDefinitionElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectItemDefinitionGroupElement Create(Microsoft.Build.ObjectModelRemoting.ProjectItemDefinitionGroupElementLink link) { throw null; }
+        public Microsoft.Build.Evaluation.ProjectItemDefinition Create(Microsoft.Build.ObjectModelRemoting.ProjectItemDefinitionLink link, Microsoft.Build.Evaluation.Project project=null) { throw null; }
+        public Microsoft.Build.Construction.ProjectItemElement Create(Microsoft.Build.ObjectModelRemoting.ProjectItemElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectItemGroupElement Create(Microsoft.Build.ObjectModelRemoting.ProjectItemGroupElementLink link) { throw null; }
+        public Microsoft.Build.Evaluation.ProjectItem Create(Microsoft.Build.ObjectModelRemoting.ProjectItemLink link, Microsoft.Build.Evaluation.Project project=null, Microsoft.Build.Construction.ProjectItemElement xml=null) { throw null; }
+        public Microsoft.Build.Evaluation.Project Create(Microsoft.Build.ObjectModelRemoting.ProjectLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectMetadataElement Create(Microsoft.Build.ObjectModelRemoting.ProjectMetadataElementLink link) { throw null; }
+        public Microsoft.Build.Evaluation.ProjectMetadata Create(Microsoft.Build.ObjectModelRemoting.ProjectMetadataLink link, object parent=null) { throw null; }
+        public Microsoft.Build.Construction.ProjectOnErrorElement Create(Microsoft.Build.ObjectModelRemoting.ProjectOnErrorElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectOtherwiseElement Create(Microsoft.Build.ObjectModelRemoting.ProjectOtherwiseElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectOutputElement Create(Microsoft.Build.ObjectModelRemoting.ProjectOutputElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectPropertyElement Create(Microsoft.Build.ObjectModelRemoting.ProjectPropertyElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectPropertyGroupElement Create(Microsoft.Build.ObjectModelRemoting.ProjectPropertyGroupElementLink link) { throw null; }
+        public Microsoft.Build.Evaluation.ProjectProperty Create(Microsoft.Build.ObjectModelRemoting.ProjectPropertyLink link, Microsoft.Build.Evaluation.Project project=null) { throw null; }
+        public Microsoft.Build.Construction.ProjectRootElement Create(Microsoft.Build.ObjectModelRemoting.ProjectRootElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectSdkElement Create(Microsoft.Build.ObjectModelRemoting.ProjectSdkElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectTargetElement Create(Microsoft.Build.ObjectModelRemoting.ProjectTargetElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectTaskElement Create(Microsoft.Build.ObjectModelRemoting.ProjectTaskElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectUsingTaskBodyElement Create(Microsoft.Build.ObjectModelRemoting.ProjectUsingTaskBodyElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectUsingTaskElement Create(Microsoft.Build.ObjectModelRemoting.ProjectUsingTaskElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectUsingTaskParameterElement Create(Microsoft.Build.ObjectModelRemoting.ProjectUsingTaskParameterElementLink link) { throw null; }
+        public Microsoft.Build.Construction.ProjectWhenElement Create(Microsoft.Build.ObjectModelRemoting.ProjectWhenElementLink link) { throw null; }
+        public Microsoft.Build.Construction.UsingTaskParameterGroupElement Create(Microsoft.Build.ObjectModelRemoting.UsingTaskParameterGroupElementLink link) { throw null; }
+        public static Microsoft.Build.ObjectModelRemoting.LinkedObjectsFactory Get(Microsoft.Build.Evaluation.ProjectCollection collection) { throw null; }
+        public static object GetLink(object obj) { throw null; }
+        public static System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.Evaluation.Project> GetLocalProjects(Microsoft.Build.Evaluation.ProjectCollection collection, string projectFile=null) { throw null; }
+        public static bool IsLocal(object obj) { throw null; }
+    }
+    public abstract partial class ProjectChooseElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectChooseElementLink() { }
+    }
+    public abstract partial class ProjectElementContainerLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectElementContainerLink() { }
+        public abstract int Count { get; }
+        public abstract Microsoft.Build.Construction.ProjectElement FirstChild { get; }
+        public abstract Microsoft.Build.Construction.ProjectElement LastChild { get; }
+        public abstract void AddInitialChild(Microsoft.Build.Construction.ProjectElement child);
+        public static void AddInitialChild(Microsoft.Build.Construction.ProjectElementContainer xml, Microsoft.Build.Construction.ProjectElement child) { }
+        public static Microsoft.Build.Construction.ProjectElementContainer DeepClone(Microsoft.Build.Construction.ProjectElementContainer xml, Microsoft.Build.Construction.ProjectRootElement factory, Microsoft.Build.Construction.ProjectElementContainer parent) { throw null; }
+        public abstract Microsoft.Build.Construction.ProjectElementContainer DeepClone(Microsoft.Build.Construction.ProjectRootElement factory, Microsoft.Build.Construction.ProjectElementContainer parent);
+        public abstract void InsertAfterChild(Microsoft.Build.Construction.ProjectElement child, Microsoft.Build.Construction.ProjectElement reference);
+        public abstract void InsertBeforeChild(Microsoft.Build.Construction.ProjectElement child, Microsoft.Build.Construction.ProjectElement reference);
+        public abstract void RemoveChild(Microsoft.Build.Construction.ProjectElement child);
+    }
+    public abstract partial class ProjectElementLink
+    {
+        protected ProjectElementLink() { }
+        public abstract System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.ObjectModelRemoting.XmlAttributeLink> Attributes { get; }
+        public abstract Microsoft.Build.Construction.ProjectRootElement ContainingProject { get; }
+        public abstract string ElementName { get; }
+        public abstract bool ExpressedAsAttribute { get; set; }
+        public abstract Microsoft.Build.Construction.ElementLocation Location { get; }
+        public abstract Microsoft.Build.Construction.ProjectElement NextSibling { get; }
+        public abstract string OuterElement { get; }
+        public abstract Microsoft.Build.Construction.ProjectElementContainer Parent { get; }
+        public abstract Microsoft.Build.Construction.ProjectElement PreviousSibling { get; }
+        public abstract string PureText { get; }
+        public abstract void CopyFrom(Microsoft.Build.Construction.ProjectElement element);
+        public static Microsoft.Build.Construction.ProjectElement CreateNewInstance(Microsoft.Build.Construction.ProjectElement xml, Microsoft.Build.Construction.ProjectRootElement owner) { throw null; }
+        public abstract Microsoft.Build.Construction.ProjectElement CreateNewInstance(Microsoft.Build.Construction.ProjectRootElement owner);
+        public static Microsoft.Build.Construction.ElementLocation GetAttributeLocation(Microsoft.Build.Construction.ProjectElement xml, string attributeName) { throw null; }
+        public abstract Microsoft.Build.Construction.ElementLocation GetAttributeLocation(string attributeName);
+        public static System.Collections.Generic.IReadOnlyCollection<Microsoft.Build.ObjectModelRemoting.XmlAttributeLink> GetAttributes(Microsoft.Build.Construction.ProjectElement xml) { throw null; }
+        public static string GetAttributeValue(Microsoft.Build.Construction.ProjectElement xml, string attributeName, bool nullIfNotExists) { throw null; }
+        public abstract string GetAttributeValue(string attributeName, bool nullIfNotExists);
+        public static bool GetExpressedAsAttribute(Microsoft.Build.Construction.ProjectElement xml) { throw null; }
+        public static string GetPureText(Microsoft.Build.Construction.ProjectElement xml) { throw null; }
+        public static void MarkDirty(Microsoft.Build.Construction.ProjectElement xml, string reason, string param) { }
+        public static void SetExpressedAsAttribute(Microsoft.Build.Construction.ProjectElement xml, bool value) { }
+        public static void SetOrRemoveAttribute(Microsoft.Build.Construction.ProjectElement xml, string name, string value, bool clearAttributeCache, string reason, string param) { }
+        public abstract void SetOrRemoveAttribute(string name, string value, bool clearAttributeCache, string reason, string param);
+    }
+    public abstract partial class ProjectExtensionsElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectExtensionsElementLink() { }
+        public abstract string Content { get; set; }
+        public abstract string GetSubElement(string name);
+        public abstract void SetSubElement(string name, string value);
+    }
+    public abstract partial class ProjectImportElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectImportElementLink() { }
+        public abstract Microsoft.Build.Construction.ImplicitImportLocation ImplicitImportLocation { get; }
+        public abstract Microsoft.Build.Construction.ProjectElement OriginalElement { get; }
+    }
+    public abstract partial class ProjectImportGroupElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectImportGroupElementLink() { }
+    }
+    public abstract partial class ProjectItemDefinitionElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectItemDefinitionElementLink() { }
+    }
+    public abstract partial class ProjectItemDefinitionGroupElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectItemDefinitionGroupElementLink() { }
+    }
+    public abstract partial class ProjectItemDefinitionLink
+    {
+        protected ProjectItemDefinitionLink() { }
+        public abstract string ItemType { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectMetadata> Metadata { get; }
+        public abstract Microsoft.Build.Evaluation.Project Project { get; }
+        public abstract Microsoft.Build.Evaluation.ProjectMetadata GetMetadata(string name);
+        public abstract string GetMetadataValue(string name);
+        public abstract Microsoft.Build.Evaluation.ProjectMetadata SetMetadataValue(string name, string unevaluatedValue);
+    }
+    public abstract partial class ProjectItemElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectItemElementLink() { }
+        public abstract void ChangeItemType(string newType);
+    }
+    public abstract partial class ProjectItemGroupElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectItemGroupElementLink() { }
+    }
+    public abstract partial class ProjectItemLink
+    {
+        protected ProjectItemLink() { }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectMetadata> DirectMetadata { get; }
+        public abstract string EvaluatedInclude { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectMetadata> MetadataCollection { get; }
+        public abstract Microsoft.Build.Evaluation.Project Project { get; }
+        public abstract Microsoft.Build.Construction.ProjectItemElement Xml { get; }
+        public abstract void ChangeItemType(string newItemType);
+        public abstract Microsoft.Build.Evaluation.ProjectMetadata GetMetadata(string name);
+        public abstract string GetMetadataValue(string name);
+        public abstract bool HasMetadata(string name);
+        public abstract bool RemoveMetadata(string name);
+        public abstract void Rename(string name);
+        public abstract Microsoft.Build.Evaluation.ProjectMetadata SetMetadataValue(string name, string unevaluatedValue, bool propagateMetadataToSiblingItems);
+    }
+    public abstract partial class ProjectLink
+    {
+        protected ProjectLink() { }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectMetadata> AllEvaluatedItemDefinitionMetadata { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> AllEvaluatedItems { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectProperty> AllEvaluatedProperties { get; }
+        public abstract System.Collections.Generic.IDictionary<string, System.Collections.Generic.List<string>> ConditionedProperties { get; }
+        public abstract bool DisableMarkDirty { get; set; }
+        public abstract System.Collections.Generic.IDictionary<string, string> GlobalProperties { get; }
+        public abstract System.Collections.Generic.IList<Microsoft.Build.Evaluation.ResolvedImport> Imports { get; }
+        public abstract System.Collections.Generic.IList<Microsoft.Build.Evaluation.ResolvedImport> ImportsIncludingDuplicates { get; }
+        public abstract bool IsBuildEnabled { get; set; }
+        public abstract bool IsDirty { get; }
+        public abstract System.Collections.Generic.IDictionary<string, Microsoft.Build.Evaluation.ProjectItemDefinition> ItemDefinitions { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> Items { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> ItemsIgnoringCondition { get; }
+        public abstract System.Collections.Generic.ICollection<string> ItemTypes { get; }
+        public abstract int LastEvaluationId { get; }
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectProperty> Properties { get; }
+        public abstract bool SkipEvaluation { get; set; }
+        public abstract string SubToolsetVersion { get; }
+        public abstract System.Collections.Generic.IDictionary<string, Microsoft.Build.Execution.ProjectTargetInstance> Targets { get; }
+        public abstract bool ThrowInsteadOfSplittingItemElement { get; set; }
+        public abstract string ToolsVersion { get; }
+        public abstract Microsoft.Build.Construction.ProjectRootElement Xml { get; }
+        public abstract System.Collections.Generic.IList<Microsoft.Build.Evaluation.ProjectItem> AddItem(string itemType, string unevaluatedInclude, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> metadata);
+        public abstract System.Collections.Generic.IList<Microsoft.Build.Evaluation.ProjectItem> AddItemFast(string itemType, string unevaluatedInclude, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> metadata);
+        public abstract bool Build(string[] targets, System.Collections.Generic.IEnumerable<Microsoft.Build.Framework.ILogger> loggers, System.Collections.Generic.IEnumerable<Microsoft.Build.Logging.ForwardingLoggerRecord> remoteLoggers, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract Microsoft.Build.Execution.ProjectInstance CreateProjectInstance(Microsoft.Build.Execution.ProjectInstanceSettings settings, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract string ExpandString(string unexpandedValue);
+        public abstract System.Collections.Generic.List<Microsoft.Build.Evaluation.GlobResult> GetAllGlobs(Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract System.Collections.Generic.List<Microsoft.Build.Evaluation.GlobResult> GetAllGlobs(string itemType, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract System.Collections.Generic.List<Microsoft.Build.Evaluation.ProvenanceResult> GetItemProvenance(Microsoft.Build.Evaluation.ProjectItem item, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract System.Collections.Generic.List<Microsoft.Build.Evaluation.ProvenanceResult> GetItemProvenance(string itemToMatch, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract System.Collections.Generic.List<Microsoft.Build.Evaluation.ProvenanceResult> GetItemProvenance(string itemToMatch, string itemType, Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> GetItems(string itemType);
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> GetItemsByEvaluatedInclude(string evaluatedInclude);
+        public abstract System.Collections.Generic.ICollection<Microsoft.Build.Evaluation.ProjectItem> GetItemsIgnoringCondition(string itemType);
+        public abstract System.Collections.Generic.IEnumerable<Microsoft.Build.Construction.ProjectElement> GetLogicalProject();
+        public abstract Microsoft.Build.Evaluation.ProjectProperty GetProperty(string name);
+        public abstract string GetPropertyValue(string name);
+        public abstract void MarkDirty();
+        public abstract void ReevaluateIfNecessary(Microsoft.Build.Evaluation.Context.EvaluationContext evaluationContext);
+        public abstract bool RemoveGlobalProperty(string name);
+        public abstract bool RemoveItem(Microsoft.Build.Evaluation.ProjectItem item);
+        public abstract void RemoveItems(System.Collections.Generic.IEnumerable<Microsoft.Build.Evaluation.ProjectItem> items);
+        public abstract bool RemoveProperty(Microsoft.Build.Evaluation.ProjectProperty property);
+        public abstract void SaveLogicalProject(System.IO.TextWriter writer);
+        public abstract bool SetGlobalProperty(string name, string escapedValue);
+        public abstract Microsoft.Build.Evaluation.ProjectProperty SetProperty(string name, string unevaluatedValue);
+        public abstract void Unload();
+    }
+    public abstract partial class ProjectMetadataElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectMetadataElementLink() { }
+        public abstract string Value { get; set; }
+        public abstract void ChangeName(string newName);
+    }
+    public abstract partial class ProjectMetadataLink
+    {
+        protected ProjectMetadataLink() { }
+        public abstract string EvaluatedValueEscaped { get; }
+        public abstract object Parent { get; }
+        public abstract Microsoft.Build.Evaluation.ProjectMetadata Predecessor { get; }
+        public abstract Microsoft.Build.Construction.ProjectMetadataElement Xml { get; }
+        public static string GetEvaluatedValueEscaped(Microsoft.Build.Evaluation.ProjectMetadata metadata) { throw null; }
+        public static object GetParent(Microsoft.Build.Evaluation.ProjectMetadata metadata) { throw null; }
+    }
+    public abstract partial class ProjectOnErrorElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectOnErrorElementLink() { }
+    }
+    public abstract partial class ProjectOtherwiseElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectOtherwiseElementLink() { }
+    }
+    public abstract partial class ProjectOutputElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectOutputElementLink() { }
+    }
+    public abstract partial class ProjectPropertyElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectPropertyElementLink() { }
+        public abstract string Value { get; set; }
+        public abstract void ChangeName(string newName);
+    }
+    public abstract partial class ProjectPropertyGroupElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectPropertyGroupElementLink() { }
+    }
+    public abstract partial class ProjectPropertyLink
+    {
+        protected ProjectPropertyLink() { }
+        public abstract string EvaluatedIncludeEscaped { get; }
+        public abstract bool IsEnvironmentProperty { get; }
+        public abstract bool IsGlobalProperty { get; }
+        public abstract bool IsImported { get; }
+        public abstract bool IsReservedProperty { get; }
+        public abstract string Name { get; }
+        public abstract Microsoft.Build.Evaluation.ProjectProperty Predecessor { get; }
+        public abstract Microsoft.Build.Evaluation.Project Project { get; }
+        public abstract string UnevaluatedValue { get; set; }
+        public abstract Microsoft.Build.Construction.ProjectPropertyElement Xml { get; }
+        public static string GetEvaluatedValueEscaped(Microsoft.Build.Evaluation.ProjectProperty property) { throw null; }
+    }
+    public abstract partial class ProjectRootElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectRootElementLink() { }
+        public abstract string DirectoryPath { get; }
+        public abstract System.Text.Encoding Encoding { get; }
+        public abstract string FullPath { get; set; }
+        public abstract bool HasUnsavedChanges { get; }
+        public abstract System.DateTime LastWriteTimeWhenRead { get; }
+        public abstract bool PreserveFormatting { get; }
+        public abstract Microsoft.Build.Construction.ElementLocation ProjectFileLocation { get; }
+        public abstract string RawXml { get; }
+        public abstract System.DateTime TimeLastChanged { get; }
+        public abstract int Version { get; }
+        public abstract Microsoft.Build.Construction.ProjectChooseElement CreateChooseElement();
+        public abstract Microsoft.Build.Construction.ProjectImportElement CreateImportElement(string project);
+        public abstract Microsoft.Build.Construction.ProjectImportGroupElement CreateImportGroupElement();
+        public abstract Microsoft.Build.Construction.ProjectItemDefinitionElement CreateItemDefinitionElement(string itemType);
+        public abstract Microsoft.Build.Construction.ProjectItemDefinitionGroupElement CreateItemDefinitionGroupElement();
+        public abstract Microsoft.Build.Construction.ProjectItemElement CreateItemElement(string itemType);
+        public abstract Microsoft.Build.Construction.ProjectItemElement CreateItemElement(string itemType, string include);
+        public abstract Microsoft.Build.Construction.ProjectItemGroupElement CreateItemGroupElement();
+        public abstract Microsoft.Build.Construction.ProjectMetadataElement CreateMetadataElement(string name);
+        public abstract Microsoft.Build.Construction.ProjectMetadataElement CreateMetadataElement(string name, string unevaluatedValue);
+        public abstract Microsoft.Build.Construction.ProjectOnErrorElement CreateOnErrorElement(string executeTargets);
+        public abstract Microsoft.Build.Construction.ProjectOtherwiseElement CreateOtherwiseElement();
+        public abstract Microsoft.Build.Construction.ProjectOutputElement CreateOutputElement(string taskParameter, string itemType, string propertyName);
+        public abstract Microsoft.Build.Construction.ProjectExtensionsElement CreateProjectExtensionsElement();
+        public abstract Microsoft.Build.Construction.ProjectSdkElement CreateProjectSdkElement(string sdkName, string sdkVersion);
+        public abstract Microsoft.Build.Construction.ProjectPropertyElement CreatePropertyElement(string name);
+        public abstract Microsoft.Build.Construction.ProjectPropertyGroupElement CreatePropertyGroupElement();
+        public abstract Microsoft.Build.Construction.ProjectTargetElement CreateTargetElement(string name);
+        public abstract Microsoft.Build.Construction.ProjectTaskElement CreateTaskElement(string name);
+        public abstract Microsoft.Build.Construction.ProjectUsingTaskBodyElement CreateUsingTaskBodyElement(string evaluate, string body);
+        public abstract Microsoft.Build.Construction.ProjectUsingTaskElement CreateUsingTaskElement(string taskName, string assemblyFile, string assemblyName, string runtime, string architecture);
+        public abstract Microsoft.Build.Construction.ProjectUsingTaskParameterElement CreateUsingTaskParameterElement(string name, string output, string required, string parameterType);
+        public abstract Microsoft.Build.Construction.UsingTaskParameterGroupElement CreateUsingTaskParameterGroupElement();
+        public abstract Microsoft.Build.Construction.ProjectWhenElement CreateWhenElement(string condition);
+        public abstract void MarkDirty(string reason, string param);
+        public abstract void ReloadFrom(string path, bool throwIfUnsavedChanges, bool preserveFormatting);
+        public abstract void ReloadFrom(System.Xml.XmlReader reader, bool throwIfUnsavedChanges, bool preserveFormatting);
+        public abstract void Save(System.IO.TextWriter writer);
+        public abstract void Save(System.Text.Encoding saveEncoding);
+    }
+    public abstract partial class ProjectSdkElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectSdkElementLink() { }
+    }
+    public abstract partial class ProjectTargetElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectTargetElementLink() { }
+        public abstract string Name { get; set; }
+        public abstract string Returns { set; }
+    }
+    public abstract partial class ProjectTaskElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectTaskElementLink() { }
+        public abstract System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, Microsoft.Build.Construction.ElementLocation>> ParameterLocations { get; }
+        public abstract System.Collections.Generic.IDictionary<string, string> Parameters { get; }
+        public abstract string GetParameter(string name);
+        public abstract void RemoveAllParameters();
+        public abstract void RemoveParameter(string name);
+        public abstract void SetParameter(string name, string unevaluatedValue);
+    }
+    public abstract partial class ProjectUsingTaskBodyElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectUsingTaskBodyElementLink() { }
+        public abstract string TaskBody { get; set; }
+    }
+    public abstract partial class ProjectUsingTaskElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectUsingTaskElementLink() { }
+    }
+    public abstract partial class ProjectUsingTaskParameterElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementLink
+    {
+        protected ProjectUsingTaskParameterElementLink() { }
+        public abstract string Name { get; set; }
+    }
+    public abstract partial class ProjectWhenElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected ProjectWhenElementLink() { }
+    }
+    public abstract partial class UsingTaskParameterGroupElementLink : Microsoft.Build.ObjectModelRemoting.ProjectElementContainerLink
+    {
+        protected UsingTaskParameterGroupElementLink() { }
+    }
+    [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    public partial struct XmlAttributeLink
+    {
+        public XmlAttributeLink(string localName, string value, string namespaceUri) { throw null;}
+        public string LocalName { get { throw null; } }
+        public string NamespaceURI { get { throw null; } }
+        public string Value { get { throw null; } }
+    }
 }

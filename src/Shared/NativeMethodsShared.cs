@@ -19,11 +19,6 @@ using Microsoft.Win32.SafeHandles;
 using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 using Microsoft.Build.Utilities;
 
-#if MICROSOFT_BUILD_TASKS
-using MSBuildConstants = Microsoft.Build.Tasks.MSBuildConstants;
-#else
-using MSBuildConstants = Microsoft.Build.Shared.MSBuildConstants;
-#endif
 
 namespace Microsoft.Build.Shared
 {
@@ -75,6 +70,7 @@ namespace Microsoft.Build.Shared
         internal const ushort PROCESSOR_ARCHITECTURE_ARM = 5;
         internal const ushort PROCESSOR_ARCHITECTURE_IA64 = 6;
         internal const ushort PROCESSOR_ARCHITECTURE_AMD64 = 9;
+        internal const ushort PROCESSOR_ARCHITECTURE_ARM64 = 12;
 
         internal const uint INFINITE = 0xFFFFFFFF;
         internal const uint WAIT_ABANDONED_0 = 0x00000080;
@@ -180,6 +176,9 @@ namespace Microsoft.Build.Shared
 
             // ARM
             ARM,
+
+            // ARM64
+            ARM64,
 
             // Who knows
             Unknown
@@ -390,6 +389,8 @@ namespace Microsoft.Build.Shared
                         return ProcessorArchitectures.ARM;
                     case PROCESSOR_ARCHITECTURE_IA64:
                         return ProcessorArchitectures.IA64;
+                    case PROCESSOR_ARCHITECTURE_ARM64:
+                        return ProcessorArchitectures.ARM64;
                     default:
                         return ProcessorArchitectures.Unknown;
                 }
@@ -513,7 +514,7 @@ namespace Microsoft.Build.Shared
             }
         }
 
-        private static bool IsMaxPathLegacyWindows()
+        internal static bool IsMaxPathLegacyWindows()
         {
             try
             {
@@ -626,28 +627,25 @@ namespace Microsoft.Build.Shared
 #endif
         }
 
-#if MONO
+#if !CLR2COMPATIBILITY
         private static bool? _isOSX;
 #endif
+
         /// <summary>
         /// Gets a flag indicating if we are running under Mac OSX
         /// </summary>
         internal static bool IsOSX
         {
-#if MONO
-            get
-            {
-                if (!_isOSX.HasValue)
-                {
-                    _isOSX = File.Exists("/usr/lib/libc.dylib");
-                }
-
-                return _isOSX.Value;
-            }
-#elif CLR2COMPATIBILITY
+#if CLR2COMPATIBILITY
             get { return false; }
 #else
-            get { return RuntimeInformation.IsOSPlatform(OSPlatform.OSX); }
+            get {
+                if (_isOSX == null)
+                {
+                    _isOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+                }
+                return _isOSX.Value;
+            }
 #endif
         }
 
@@ -1351,7 +1349,7 @@ namespace Microsoft.Build.Shared
 
         /// <summary>
         /// Gets the current OEM code page which is used by console apps
-        /// (as opposed to the Windows/ANSI code page used by the normal people)
+        /// (as opposed to the Windows/ANSI code page)
         /// Basically for each ANSI code page (set in Regional settings) there's a corresponding OEM code page
         /// that needs to be used for instance when writing to batch files
         /// </summary>

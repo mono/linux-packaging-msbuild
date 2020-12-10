@@ -3,24 +3,26 @@
 
 using System;
 using System.IO;
-using System.Reflection;
-using System.Collections;
+using System.Linq;
+
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
-using System.Text.RegularExpressions;
 
-using Microsoft.Build.Shared;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.Build.UnitTests
 {
     sealed public class MSBuildTask_Tests : IDisposable
     {
-        public MSBuildTask_Tests()
+        private readonly ITestOutputHelper _testOutput;
+
+        public MSBuildTask_Tests(ITestOutputHelper testOutput)
         {
+            _testOutput = testOutput;
             ProjectCollection.GlobalProjectCollection.UnloadAllProjects();
         }
 
@@ -34,6 +36,7 @@ namespace Microsoft.Build.UnitTests
         /// throw a path too long exception
         /// </summary>
         [Fact]
+        [ActiveIssue("https://github.com/Microsoft/msbuild/issues/4247")]
         public void ProjectItemSpecTooLong()
         {
             string currentDirectory = Directory.GetCurrentDirectory();
@@ -70,13 +73,14 @@ namespace Microsoft.Build.UnitTests
                 projectFile1 += Path.Combine(tempPathNoRoot, fileName);
                 try
                 {
-                    MSBuild msbuildTask = new MSBuild();
-                    msbuildTask.BuildEngine = new MockEngine();
+                    MSBuild msbuildTask = new MSBuild
+                    {
+                        BuildEngine = new MockEngine(_testOutput),
 
-                    msbuildTask.Projects = new ITaskItem[] { new TaskItem(projectFile1) };
+                        Projects = new ITaskItem[] { new TaskItem(projectFile1) }
+                    };
 
-                    bool success = msbuildTask.Execute();
-                    Assert.True(success); // "Build failed.  See 'Standard Out' tab for details."
+                    msbuildTask.Execute().ShouldBeTrue("Build failed.  See 'Standard Out' tab for details.");
                 }
                 finally
                 {
@@ -165,7 +169,7 @@ namespace Microsoft.Build.UnitTests
             Project project = ObjectModelHelpers.CreateInMemoryProject(projectContents, logger);
 
             bool success = project.Build();
-            Assert.True(success); // "Build failed.  See Standard Out tab for details"
+            Assert.True(success); // "Build failed.  See test output (Attachments in Azure Pipelines) for details"
         }
 
         /// <summary>
@@ -184,7 +188,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentProjectsMain.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentProjectsMain.csproj", logger);
             Assert.Contains("MSB3202", logger.FullLog); // project file not found
         }
 
@@ -204,7 +209,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentProjectsMain.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentProjectsMain.csproj", logger);
             Assert.Equal(0, logger.WarningCount);
             Assert.Equal(1, logger.ErrorCount);
             Assert.Contains("MSB3202", logger.FullLog); // project file not found
@@ -235,7 +241,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentProjectsMain.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentProjectsMain.csproj", logger);
 
             logger.AssertLogContains("Hello from foo.csproj");
             Assert.Equal(0, logger.WarningCount);
@@ -270,7 +277,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentProjectsMain.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentProjectsMain.csproj", logger);
 
             logger.AssertLogContains("Hello from foo.csproj");
             Assert.Equal(0, logger.WarningCount);
@@ -311,7 +319,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"BuildingVCProjMain.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"BuildingVCProjMain.csproj", logger);
 
             logger.AssertLogContains("Hello from foo.csproj");
             Assert.Equal(0, logger.WarningCount);
@@ -344,6 +353,7 @@ namespace Microsoft.Build.UnitTests
                 Path.Combine("bug'533'369", "Sub;Dir", "ConsoleApplication1", "ConsoleApplication1.csproj"), @"
 
                 <Project DefaultTargets=`Build` ToolsVersion=`msbuilddefaulttoolsversion` xmlns=`msbuildnamespace`>
+                  <Import Project=`$(MSBuildBinPath)\Microsoft.Common.props` />
                   <PropertyGroup>
                     <Configuration Condition=` '$(Configuration)' == '' `>Debug</Configuration>
                     <Platform Condition=` '$(Platform)' == '' `>AnyCPU</Platform>
@@ -420,7 +430,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            ObjectModelHelpers.BuildTempProjectFileExpectSuccess(Path.Combine("bug'533'369", "Sub;Dir", "TeamBuild.proj"));
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectSuccess(Path.Combine("bug'533'369", "Sub;Dir", "TeamBuild.proj"), logger);
 
             ObjectModelHelpers.AssertFileExistsInTempProjectDirectory(Path.Combine("bug'533'369", "Sub;Dir", "binaries", "ConsoleApplication1.exe"));
         }
@@ -1357,7 +1368,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentTargets.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectSuccess(@"SkipNonexistentTargets.csproj", logger);
 
             // Target t2 should still execute
             logger.FullLog.ShouldContain("t2 executing");
@@ -1382,7 +1394,8 @@ namespace Microsoft.Build.UnitTests
                 </Project>
                 ");
 
-            MockLogger logger = ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentTargets.csproj");
+            MockLogger logger = new MockLogger(_testOutput);
+            ObjectModelHelpers.BuildTempProjectFileExpectFailure(@"SkipNonexistentTargets.csproj", logger);
 
             logger.WarningCount.ShouldBe(0);
             logger.ErrorCount.ShouldBe(1);
@@ -1392,6 +1405,93 @@ namespace Microsoft.Build.UnitTests
 
             // 2nd invocation of t_missing should fail the build resulting in target not found error (MSB4057)
             logger.FullLog.ShouldContain("MSB4057");
+        }
+
+        [Fact]
+        public void MSBuildTaskPassesTaskIdToSpawnedBuilds()
+        {
+            string projectFile1 = ObjectModelHelpers.CreateTempFileOnDisk(@"
+                <Project>
+                    <Target Name=`Build`>
+                        <Message Text=`test`/>
+                    </Target>
+                </Project>");
+
+            string projectFile2 = ObjectModelHelpers.CreateTempFileOnDisk(@"
+                <Project>
+                    <Target Name=`Build`>
+                        <MSBuild Projects=`" + projectFile1 + @"` Targets=`Build` />
+                    </Target>	
+                </Project>");
+
+            try
+            {
+                Project project = new Project(projectFile2);
+                var logger = new MockLogger();
+
+                Assert.True(project.Build(logger));
+
+                var expectedTaskId = logger.TaskStartedEvents.First(t => t.TaskName == "MSBuild").BuildEventContext.TaskId;
+                var actualTaskId = logger.ProjectStartedEvents
+                    .Where(p => p.ParentProjectBuildEventContext != null && p.ParentProjectBuildEventContext.TaskId > 0)
+                    .First()
+                    .ParentProjectBuildEventContext.TaskId;
+
+                Assert.Equal(expectedTaskId, actualTaskId);
+            }
+            finally
+            {
+                File.Delete(projectFile1);
+                File.Delete(projectFile2);
+            }
+        }
+
+        [Fact]
+        public void CustomTaskWithBuildProjectFilePassesTaskId()
+        {
+            string projectFile1 = ObjectModelHelpers.CreateTempFileOnDisk($@"
+                <Project>
+                    <UsingTask TaskName=`{nameof(BuildProjectFileTask)}` AssemblyFile =`{typeof(BuildProjectFileTask).Assembly.Location}` />
+                    <Target Name=`Build`>
+                        <{nameof(BuildProjectFileTask)} Project=`$(MSBuildThisFileFullPath)` Targets=`Other` />
+                    </Target>
+                    <Target Name=`Other`>
+                        <Message Text=`test`/>
+                    </Target>
+                </Project>");
+
+            try
+            {
+                Project project = new Project(projectFile1);
+                var logger = new MockLogger();
+
+                Assert.True(project.Build(logger));
+
+                var expectedTaskId = logger.TaskStartedEvents.First(t => t.TaskName == nameof(BuildProjectFileTask)).BuildEventContext.TaskId;
+                var actualTaskId = logger.ProjectStartedEvents
+                    .Where(p => p.ParentProjectBuildEventContext != null && p.ParentProjectBuildEventContext.TaskId > 0)
+                    .First()
+                    .ParentProjectBuildEventContext.TaskId;
+
+                Assert.Equal(expectedTaskId, actualTaskId);
+            }
+            finally
+            {
+                File.Delete(projectFile1);
+            }
+        }
+    }
+
+    public class BuildProjectFileTask : Task
+    {
+        public string Project { get; set; }
+        public string[] Targets { get; set; }
+
+        public override bool Execute()
+        {
+            this.BuildEngine.BuildProjectFile(Project, Targets, null, null);
+
+            return true;
         }
     }
 }

@@ -32,25 +32,33 @@
         <note />
       </trans-unit>
       <trans-unit id="CacheMissesNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4252: Project "{0}" has a reference to "{1}" ({2} target(s)) but the build result for the reference is not in the engine cache. In isolated builds this could mean one of the following:
-    - the reference was not explicitly specified as a ProjectReference item in "{0}"
-    - the reference was not included in the provided input caches
-    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in "{0}"
+        <source>MSB4252: Project "{0}" with global properties
+    ({1})
+    is building project "{2}" with global properties
+    ({3})
+    with the ({4}) target(s) but the build result for the built project is not in the engine cache. In isolated builds this could mean one of the following:
+    - the reference was called with a target which is not specified in the ProjectReferenceTargets item in project "{0}"
+    - the reference was called with global properties that do not match the static graph inferred nodes
+    - the reference was not explicitly specified as a ProjectReference item in project "{0}"
     </source>
-        <target state="translated">MSB4252: プロジェクト "{0}" には "{1}" ({2} ターゲット) への参照が含まれていますが、参照のビルド結果がエンジン キャッシュ内にありません。分離されたビルドの場合、これは以下のいずれかを意味する可能性があります。
-    - 参照が "{0}" 内で ProjectReference 項目として明示的に指定されていなかった
-    - 参照が、指定された入力キャッシュ内に含まれていなかった
-    - 参照の呼び出しで指定されたターゲットが、"{0}" 内の ProjectReferenceTargets 項目で指定されていなかった
+        <target state="translated">MSB4252: グローバル プロパティを含むプロジェクト "{0}"
+    ({1})
+    グローバル プロパティを含むプロジェクト "{2}" をビルドしています
+    ({3})
+    ({4}) ターゲットがありますが、ビルド プロジェクトのビルド結果がエンジン キャッシュ内にありません。分離されたビルドの場合、これは以下のいずれかを意味する可能性があります。
+    - 参照の呼び出しで指定されたターゲットが、プロジェクト "{0}" 内の ProjectReferenceTargets 項目で指定されていなかった
+    - 参照の呼び出しで指定されたグローバル プロパティが、静的グラフの推定されたノードと一致しない
+    - 参照がプロジェクト "{0}" 内で ProjectReference 項目として明示的に指定されていなかった
     </target>
         <note>
       {StrBegin="MSB4252:"}
-      LOCALIZATION: Do not localize the following words: ProjectReference.
+      LOCALIZATION: Do not localize the following words: ProjectReference, ProjectReferenceTargets
     </note>
       </trans-unit>
       <trans-unit id="CannotExpandItemMetadata">
         <source>MSB4248: Cannot expand metadata in expression "{0}". {1}</source>
         <target state="translated">MSB4248: 式 "{0}" の中のメタデータを展開できません。 {1}</target>
-        <note>{StrBegin="MSB4023: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
+        <note>{StrBegin="MSB4248: "}UE: This message is shown when metadata cannot be expanded in an expression for some reason e.g. trying to apply
     %(RootDir) to an item-spec that's not a valid path would result in this error.
     LOCALIZATION: "{1}" is a localized message explaining the problem.</note>
       </trans-unit>
@@ -67,6 +75,11 @@
         <target state="translated">MSB4257: 指定された出力結果キャッシュ ファイルは空です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnvironmentVariableRead">
+        <source>Read environment variable "{0}"</source>
+        <target state="translated">環境変数 "{0}" の読み取り</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ErrorReadingCacheFile">
         <source>MSB4256: Reading input result cache files from path "{0}" encountered an error: {1}</source>
         <target state="translated">MSB4256: パス "{0}" から入力結果キャッシュ ファイルを読み取る処理でエラーが発生しました: {1}</target>
@@ -80,6 +93,23 @@
       <trans-unit id="InputCacheFilesDoNotExist">
         <source>MSB4255: The following input result cache files do not exist: "{0}"</source>
         <target state="translated">MSB4255: 以下の入力結果キャッシュ ファイルが存在しません: "{0}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidVersionFormat">
+        <source>Version string was not in a correct format.</source>
+        <target state="translated">バージョン文字列の形式が正しくありません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LogLoggerVerbosity">
+        <source>Logging verbosity is set to: {0}.</source>
+        <target state="translated">ログの詳細度は次のように設定されています: {0}。</target>
+        <note>
+      LOCALIZATION: {0} is an enum value of LoggerVerbosity.
+    </note>
+      </trans-unit>
+      <trans-unit id="LogTaskInputs.Truncated">
+        <source>The parameters have been truncated beyond this point. To view all parameters, clear the MSBUILDTRUNCATETASKINPUTLOGGING environment variable.</source>
+        <target state="translated">このポイントを超えるパラメーターは切り詰められています。すべてのパラメーターを表示するには、MSBUILDTRUNCATETASKINPUTLOGGING 環境変数をクリアします。</target>
         <note />
       </trans-unit>
       <trans-unit id="MetaprojectGenerated">
@@ -100,6 +130,11 @@
       LOCALIZATION:  Do not localize the following words: ProjectInstanceFactoryFunc.
     </note>
       </trans-unit>
+      <trans-unit id="OM_TargetNameNullOrEmpty">
+        <source>Method {0} cannot be called with a collection containing null or empty target names.</source>
+        <target state="translated">Null または空のターゲット名を含むコレクションを指定してメソッド {0} を呼び出すことはできません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProjectGraphDoesNotSupportProjectReferenceWithToolset">
         <source>MSB4250: ProjectGraph does not support ProjectReference items with the ToolsVersion metadata set. Found ProjectReference "{0}" with ToolsVersion in file "{1}"</source>
         <target state="translated">MSB4250: ProjectGraph では、ToolsVersion メタデータが設定された ProjectReference 項目はサポートしていません。ToolsVersion が含まれる ProjectReference "{0}" がファイル "{1}" で見つかりました</target>
@@ -108,13 +143,59 @@
       LOCALIZATION:  Do not localize the following words: ProjectGraph, ProjectReference, ToolsVersion.
     </note>
       </trans-unit>
+      <trans-unit id="PropertyAssignment">
+        <source>Property initial value: $({0})="{1}" Source: {2}</source>
+        <target state="translated">プロパティの初期値: $({0})="{1}" ソース: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedConstraintsOnRequest">
+        <source>MSB4260: Project "{0}" skipped graph isolation constraints on referenced project "{1}"</source>
+        <target state="translated">MSB4260: プロジェクト "{0}" は、参照先のプロジェクト "{1}" で、グラフの分離制約をスキップしました</target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphAcceptsSingleSolutionEntryPoint">
+        <source>MSB4261: Static graph only accepts a solution as the only entry point. Multiple entry points detected: {0}</source>
+        <target state="translated">MSB4261: 静的グラフでは、ソリューションを唯一のエントリ ポイントとして受け入れるのみです。複数のエントリ ポイントが検出されました: {0}</target>
+        <note>
+      LOCALIZATION: {0} is a semicolon delimited list of files
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphDoesNotSupportSlnReferences">
+        <source>MSB4263: Project "{0}" has a reference to solution file "{1}". Referencing solutions is not supported in static graph.
+    </source>
+        <target state="translated">MSB4263: プロジェクト "{0}" には、ソリューション ファイル "{1}" への参照が含まれています。静的グラフでは、ソリューションの参照はサポートされていません。
+    </target>
+        <note>
+      LOCALIZATION: {0} and {1} are file paths
+    </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphSolutionLoaderEncounteredSolutionWarningsAndErrors">
+        <source>MSB4262: Solution file "{0}" contains the following warnings and errors:
+           Warnings: {1}
+           Errors: {2}
+    </source>
+        <target state="translated">MSB4262: ソリューション ファイル "{0}" には、次の警告とエラーが含まれています:
+           警告: {1}
+           エラー: {2}
+    </target>
+        <note>
+      LOCALIZATION: {0} is a file, {1} and {2} are semicolon delimited lists of messages
+    </note>
+      </trans-unit>
       <trans-unit id="UndeclaredMSBuildTasksNotAllowedInIsolatedGraphBuilds">
-        <source>MSB4254: The MSBuild task is building project(s) {0} which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
-        <target state="translated">MSB4254: ProjectReference 項目で指定されていないプロジェクト {0} が MSBuild タスクによってビルドされています。分離されたビルドでは、これは多くの場合、参照が "{1}" で ProjectReference 項目として明示的に指定されていないことを意味します</target>
+        <source>MSB4254: The MSBuild task is building project(s) "{0}" which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
+        <target state="translated">MSB4254: ProjectReference 項目で指定されていないプロジェクト "{0}" が MSBuild タスクによってビルドされています。分離されたビルドでは、これは多くの場合、参照が "{1}" で ProjectReference 項目として明示的に指定されていないことを意味します</target>
         <note>
       {StrBegin="MSB4254:"}
       LOCALIZATION: Do not localize the following words: ProjectReference, MSBuild, task.
     </note>
+      </trans-unit>
+      <trans-unit id="UninitializedPropertyRead">
+        <source>Read uninitialized property "{0}"</source>
+        <target state="translated">初期化されていないプロパティ "{0}" の読み取り</target>
+        <note />
       </trans-unit>
       <trans-unit id="UsingInputCaches">
         <source>Using input build results caches: {0}</source>
@@ -545,18 +626,18 @@
         <note>{StrBegin="MSB4101: "}</note>
       </trans-unit>
       <trans-unit id="ImportedProjectNotFound">
-        <source>MSB4019: The imported project "{0}" was not found. Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk.</source>
-        <target state="translated">MSB4019: インポートされたプロジェクト "{0}" が見つかりませんでした。&lt;Import&gt; 宣言のパスが正しいかどうか、およびファイルがディスクに存在しているかどうかを確認してください。</target>
+        <source>MSB4019: The imported project "{0}" was not found. Confirm that the expression in the Import declaration "{1}" is correct, and that the file exists on disk.</source>
+        <target state="translated">MSB4019: インポートされたプロジェクト "{0}" が見つかりませんでした。Import 宣言 "{1}" の式が正しいことと、ファイルがディスク上に存在することを確認してください。</target>
         <note>{StrBegin="MSB4019: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFoundFromAppConfig">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . These search paths are defined in "{4}". Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: インポートされたプロジェクト "{0}" が見つかりませんでした。また、{2} - {3} のフォールバック検索パスで "{1}" を検索しようとしました。これらの検索パスは "{4}" に定義されています。&lt;Import&gt; 宣言のパスが正しいかどうか、およびいずれかの検索パスのディスクにファイルが存在しているかどうかを確認してください。</target>
+        <target state="translated">MSB4226: インポートされたプロジェクト "{0}" が見つかりませんでした。また、{2} - {3} に対してフォールバック検索パスで "{1}" の検索が試行されました。これらの検索パスは "{4}" で定義されています。&lt;Import&gt; 宣言のパスが正しいこと、およびファイルが検索パスのいずれかのディスク上に存在することを確認してください。</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="ImportedProjectFromExtensionsPathNotFound">
         <source>MSB4226: The imported project "{0}" was not found. Also, tried to find "{1}" in the fallback search path(s) for {2} - {3} . Confirm that the path in the &lt;Import&gt; declaration is correct, and that the file exists on disk in one of the search paths.</source>
-        <target state="translated">MSB4226: インポートされたプロジェクト "{0}" が見つかりませんでした。また、{2} - {3} のフォールバック検索パスで "{1}" を検索しようとしました。&lt;Import&gt; 宣言のパスが正しいかどうか、およびいずれかの検索パスのディスクにファイルが存在しているかどうかを確認してください。</target>
+        <target state="translated">MSB4226: インポートされたプロジェクト "{0}" が見つかりませんでした。また、{2} - {3} に対してフォールバック検索パスで "{1}" の検索が試行されました。&lt;Import&gt; 宣言のパスが正しいこと、およびファイルが検索パスのいずれかのディスク上に存在することを確認してください。</target>
         <note>{StrBegin="MSB4226: "}LOCALIZATION: &lt;Import&gt; should not be localized.</note>
       </trans-unit>
       <trans-unit id="IncorrectNumberOfFunctionArguments">
@@ -783,7 +864,7 @@
       </trans-unit>
       <trans-unit id="MissingTaskError">
         <source>MSB4036: The "{0}" task was not found. Check the following: 1.) The name of the task in the project file is the same as the name of the task class. 2.) The task class is "public" and implements the Microsoft.Build.Framework.ITask interface. 3.) The task is correctly declared with &lt;UsingTask&gt; in the project file, or in the *.tasks files located in the "{1}" directory.</source>
-        <target state="translated">MSB4036: "{0}" タスクが見つかりませんでした。次のことを確認してください。1.)プロジェクト ファイルの中のタスク名がタスク クラス名と同一である。2.)タスク クラスが public であり Microsoft.Build.Framework.ITask インターフェイスを実装する。3.)プロジェクト ファイルまたは "{1}" ディレクトリに配置された *.tasks ファイルの中の &lt;UsingTask&gt; でタスクが正しく宣言されている。</target>
+        <target state="translated">MSB4036: "{0}" タスクが見つかりませんでした。次のことを確認してください。1.) プロジェクト ファイルの中のタスク名がタスク クラス名と同一である。2.) タスク クラスが public であり Microsoft.Build.Framework.ITask インターフェイスを実装する。3.) プロジェクト ファイルまたは "{1}" ディレクトリに配置された *.tasks ファイルの中の &lt;UsingTask&gt; でタスクが正しく宣言されている。</target>
         <note>{StrBegin="MSB4036: "}LOCALIZATION: &lt;UsingTask&gt; and "*.tasks" should not be localized.</note>
       </trans-unit>
       <trans-unit id="MSBuildToolsPathIsNotSpecified">
@@ -898,7 +979,7 @@
       </trans-unit>
       <trans-unit id="ProjectMustBeInMSBuildXmlNamespace">
         <source>MSB4041: The default XML namespace of the project must be the MSBuild XML namespace or no namespace. If the project is authored in the MSBuild 2003 format, please add xmlns="{0}" to the &lt;Project&gt; element. If the project has been authored in the old 1.0 or 1.2 format, please convert it to MSBuild 2003 format.</source>
-        <target state="translated">MSB4041: プロジェクトの既定の XML 名前空間は MSBuild の XML 名前空間であるか、名前空間なしである必要があります。プロジェクトが MSBuild 2003 形式で作成されている場合、xmlns="{0}" を &lt;Project&gt; 要素に追加してください。プロジェクトが古い 1.0 または 1.2 形式で作成されている場合、MSBuild 2003 形式に変換してください。</target>
+        <target state="translated">MSB4041: プロジェクトの既定の XML 名前空間は MSBuild XML 名前空間にするか、名前空間なしにする必要があります。プロジェクトが MSBuild 2003 形式で作成されている場合、xmlns="{0}" を &lt;Project&gt; 要素に追加してください。プロジェクトが古い 1.0 または 1.2 形式で作成されている場合、MSBuild 2003 形式に変換してください。</target>
         <note>{StrBegin="MSB4041: "}UE: This is a Beta 1 message only.
       LOCALIZATION: &lt;Project&gt;, "MSBuild" and "xmlns" should not be localized.</note>
       </trans-unit>
@@ -1121,7 +1202,7 @@
       </trans-unit>
       <trans-unit id="SolutionVenusProjectSkipped">
         <source>Skipping because the "$(AspNetConfiguration)" configuration is not supported for this web project.  You can use the AspNetConfiguration property to override the configuration used for building web projects, by adding /p:AspNetConfiguration=&lt;value&gt; to the command line. Currently web projects only support Debug and Release configurations.</source>
-        <target state="translated">"$(AspNetConfiguration)" 構成はこの Web プロジェクトではサポートされていないため、省略します。AspNetConfiguration プロパティを使用し、/p:AspNetConfiguration=&lt;value&gt; をコマンド ラインに追加することによって、Web プロジェクトをビルドするのに使われた構成をオーバーライドすることができます。現在、Web プロジェクトでは、Debug 構成と Release 構成のみがサポートされています。</target>
+        <target state="translated">"$(AspNetConfiguration)" 構成はこの Web プロジェクトではサポートされていないため、省略します。AspNetConfiguration プロパティを使用し、/p:AspNetConfiguration=&lt;value&gt; をコマンド ラインに追加することによって、Web プロジェクトをビルドするのに使われた構成を上書きすることができます。現在、Web プロジェクトでは、Debug 構成と Release 構成のみがサポートされています。</target>
         <note>
     UE: This is not an error, so doesn't need an error code.
     LOCALIZATION: Do NOT localize "AspNetConfiguration", "Debug", "Release".
@@ -1979,7 +2060,7 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="General.InvalidPropertyError">
         <source>MSB3100: Syntax for "{0}" parameter is not valid ({1}). Correct syntax is {0}="&lt;name&gt;=&lt;value&gt;".</source>
-        <target state="translated">MSB3100: "{0}" パラメーターの構文が無効です ({1})。正しい構文は {0}="&lt;name&gt;=&lt;value&gt;" です。</target>
+        <target state="translated">MSB3100: "{0}" パラメーターの構文が無効です ({1})。正しい構文は {0}="&lt;名前&gt;=&lt;値&gt;" です。</target>
         <note>{StrBegin="MSB3100: "}This error is shown if the user does any of the following:
     Properties="foo"              (missing property value)
     Properties="=4"               (missing property name)
@@ -2017,17 +2098,17 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="InvalidAttributeDueToDuplication">
         <source>MSB4227: The attribute "{0}" on element &lt;{1}&gt; is invalid because an attribute with that name already exists</source>
-        <target state="translated">MSB4227: 同じ名前の属性が既に存在するため、要素 &lt;{1}&gt; の属性 "{0}" は無効です。</target>
+        <target state="translated">MSB4227: 同じ名前の属性が既に存在するため、要素 &lt;{1}&gt; 上の属性 "{0}" は無効です</target>
         <note>{StrBegin="MSB4227: "}</note>
       </trans-unit>
       <trans-unit id="InvalidMetadataAsAttribute">
         <source>MSB4228: The name "{0}" is not valid for metadata expressed as an attribute (on element &lt;{1}&gt;)</source>
-        <target state="translated">MSB4228: 属性 (要素 &lt;{1}&gt; 上) として表したメタデータの名前 "{0}" は有効ではありません。</target>
+        <target state="translated">MSB4228: 名前 "{0}" は、属性として表わされるメタデータでは無効です (要素 &lt;{1}&gt; 上)</target>
         <note>{StrBegin="MSB4228: "}</note>
       </trans-unit>
       <trans-unit id="OM_OneOfAttributeButNotMore">
         <source>The &lt;{0}&gt; element must have either the "{1}" attribute, the "{2}" attribute, or the "{3}" attribute, but not more than one.</source>
-        <target state="translated">&lt;{0}&gt; 要素には、"{1}" 属性、"{2}" 属性、または "{3}" 属性のいずれか 1 つのみが必要です。</target>
+        <target state="translated">&lt;{0}&gt; 要素には "{1}" 属性、"{2}" 属性、"{3}" 属性のうち 1 つが必要ですが、複数を指定することはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="OM_ItemsOutsideTargetMustHaveIncludeOrUpdateOrRemove">
@@ -2092,7 +2173,7 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="PropertyReassignment">
         <source>Property reassignment: $({0})="{1}" (previous value: "{2}") at {3}</source>
-        <target state="translated">プロパティの再割り当て: $({0})="{1}" (以前の値: "{2}") {3}</target>
+        <target state="translated">プロパティの再代入: $({0})="{1}" (以前の値: "{2}") {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="CouldNotResolveSdk">
@@ -2182,7 +2263,7 @@ Utilization:          {0} Average Utilization: {1:###.0}</source>
       </trans-unit>
       <trans-unit id="ErrorWritingProfilerReport">
         <source>MSBUILD : error MSB4239: Error writing profiling report. {0}</source>
-        <target state="translated">MSBUILD : エラー MSB4239: プロファイル レポートの書き込みでエラーが発生しました。{0}</target>
+        <target state="translated">MSBUILD : error MSB4239: プロファイル レポートの書き込みでエラーが発生しました。{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="WritingProfilerReport">

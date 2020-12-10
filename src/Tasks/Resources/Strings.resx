@@ -910,8 +910,7 @@
     <comment>{StrBegin="MSB3554: "}</comment>
   </data>
   <data name="GenerateResource.CorruptOutput">
-    <value>MSB3555: Output file "{0}" is possibly corrupt.</value>
-    <comment>{StrBegin="MSB3555: "}</comment>
+    <value>Output file "{0}" is possibly corrupt and will be deleted and recreated.</value>
   </data>
   <data name="GenerateResource.OnlyStringsSupported">
     <value>MSB3556: Only strings can be written to a .txt file, resource "{0}" is type {1}.</value>
@@ -1007,6 +1006,29 @@
   <data name="GenerateResource.NothingOutOfDate">
     <value>No resources are out of date with respect to their source files. Skipping resource generation.</value>
   </data>
+  <!-- Intentionally the same string as the engine's BuildTargetCompletelyInputNewer, so it's easy to grep the log for the out of date reason -->
+  <data name="GenerateResource.InputNewer">
+    <value>Input file "{0}" is newer than output file "{1}".</value>
+    <comment>{0} and {1} are filenames on disk.</comment>
+  </data>
+  <data name="GenerateResource.LinkedInputNewer">
+    <value>Linked input file "{0}" is newer than output file "{1}".</value>
+    <comment>{0} and {1} are filenames on disk.</comment>
+  </data>
+  <!-- Intentionally the same string as the engine's BuildTargetCompletelyInputDoesntExist, so it's easy to grep the log for the out of date reason -->
+  <data name="GenerateResource.InputDoesntExist">
+    <value>Input file "{0}" does not exist.</value>
+    <comment>{0} is a filename on disk.</comment>
+  </data>
+    <data name="GenerateResource.LinkedInputDoesntExist">
+    <value>Linked input file "{0}" does not exist.</value>
+    <comment>{0} is a filename on disk.</comment>
+  </data>
+  <!-- Intentionally the same string as the engine's BuildTargetCompletelyOutputDoesntExist, so it's easy to grep the log for the out of date reason -->
+  <data name="GenerateResource.OutputDoesntExist">
+    <value>Output file "{0}" does not exist.</value>
+    <comment>{0} is a filename on disk.</comment>
+  </data>
   <data name="GenerateResource.AdditionalInputNewerThanTLog">
     <value>Additional input "{0}" has been updated since the last build.  Forcing regeneration of all resources.</value>
   </data>
@@ -1100,7 +1122,18 @@
     <value>MSB3821: Couldn't process file {0} due to its being in the Internet or Restricted zone or having the mark of the web on the file. Remove the mark of the web if you want to process these files.</value>
     <comment>{StrBegin="MSB3821: "} "Internet zone", "Restricted zone", and "mark of the web" are Windows concepts that may have a specific translation.</comment>
   </data>
-
+  <data name="GenerateResource.PreserializedResourcesRequiresExtensions">
+    <value>MSB3822: Non-string resources require the System.Resources.Extensions assembly at runtime, but it was not found in this project's references.</value>
+    <comment>{StrBegin="MSB3822: "}</comment>
+  </data>
+  <data name="GenerateResource.PreserializedResourcesRequiresProperty">
+    <value>MSB3823: Non-string resources require the property GenerateResourceUsePreserializedResources to be set to true.</value>
+    <comment>{StrBegin="MSB3823: "}</comment>
+  </data>
+  <data name="GenerateResource.CoreSupportsLimitedScenarios">
+    <value>MSB3824: In order to build with .NET Core, resource inputs must be in .txt or .resx format.</value>
+    <comment>{StrBegin="MSB3824: "}</comment>
+  </data>
 
 
   <!--
@@ -1934,6 +1967,10 @@
     <value>MSB3473: Path for "{0}" is invalid. {1}</value>
     <comment>{StrBegin="MSB3473: "}</comment>
   </data>
+  <data name="SGen.TaskNotSupported">
+    <value>MSB3474: The task "{0}" is not supported on the .NET Core version of MSBuild. Use the Microsoft XML Serializer Generator package instead. See https://go.microsoft.com/fwlink/?linkid=858594 for more information.</value>
+    <comment>{StrBegin="MSB3474: "}</comment>
+  </data>
   <!--
         The SignFile message bucket is: MSB3481 - MSB3490
 
@@ -2098,11 +2135,10 @@
   </data>
   <data name="WriteLinesToFile.ErrorReadingFile">
     <value>MSB3492: Could not read existing file "{0}" to determine whether its contents are up to date. Overwriting it.</value>
-    <comment>{StrBegin="MSB3491: "}</comment>
+    <comment>{StrBegin="MSB3492: "}</comment>
   </data>
   <data name="WriteLinesToFile.SkippingUnchangedFile">
-    <value>MSB3493: Skipping write to file "{0}" because content would not change.</value>
-    <comment>{StrBegin="MSB3493: "}</comment>
+    <value>Skipping write to file "{0}" because content would not change.</value>
   </data>
   <!--
         The GetReferenceAssemblyPaths message bucket is: MSB3642 - MSB3646.
@@ -2117,7 +2153,7 @@
     <comment>{StrBegin="MSB3643: "}</comment>
   </data>
   <data name="GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound">
-    <value>MSB3644: The reference assemblies for framework "{0}" were not found. To resolve this, install the SDK or Targeting Pack for this framework version or retarget your application to a version of the framework for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your assembly may not be correctly targeted for the framework you intend.</value>
+    <value>MSB3644: The reference assemblies for {0} were not found. To resolve this, install the Developer Pack (SDK/Targeting Pack) for this framework version or retarget your application. You can download .NET Framework Developer Packs at https://aka.ms/msbuild/developerpacks</value>
     <comment>{StrBegin="MSB3644: "}</comment>
   </data>
   <data name="GetReferenceAssemblyPaths.NETFX35SP1NotIntstalled">
@@ -2189,6 +2225,10 @@
     <value>MSB3723: The parameter "{0}" requires missing parameter "{1}" to be set.</value>
     <comment>{StrBegin="MSB3723: "}</comment>
   </data>
+  <data name="Xaml.DuplicatePropertyName" xml:space="preserve">
+      <value>MSB3724: Unable to create Xaml task.  Duplicate property name '{0}'.</value>
+    <comment>{StrBegin="MSB3724: "}</comment>
+  </data>
 
   <!--
         The XslTransformation message bucket is: MSB3701-3710.
@@ -2233,6 +2273,10 @@
   </data>
   <data name="XslTransform.UseTrustedSettings" xml:space="preserve">
     <value>The usage of the document() method and embedded scripts is prohibited by default, due to risks of foreign code execution.  If "{0}" is a trusted source that requires those constructs, please set the "UseTrustedSettings" parameter to "true" to allow their execution.</value>
+  </data>
+    <data name="XslTransform.PrecompiledXsltError" xml:space="preserve">
+    <value>MSB3705: XslCompiledDllPath is not supported when building with .NET Core.</value>
+    <comment>{StrBegin="MSB3705: "}</comment>
   </data>
 
 
@@ -2652,6 +2696,14 @@
   <data name="Copy.ExactlyOneTypeOfLink">
     <value>MSB3891: Both "{0}" and "{1}" were specified in the project file. Please choose one or the other.</value>
   </data>
+  <data name="Copy.ErrorIfLinkFailsSetWithoutLinkOption" xml:space="preserve">
+    <value>MSB3892: ErrorIfLinkFails requires UseHardlinksIfPossible or UseSymbolicLinksIfPossible to be set.</value>
+    <comment>{StrBegin="MSB3892: "} LOCALIZATION: Do not localize "ErrorIfLinkFails", "UseHardLinksIfPossible", or "UseSymbolicLinksIfPossible".</comment>
+  </data>
+  <data name="Copy.LinkFailed" xml:space="preserve">
+    <value>MSB3893: Could not use a link to copy "{0}" to "{1}".</value>
+    <comment>{StrBegin="MSB3893: "} LOCALIZATION: {0} and {1} are paths.</comment>
+  </data>
 
   <!--
         MSB3901 - MSB3910   Task: Telemetry
@@ -2869,6 +2921,7 @@
 
         The following codes are not longer used but have shipped so should not be reused:
             MSB3109
+            MSB3493
 
 
         The message spec is here:

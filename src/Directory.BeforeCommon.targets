@@ -12,28 +12,28 @@
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);STANDALONEBUILD</DefineConstants>
-    <DefineConstants Condition="'$(DisableNerdbankVersioning)' != 'true'">$(DefineConstants);THISASSEMBLY</DefineConstants>
+
+    <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_DEBUG_LAUNCH</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4')) Or $(TargetFramework.StartsWith('net3'))">
     <DefineConstants>$(DefineConstants);FEATURE_64BIT_ENVIRONMENT_QUERY</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_APARTMENT_STATE</DefineConstants>
-    <DefineConstants>$(DefineConstants);FEATURE_APM</DefineConstants>
+    <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_APM</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_APPDOMAIN</DefineConstants>
     <FeatureAppDomain>true</FeatureAppDomain>
     <DefineConstants>$(DefineConstants);FEATURE_APPDOMAIN_UNHANDLED_EXCEPTION</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_ASPNET_COMPILER</DefineConstants>
-    <DefineConstants>$(DefineConstants);FEATURE_ASSEMBLY_LOADFROM</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_ASSEMBLY_LOCATION</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_ASSEMBLY_GETENTRYASSEMBLY</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_ASSEMBLYNAME_CLONE</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_TYPE_GETCONSTRUCTOR</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_COM_INTEROP</DefineConstants>
+    <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_COMPILED_XSL</DefineConstants>
     <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_COMPILE_IN_TESTS</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CONSOLE_BUFFERWIDTH</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CONSTRAINED_EXECUTION</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CHARSET_AUTO</DefineConstants>
-    <DefineConstants>$(DefineConstants);FEATURE_CODEDOM</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CODETASKFACTORY</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CULTUREINFO_CONSOLE_FALLBACK</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_CULTUREINFO_GETCULTUREINFO</DefineConstants>
@@ -68,7 +68,7 @@
     <DefineConstants>$(DefineConstants);FEATURE_RESOURCE_EXPOSURE</DefineConstants>
     <!-- System.Resources.ResourceManager.GetResourceSet() method is currently only in full framework -->
     <DefineConstants>$(DefineConstants);FEATURE_RESOURCEMANAGER_GETRESOURCESET</DefineConstants>
-    <DefineConstants>$(DefineConstants);FEATURE_RESX_RESOURCE_READER</DefineConstants>
+    <DefineConstants>$(DefineConstants);FEATURE_RESXREADER_LIVEDESERIALIZATION</DefineConstants>
     <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_RTLMOVEMEMORY</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_RUN_EXE_IN_TESTS</DefineConstants>
     <DefineConstants Condition="'$(MonoBuild)' == 'true'">$(DefineConstants);USE_MSBUILD_DLL_EXTN</DefineConstants>
@@ -91,7 +91,6 @@
     <DefineConstants>$(DefineConstants);FEATURE_TYPE_GETINTERFACE</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_USERINTERACTIVE</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_USERDOMAINNAME</DefineConstants>
-    <DefineConstants>$(DefineConstants);FEATURE_VARIOUS_EXCEPTIONS</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_XAML_TYPES</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_XAMLTASKFACTORY</DefineConstants>
     <FeatureXamlTypes>true</FeatureXamlTypes>
@@ -99,7 +98,6 @@
     <DefineConstants>$(DefineConstants);FEATURE_XML_LOADPATH</DefineConstants>
     <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_XML_SCHEMA_VALIDATION</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_DEBUGGER</DefineConstants>
-    <DefineConstants Condition="'$(MonoBuild)' != 'true'">$(DefineConstants);FEATURE_DEBUG_LAUNCH</DefineConstants>
     <DefineConstants Condition="'$(MachineIndependentBuild)' != 'true'">$(DefineConstants);FEATURE_WIN32_REGISTRY</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_WORKINGSET</DefineConstants>
     <DefineConstants Condition="'$(MonoBuild)' != 'true' and '$(MachineIndependentBuild)' != 'true'">$(DefineConstants);FEATURE_VISUALSTUDIOSETUP</DefineConstants>
@@ -120,6 +118,7 @@
 
   <PropertyGroup Condition="'$(NetCoreBuild)'=='true'">
     <CompilerToolsDir>$([System.IO.Path]::Combine($(ToolPackagesDir)Microsoft.Net.Compilers, $(CompilerToolsVersion), "tools"))$([System.IO.Path]::DirectorySeparatorChar)</CompilerToolsDir>
+    <DefineConstants>$(DefineConstants);FEATURE_ASSEMBLYLOADCONTEXT</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_PROCESSSTARTINFO_ENVIRONMENT</DefineConstants>
     <DefineConstants>$(DefineConstants);FEATURE_RUNTIMEINFORMATION</DefineConstants>
     <DefineConstants>$(DefineConstants);USE_MSBUILD_DLL_EXTN</DefineConstants>

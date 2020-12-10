@@ -1,0 +1,28 @@
+<Project>
+    <Import Project="..\..\eng\Versions.props" />
+    <PropertyGroup>
+        <MicrosoftNETBuildExtensionsVersion>$(MicrosoftNETSdkVersion)</MicrosoftNETBuildExtensionsVersion>
+
+        <MicrosoftNETSdkPublishVersion>$(MicrosoftNETSdkWebVersion)</MicrosoftNETSdkPublishVersion>
+        <MicrosoftNETSdkWebProjectSystemVersion>$(MicrosoftNETSdkWebVersion)</MicrosoftNETSdkWebProjectSystemVersion>
+        <NuGetBuildTasksPackVersion>$(NuGetBuildTasksVersion)</NuGetBuildTasksPackVersion>
+
+        <MicrosoftDotNetMSBuildSdkResolverVersion>$(MicrosoftDotNetCliRuntimeVersion)</MicrosoftDotNetMSBuildSdkResolverVersion>
+        <DotNetSdkVersionForLibHostFxr>$(MicrosoftNETCoreAppVersion)</DotNetSdkVersionForLibHostFxr>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <BundledSdk Include="Microsoft.NET.Sdk" Version="$(MicrosoftNETSdkVersion)" />
+        <BundledSdk Include="Microsoft.NET.Sdk.Razor" Version="$(MicrosoftNETSdkRazorVersion)" />
+        <BundledSdk Include="Microsoft.NET.Sdk.Web" Version="$(MicrosoftNETSdkWebVersion)" />
+        <BundledSdk Include="Microsoft.NET.Sdk.Publish" Version="$(MicrosoftNETSdkPublishVersion)" />
+        <BundledSdk Include="Microsoft.NET.Sdk.Web.ProjectSystem" Version="$(MicrosoftNETSdkWebProjectSystemVersion)" />
+
+        <BundledSdk Include="ILLink.Tasks" Version="$(ILLinkTasksVersion)" />
+
+        <BundledSdk Include="NuGet.Build.Tasks.Pack" Version="$(NuGetBuildTasksPackVersion)" />
+
+        <BundledSdk Include="FSharp.NET.Sdk" Version="1.0.4-bundled-0100" />
+        <BundledSdk Include="Microsoft.Docker.Sdk" Version="1.1.0" />
+    </ItemGroup>
+</Project>

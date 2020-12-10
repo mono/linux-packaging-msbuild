@@ -1,152 +1,338 @@
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly25) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin6) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 13:27:54 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 21:48:16 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly24) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 13:25:59 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly23) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin5) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 12 Jul 2019 20:34:40 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 20:52:50 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly22) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 12 Jul 2019 19:03:07 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly21) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin4) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 23 Apr 2019 17:10:40 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 19:55:28 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly20) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 23 Apr 2019 15:45:38 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly19) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin3) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 23 Apr 2019 14:51:13 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 19:49:59 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly18) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 16:50:39 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly17) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 15:53:57 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 17:51:27 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly16) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.10.22.18.31-0xamarin1) preview; urgency=medium
 
-  * Packaging bugfix:
+  * New release - msbuild-16.6+xamarinxplat.2020.10.22.18.31.tar.xz
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 15:37:07 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 07 Dec 2020 17:46:44 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly15) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 15:17:09 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly14) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin5) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 14:56:14 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 14:29:52 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly13) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 14:34:57 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly12) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin4) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 14:06:16 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 13:55:51 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly11) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 13:43:22 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly10) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin3) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 19 Apr 2019 13:18:42 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 13:26:02 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly9) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 21:11:13 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly8) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 20:46:33 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 13:20:15 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly7) nightly; urgency=medium
+msbuild (1:16.6+xamarinxplat.2020.04.29.14.43-0xamarin1) preview; urgency=medium
 
-  * Packaging bugfix:
+  * New release - msbuild-16.6+xamarinxplat.2020.04.29.14.43.tar.xz
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 20:24:20 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 26 Jun 2020 13:03:18 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly6) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 19:21:59 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly5) nightly; urgency=medium
+msbuild (1:16.5+xamarinxplat.2020.02.20.11.54-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 18:14:54 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 11 May 2020 19:37:12 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly4) nightly; urgency=medium
+msbuild (1:16.5+xamarinxplat.2020.02.20.11.54-0xamarin1) preview; urgency=medium
 
-  * Packaging bugfix:
+  * New release - msbuild-16.5+xamarinxplat.2020.02.20.11.54.tar.xz
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 18:01:12 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 11 May 2020 18:50:16 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly3) nightly; urgency=medium
-
-  * Packaging bugfix:
-
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 17:34:12 +0000
-
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly2) nightly; urgency=medium
+msbuild (1:16.5+xamarinxplat.2020.01.10.05.36-0xamarin4) preview; urgency=medium
 
   * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 09 Apr 2019 20:20:53 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 17 Apr 2020 20:13:18 +0000
 
-msbuild (1:16.0+xamarinxplat.2019.04.08.19.19-0nightly1) nightly; urgency=medium
+msbuild (1:16.5+xamarinxplat.2020.01.10.05.36-0xamarin3) preview; urgency=medium
 
-  * New release - msbuild-16.0+xamarinxplat.2019.04.08.19.19.tar.xz
+  * Packaging bugfix:
 
- -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 09 Apr 2019 19:47:50 +0000
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 17 Apr 2020 19:20:36 +0000
+
+msbuild (1:16.5+xamarinxplat.2020.01.10.05.36-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 17 Apr 2020 16:41:03 +0000
+
+msbuild (1:16.5+xamarinxplat.2020.01.10.05.36-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.5+xamarinxplat.2020.01.10.05.36.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 15 Jan 2020 18:41:15 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.11.27.22.07-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 14 Jan 2020 16:22:38 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.11.27.22.07-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.4+xamarinxplat.2019.11.27.22.07.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 14 Jan 2020 16:13:20 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.09.09.15.03-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 30 Sep 2019 20:00:44 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.09.09.15.03-0xamarin4) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 30 Sep 2019 18:46:56 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.09.09.15.03-0xamarin3) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 30 Sep 2019 18:09:01 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.09.09.15.03-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 30 Sep 2019 17:39:55 +0000
+
+msbuild (1:16.4+xamarinxplat.2019.09.09.15.03-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild_16.4+xamarinxplat.2019.09.09.15.03.orig.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 30 Sep 2019 17:31:45 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.08.08.00.55-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 19 Aug 2019 14:22:26 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.08.08.00.55-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.3+xamarinxplat.2019.08.08.00.55.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 19 Aug 2019 13:48:36 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin7) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 18:19:24 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin6) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 17:14:12 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 16:31:52 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin4) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 15:51:09 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin3) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 15:47:54 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 14:54:52 +0000
+
+msbuild (1:16.3+xamarinxplat.2019.07.26.14.57-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.3+xamarinxplat.2019.07.26.14.57.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 30 Jul 2019 14:49:22 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin9) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Jul 2019 14:06:52 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin8) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 18:44:42 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin7) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 17:56:49 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin6) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 17:15:30 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 16:24:43 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin4) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 15:30:49 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin3) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 15:09:10 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 14:07:04 +0000
+
+msbuild (1:16.1+xamarinxplat.2019.06.05.11.19-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.1+xamarinxplat.2019.06.05.11.19.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 17 Jul 2019 14:02:24 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin14) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 16:31:08 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin13) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 15:53:45 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin12) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 15:12:53 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin11) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 15 Jul 2019 13:25:48 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin10) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Fri, 12 Jul 2019 19:03:44 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin9) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 23 Apr 2019 15:46:35 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin8) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 23 Apr 2019 14:50:21 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin7) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 22 Apr 2019 15:07:59 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin6) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 22 Apr 2019 14:08:18 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin5) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 20:09:44 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin4) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 19:24:12 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin3) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 18:45:49 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin2) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 18:37:20 +0000
+
+msbuild (1:16.0+xamarinxplat.2019.03.13.11.00-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.0+xamarinxplat.2019.03.13.11.00.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 18:32:09 +0000
 
 msbuild (1:16.0+xamarinxplat.2018.09.26.17.53-0xamarin3) preview; urgency=medium
 

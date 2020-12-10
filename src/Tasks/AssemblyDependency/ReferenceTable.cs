@@ -9,14 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-
+using Microsoft.Build.Eventing;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Tasks.AssemblyDependency;
 using Microsoft.Build.Utilities;
-#if (!STANDALONEBUILD)
-using Microsoft.Internal.Performance;
-#endif
 using FrameworkNameVersioning = System.Runtime.Versioning.FrameworkName;
 using SystemProcessorArchitecture = System.Reflection.ProcessorArchitecture;
 
@@ -890,10 +887,21 @@ namespace Microsoft.Build.Tasks
             }
 
             // Native Winmd files may have a companion dll beside it.
-            // If this is not a primary reference or the implementation metadata is not set on the item we need to set the implmentation metadata.
-            if (reference.IsWinMDFile && (!reference.IsPrimary || String.IsNullOrEmpty(reference.PrimarySourceItem.GetMetadata(ItemMetadataNames.winmdImplmentationFile))) && !reference.IsManagedWinMDFile)
+            if (reference.IsWinMDFile && !reference.IsManagedWinMDFile)
             {
-                string companionFile = baseName + ".dll";
+                var companionFile = baseName + ".dll";
+
+                if (reference.IsPrimary)
+                {
+                    var implementationFile = reference.PrimarySourceItem.GetMetadata(ItemMetadataNames.winmdImplmentationFile);
+
+                    // Static library projects can produce a .winmd with an associated .lib, but that is not
+                    // a real ImplementationAssembly--it would fail downstream when trying to read its PE header.
+                    if (!String.IsNullOrEmpty(implementationFile) && Path.GetExtension(implementationFile) == ".dll")
+                    {
+                        companionFile = Path.Combine(Path.GetDirectoryName(baseName), implementationFile);
+                    }
+                }
 
                 if (_fileExists(companionFile))
                 {
@@ -1332,9 +1340,7 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         internal void RemoveReferencesMarkedForExclusion(bool removeOnlyNoWarning, string subsetName)
         {
-#if (!STANDALONEBUILD)
-            using (new CodeMarkerStartEnd(CodeMarkerEvent.perfMSBuildRARRemoveFromExclusionListBegin, CodeMarkerEvent.perfMSBuildRARRemoveFromExclusionListEnd))
-#endif
+            MSBuildEventSource.Log.RarRemoveReferencesMarkedForExclusionStart();
             {
                 // Create a table which will contain the references which are not in the black list
                 var goodReferences = new Dictionary<AssemblyNameExtension, Reference>(AssemblyNameComparer.GenericComparer);
@@ -1421,6 +1427,7 @@ namespace Microsoft.Build.Tasks
 
                 // Replace the references table with the list only containing good references.
                 References = goodReferences;
+                MSBuildEventSource.Log.RarRemoveReferencesMarkedForExclusionStop();
             }
         }
 
@@ -1587,9 +1594,7 @@ namespace Microsoft.Build.Tasks
             List<Exception> exceptions
         )
         {
-#if (!STANDALONEBUILD)
-            using (new CodeMarkerStartEnd(CodeMarkerEvent.perfMSBuildRARComputeClosureBegin, CodeMarkerEvent.perfMSBuildRARComputeClosureEnd))
-#endif
+            MSBuildEventSource.Log.RarComputeClosureStart();
             {
                 References.Clear();
                 _externallyResolvedPrimaryReferences.Clear();
@@ -1600,6 +1605,7 @@ namespace Microsoft.Build.Tasks
 
                 ComputeClosure();
             }
+            MSBuildEventSource.Log.RarComputeClosureStop();
         }
 
         /// <summary>
@@ -2602,7 +2608,10 @@ namespace Microsoft.Build.Tasks
                 {
                     if (VerifyArchitectureOfImplementationDll(reference.ImplementationAssembly, reference.FullPath))
                     {
-                        referenceItem.SetMetadata(ItemMetadataNames.winmdImplmentationFile, Path.GetFileName(reference.ImplementationAssembly));
+                        if (string.IsNullOrEmpty(referenceItem.GetMetadata(ItemMetadataNames.winmdImplmentationFile)))
+                        {
+                            referenceItem.SetMetadata(ItemMetadataNames.winmdImplmentationFile, Path.GetFileName(reference.ImplementationAssembly));
+                        }
 
                         // Add the implementation item as a related file
                         ITaskItem item = new TaskItem(reference.ImplementationAssembly);
@@ -2798,6 +2807,9 @@ namespace Microsoft.Build.Tasks
                     case NativeMethods.IMAGE_FILE_MACHINE_ARMV7:
                         dllArchitecture = SystemProcessorArchitecture.Arm;
                         break;
+                    case NativeMethods.IMAGE_FILE_MACHINE_ARM64:
+                        dllArchitecture = (SystemProcessorArchitecture) 6; // There's no entry for ARM64 in SystemProcessorArchitecture, use the next available constant
+                        break;
                     case NativeMethods.IMAGE_FILE_MACHINE_I386:
                         dllArchitecture = SystemProcessorArchitecture.X86;
                         break;
@@ -2906,6 +2918,10 @@ namespace Microsoft.Build.Tasks
             item.RemoveMetadata(ItemMetadataNames.winmdImplmentationFile);
             item.RemoveMetadata(ItemMetadataNames.imageRuntime);
             item.RemoveMetadata(ItemMetadataNames.winMDFile);
+            if (!Traits.Instance.EscapeHatches.TargetPathForRelatedFiles)
+            {
+                item.RemoveMetadata(ItemMetadataNames.targetPath);
+            }
         }
 
         /// <summary>

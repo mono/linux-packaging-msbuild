@@ -10,6 +10,11 @@
       fire this error.
       LOCALIZATION: The prefix "MSBUILD : error MSBxxxx:" should not be localized.</note>
       </trans-unit>
+      <trans-unit id="CommandLine">
+        <source>Command line arguments = "{0}"</source>
+        <target state="translated">Argumentos de la línea de comandos: "{0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationFailurePrefixNoErrorCode">
         <source>MSBUILD : Configuration error {0}: {1}</source>
         <target state="translated">MSBUILD : Error de configuración; error {0}: {1}</target>
@@ -32,9 +37,14 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
 </target>
         <note>LOCALIZATION: {0} contains the DLL version number. {1} contains the name of a runtime, like ".NET Framework", ".NET Core", or "Mono"</note>
       </trans-unit>
+      <trans-unit id="CurrentDirectory">
+        <source>Current directory = "{0}"</source>
+        <target state="translated">Directorio actual: "{0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DuplicateOutputResultsCache">
         <source>MSBUILD : error MSB1058: Only one output results cache can be specified.</source>
-        <target state="translated">MSBUILD: Error MSB1058: Solo se puede especificar una memoria caché de resultados de salida.</target>
+        <target state="translated">MSBUILD : error MSB1058: Solo se puede especificar una memoria caché de resultados de salida.</target>
         <note>{StrBegin="MSBUILD : error MSB1058: "}</note>
       </trans-unit>
       <trans-unit id="DuplicateProjectSwitchError">
@@ -173,6 +183,57 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
       LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
     </note>
       </trans-unit>
+      <trans-unit id="HelpMessage_37_DocsLink">
+        <source>For more detailed information, see https://aka.ms/msbuild/docs</source>
+        <target state="translated">Para obtener información más detallada, vea https://aka.ms/msbuild/docs</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpMessage_38_TargetsSwitch">
+        <source>  -targets[:file]
+                     Prints a list of available targets without executing the
+                     actual build process. By default the output is written to
+                     the console window. If the path to an output file
+                     is provided that will be used instead.
+                     (Short form: -ts)
+                     Example:
+                       -ts:out.txt
+    </source>
+        <target state="translated">  -targets[:archivo]
+                     Imprime una lista de los destinos disponibles sin ejecutar el
+                     proceso de compilación en sí. De forma predeterminada, la salida se escribe en
+                     la ventana de la consola. Si se proporciona la ruta de acceso a un
+                     archivo de salida, se usará este en su lugar.
+                     (Forma corta: -ts)
+                     Ejemplo:
+                       -ts:out.txt
+    </target>
+        <note>
+      LOCALIZATION: "MSBuild" should not be localized.
+      LOCALIZATION: "-targets" and "-ts" should not be localized.
+      LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
+    </note>
+      </trans-unit>
+      <trans-unit id="HelpMessage_39_LowPrioritySwitch">
+        <source>  -lowPriority[:True|False]
+                     Causes MSBuild to run at low process priority.
+
+                     Specifying -lowPriority is the same as specifying
+                     -lowPriority:True.
+                     (Short form: -low)
+    </source>
+        <target state="translated">  -lowPriority[:True|False]
+                     Hace que MSBuild se ejecute con prioridad de proceso baja.
+
+                     Especificar -lowPriority es igual que especificar
+                     -lowPriority:True.
+                     (Forma corta: -low)
+    </target>
+        <note>
+      LOCALIZATION: "MSBuild" should not be localized.
+      LOCALIZATION: "-lowPriority" and "-low" should not be localized.
+      LOCALIZATION: None of the lines should be longer than a standard width console window, eg 80 chars.
+    </note>
+      </trans-unit>
       <trans-unit id="HelpMessage_3_SwitchesHeader">
         <source>Switches:            Note that you can specify switches using both
                      "-switch" and "/switch".
@@ -241,12 +302,12 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      (1) the directory of msbuild.exe
                      (2) the directory of the first project or solution built
 </source>
-        <target state="translated">  @&lt;archivo&gt;            Insertar la configuración de la línea de comandos de un archivo de texto. Para incluir
+        <target state="translated">  @&lt;archivo&gt;            Inserta la configuración de la línea de comandos de un archivo de texto. Para incluir
                      varios archivos de respuesta, especifique cada uno de ellos
                      por separado.
 
-                     Todo archivo de respuesta denominado "msbuild.rsp" se usa 
-                     automáticamente desde las siguientes ubicaciones: 
+                     Todo archivo de respuesta denominado "msbuild.rsp" se consume
+                     automáticamente desde las ubicaciones siguientes:
                      (1) el directorio de msbuild.exe
                      (2) el directorio del primer proyecto o solución compilada
 </target>
@@ -282,11 +343,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Example:
                        -target:Resources;Compile
 </source>
-        <target state="translated">  -target:&lt;destinos&gt;  Compilar estos destinos en el proyecto. Use un carácter de punto y coma o
-                     coma para separar varios destinos o especifique cada
-                     uno de ellos por separado. (Forma corta: -t)
+        <target state="translated">  -target:&lt;destinos&gt;  Compila estos destinos en el proyecto. Use el carácter de punto y coma o
+                     coma para separar varios destinos o especifique cada uno
+                     de ellos por separado. (Forma corta: -t)
                      Ejemplo:
-                       target:Resources;Compile
+                       -target:Resources;Compile
 </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -305,12 +366,12 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Example:
                        -property:WarningLevel=2;OutDir=bin\Debug\
 </source>
-        <target state="translated">  property:&lt;n&gt;=&lt;v&gt;  Definir o invalidar estas propiedades de nivel de proyecto. &lt;n&gt; es
-                     el nombre de la propiedad y &lt;v&gt; es el valor de la propiedad. Use el
-                     carácter de punto y coma o coma para separar varias propiedades, o
-                     especifique cada propiedad por separado. (Forma corta: /p)
+        <target state="translated">  -property:&lt;n&gt;=&lt;v&gt;  Define o invalida estas propiedades de nivel de proyecto. &lt;n&gt; es
+                     el nombre de la propiedad y &lt;v&gt; es el valor de la propiedad. Use un
+                     punto y coma o una coma para separar varias propiedades, o
+                     especifique cada propiedad por separado. (Forma corta: -p)
                      Ejemplo:
-                       property:WarningLevel=2;OutDir=bin\Debug\
+                       -property:WarningLevel=2;OutDir=bin\Debug\
 </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -325,27 +386,33 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
         <source>  -logger:&lt;logger&gt;   Use this logger to log events from MSBuild. To specify
                      multiple loggers, specify each logger separately.
                      The &lt;logger&gt; syntax is:
-                       [&lt;logger class&gt;,]&lt;logger assembly&gt;[;&lt;logger parameters&gt;]
+                       [&lt;class&gt;,]&lt;assembly&gt;[,&lt;options&gt;][;&lt;parameters&gt;]
                      The &lt;logger class&gt; syntax is:
                        [&lt;partial or full namespace&gt;.]&lt;logger class name&gt;
                      The &lt;logger assembly&gt; syntax is:
                        {&lt;assembly name&gt;[,&lt;strong name&gt;] | &lt;assembly file&gt;}
+                     Logger options specify how MSBuild creates the logger.
                      The &lt;logger parameters&gt; are optional, and are passed
                      to the logger exactly as you typed them. (Short form: -l)
                      Examples:
                        -logger:XMLLogger,MyLogger,Version=1.0.2,Culture=neutral
                        -logger:XMLLogger,C:\Loggers\MyLogger.dll;OutputAsHTML
 </source>
-        <target state="translated">  -logger:&lt;registrador&gt;   Use este registrador para registrar eventos de MSBuild. Para incluir
-                     varios registradores, especifique cada uno de ellos por separado.
-                     La sintaxis del &lt;registrador&gt; es:
-                       [&lt;clase de registrador&gt;,]&lt;ensamblado de registrador&gt;[;&lt;parámetros del registrador&gt;]
-                     La sintaxis de &lt;clase de registrador&gt; es:
-                       [&lt;espacio de nombres parcial o completo&gt;.]&lt;nombre de clase del registrador&gt;
-                     La sintaxis de &lt;ensamblado de registrador&gt; es:
-                       {&lt;nombre del ensamblado&gt;[,&lt;nombre seguro&gt;] | &lt;archivo de ensamblado&gt;}
+        <target state="translated">  -logger:&lt;registrador&gt;   Use este registrador para registrar eventos
+                     de MSBuild. Para especificar varios registradores, especifique
+                     cada uno de ellos por separado.
+                     La sintaxis de &lt;registrador&gt; es:
+                       [&lt;clase&gt;,]&lt;ensamblado&gt;[,&lt;opciones&gt;][;&lt;parámetros&gt;]
+                     La sintaxis de &lt;clase del registrador&gt; es:
+                       [&lt;espacio de nombres parcial o completo&gt;.]&lt;nombre de
+                       clase del registrador&gt;
+                     La sintaxis de &lt;ensamblado del registrador&gt; es:
+                       {&lt;nombre del ensamblado&gt;[,&lt;strong name&gt;] | &lt;archivo
+                       de ensamblado&gt;}
+                     Las opciones del registrador especifican cómo crea MSBuild
+                     el registrador.
                      Los &lt;parámetros del registrador&gt; son opcionales y se pasan
-                     al registrador igual que se escriben. (Forma corta -)
+                     al registrador tal como se escriben. (Forma corta: -l)
                      Ejemplos:
                        -logger:XMLLogger,MyLogger,Version=1.0.2,Culture=neutral
                        -logger:XMLLogger,C:\Loggers\MyLogger.dll;OutputAsHTML
@@ -366,11 +433,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Example:
                        -verbosity:quiet
 </source>
-        <target state="translated">  verbosity:&lt;nivel&gt; Mostrar en el registro de eventos la cantidad de información especificada.
+        <target state="translated">  -verbosity:&lt;nivel&gt; Muestra en el registro de eventos la cantidad de información especificada.
                      Los niveles de detalle disponibles son: q[uiet], m[inimal],
-                     n[ormal], d[etailed] y diag[nostic]. (Forma corta: /v)
+                     n[ormal], d[etailed] y diag[nostic]. (Forma corta: -v)
                      Ejemplo:
-                       /verbosity:quiet
+                       -verbosity:quiet
 </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -417,34 +484,34 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                         -consoleLoggerParameters:PerformanceSummary;NoSummary;
                                                  Verbosity=minimal
 </source>
-        <target state="translated">  consoleloggerparameters:&lt;parámetros&gt;
+        <target state="translated">  -consoleLoggerParameters:&lt;parámetros&gt;
                      Parámetros del registrador de consola. (Forma corta: -clp)
                      Los parámetros disponibles son:
-                        PerformanceSummary: mostrar el tiempo empleado en tareas, destinos
+                        PerformanceSummary: muestra el tiempo empleado en tareas, destinos
                             y proyectos.
-                        Summary: mostrar un resumen de errores y advertencias al final.
-                        NoSummary: no mostrar el resumen de errores y advertencias al
+                        Summary: muestra un resumen de errores y advertencias al final.
+                        NoSummary: no muestra el resumen de errores y advertencias al
                             final.
-                        ErrorsOnly: mostrar solo errores.
-                        WarningsOnly: mostrar solo advertencias.
-                        NoItemAndPropertyList: no mostrar la lista de elementos y
+                        ErrorsOnly: muestra solo errores.
+                        WarningsOnly: muestra solo advertencias.
+                        NoItemAndPropertyList: no muestra la lista de elementos y
                             propiedades al principio de cada compilación del proyecto.
-                        ShowCommandLine: mostrar los mensajes de TaskCommandLineEvent
-                        ShowTimestamp: mostrar la marca de tiempo como un prefijo en
-                            los mensajes.
-                        ShowEventId: mostrar el identificador de evento para los eventos iniciados, los eventos 
+                        ShowCommandLine: muestra los mensajes de TaskCommandLineEvent
+                        ShowTimestamp: muestra la marca de tiempo como un prefijo en los
+                            mensajes.
+                        ShowEventId: muestra el identificador de evento para los eventos iniciados, los eventos 
                             finalizados y los mensajes.
-                        ForceNoAlign: no alinear el texto al tamaño del
+                        ForceNoAlign: no alinea el texto al tamaño del
                             búfer de la consola
-                        DisableConsoleColor: usar los colores de consola predeterminados
+                        DisableConsoleColor: usa los colores de consola predeterminados
                             para todos los mensajes de registro.
-                        DisableMPLogging: deshabilitar el estilo
-                            de registro de resultados de multiprocesador al ejecutarse en
-                            el modo de no multiprocesador.
-                        EnableMPLogging: habilitar el estilo de registro
-                            de multiprocesador al ejecutarse ejecute en el modo de
+                        DisableMPLogging: deshabilita el estilo de registro de resultados
+                            de multiprocesador al ejecutarse en el
+                            modo de no multiprocesador.
+                        EnableMPLogging: habilita el estilo de registro de
+                            multiprocesador aunque se ejecute en el modo de
                             no multiprocesador. Este estilo de registro está habilitado de forma predeterminada.
-                        ForceConsoleColor: usar los colores de consola ANSI incluso si
+                     ForceConsoleColor: usa los colores de consola ANSI incluso si
                             la consola no lo admite.
                         Verbosity: invalida el valor -verbosity para este
                             registrador.
@@ -486,13 +553,13 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Example:
                        -validate:MyExtendedBuildSchema.xsd
 </source>
-        <target state="translated">  -validate          Validar el proyecto comparándolo con el esquema predeterminado. (Forma
-                     corta: /val)
+        <target state="translated">  -validate          Valida el proyecto comparándolo con el esquema predeterminado. (Forma
+                     corta: -val)
 
-  -validate:&lt;esquema&gt; Validar el proyecto comparándolo con el esquema especificado. (Forma
-                     corta: /val)
+  -validate:&lt;esquema&gt; Valida el proyecto comparándolo con el esquema especificado. (Forma
+                     corta: -val)
                      Ejemplo:
-                       /validate:MyExtendedBuildSchema.xsd
+                       -validate:MyExtendedBuildSchema.xsd
 </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -550,11 +617,10 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Setting this also turns on isolated builds (-isolate).
                      (short form: -irc)
    </source>
-        <target state="translated">  -inputResultsCaches:&lt;archivo-de-caché&gt;...
-                     Lista de archivos de caché de entrada separados con
-                     punto y coma de donde MSBuild lee los resultados de
-                     compilación. Si se establece esta opción, se activan
-                     también las compilaciones aisladas.
+        <target state="translated">  -inputResultsCaches:&lt;archivoCaché&gt;...
+                     Lista de archivos de caché de entrada, separados por punto y coma, de la que MSBuild
+                     leerá los resultados de la compilación.
+                     Si se establece esta opción, se activan también las compilaciones aisladas (-isolate).
                      (Forma corta: -irc)
    </target>
         <note>
@@ -595,11 +661,12 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      multiple loggers, specify each logger separately.
                      (Short form -dl)
                      The &lt;logger&gt; syntax is:
-                       [&lt;logger class&gt;,]&lt;logger assembly&gt;[;&lt;logger parameters&gt;]
+                       [&lt;class&gt;,]&lt;assembly&gt;[,&lt;options&gt;][;&lt;parameters&gt;]
                      The &lt;logger class&gt; syntax is:
                        [&lt;partial or full namespace&gt;.]&lt;logger class name&gt;
                      The &lt;logger assembly&gt; syntax is:
                        {&lt;assembly name&gt;[,&lt;strong name&gt;] | &lt;assembly file&gt;}
+                     Logger options specify how MSBuild creates the logger.
                      The &lt;logger parameters&gt; are optional, and are passed
                      to the logger exactly as you typed them. (Short form: -l)
                      Examples:
@@ -607,18 +674,22 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                        -dl:MyLogger,C:\My.dll*ForwardingLogger,C:\Logger.dll
 </source>
         <target state="translated">  -distributedLogger:&lt;registrador central&gt;*&lt;registrador de reenvío&gt;
-                     Use este registrador para registrar eventos de MSBuild, adjuntando una
-                     interfaz de registrador diferente a cada nodo. Para incluir
-                     varios registradores, especifique cada uno de ellos por separado.
-                     (Forma corta: -dl)
-                     La sintaxis del &lt;registrador&gt; es:
-                       [&lt;clase de registrador&gt;,]&lt;ensamblado de registrador&gt;[;&lt;parámetros del registrador&gt;]
-                     La sintaxis de &lt;clase de registrador&gt; es:
-                       [&lt;espacio de nombres parcial o completo&gt;.]&lt;nombre de clase del registrador&gt;
-                     La sintaxis de &lt;ensamblado de registrador&gt; es:
-                       {&lt;nombre del ensamblado&gt;[,&lt;nombre seguro&gt;] | &lt;archivo de ensamblado&gt;}
+                     Use este registrador para registrar eventos de MSBuild,
+                     asociando una interfaz de registrador diferente a cada nodo.
+                     Para especificar varios registradores, especifique cada uno
+                     de ellos por separado. (Forma corta: -dl)
+                     La sintaxis de &lt;registrador&gt; es:
+                       [&lt;clase&gt;,]&lt;ensamblado&gt;[,&lt;opciones&gt;][;&lt;parámetros&gt;]
+                     La sintaxis de &lt;clase del registrador&gt; es:
+                       [&lt;espacio de nombres parcial o completo&gt;.]&lt;nombre
+                       de la clase del registrador&gt;
+                     La sintaxis de &lt;ensamblado del registrador&gt; es:
+                       {&lt;nombre del ensamblado&gt;[,&lt;strong name&gt;] | &lt;archivo
+                      de ensamblado&gt;}
+                     Las opciones del registrador especifican cómo crea MSBuild
+                     el registrador.
                      Los &lt;parámetros del registrador&gt; son opcionales y se pasan
-                     al registrador igual que como se escriben. (Forma corta: -l)
+                     al registrador tal como se escriben. (Forma corta: -l)
                      Ejemplos:
                        -dl:XMLLogger,MyLogger,Version=1.0.2,Culture=neutral
                        -dl:MyLogger,C:\My.dll*ForwardingLogger,C:\Logger.dll
@@ -641,13 +712,13 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Example:
                        -ignoreProjectExtensions:.sln
     </source>
-        <target state="translated">  /ignoreProjectExtensions:&lt;extensiones&gt;
-                     Lista de extensiones que se omiten al determinar el
-                     archivo de proyecto que se va a compilar. Use el carácter de punto y coma o coma
-                     para separar varias extensiones.
-                     (Forma corta: -ignore)
+        <target state="translated">  -ignoreProjectExtensions:&lt;extensiones&gt;
+                     Lista de extensiones que se omiten al determinar el 
+                     archivo del proyecto que se va a compilar. Use el carácter de 
+                     punto y coma o coma para separar varias extensiones.
+                    (Forma corta: -ignore)
                      Ejemplo:
-                       -ignoreprojectextensions:.sln
+                       -ignoreProjectExtensions:.sln
     </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -669,11 +740,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
    </source>
         <target state="translated">  -toolsVersion:&lt;versión&gt;
                      La versión del conjunto de herramientas de MSBuild (tareas, destinos, etc.)
-                     que se utiliza durante la compilación. Esta versión invalidará las
+                     que se usa durante la compilación. Esta versión invalidará las
                      versiones especificadas por los distintos proyectos. (Forma corta:
                      -tv)
                      Ejemplo:
-                       -toolsversion:3.5
+                       -toolsVersion:3.5
    </target>
         <note>
       LOCALIZATION: The following should not be localized:
@@ -727,16 +798,16 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      create a log file for each node.
     </source>
         <target state="translated">  -distributedFileLogger
-                     Registra los resultados de la compilación en varios archivos de registro, uno
-                     para cada nodo de MSBuild. La ubicación inicial de estos archivos es
+                     Registra los resultados de la compilación en varios archivos de registro, uno para
+                     cada nodo de MSBuild. La ubicación inicial de estos archivos es
                      el directorio actual. De forma predeterminada, estos archivos se denominan
-                     "MSBuild&lt;idNodo&gt;.log". La ubicación del archivo y
-                     otros parámetros del registrador de archivos se pueden especificar
-                     agregando el modificador "-fileLoggerParameters".
+                     "MSBuild&lt;idNodo&gt;.log". La ubicación de estos archivos y
+                     otros parámetros de fileLogger se pueden especificar
+                    agregando el modificador "-fileLoggerParameters".
 
                      Si se define un nombre de archivo de registro mediante el modificador fileLoggerParameters,
-                     el registrador distribuido usará el nombre de archivo como 
-                     plantilla y agregará el identificador de nodo a ese nombre de archivo para 
+                     el registrador distribuido usará el nombre de archivo como
+                     plantilla y agregará el identificador de nodo a ese nombre de archivo para
                      crear un archivo de registro para cada nodo.
     </target>
         <note>
@@ -778,25 +849,25 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                        -flp1:warningsonly;logfile=msbuild.wrn
                        -flp2:errorsonly;logfile=msbuild.err
     </source>
-        <target state="translated">  -fileloggerparameters[n]:&lt;parámetros&gt;
+        <target state="translated">  -fileLoggerParameters[n]:&lt;parámetros&gt;
                      Proporciona parámetros adicionales de los registradores de archivos.
-                     La presencia de este modificador implica el
-                     modificador -filelogger[n] correspondiente.
-                     Si está presente "n" puede ser un dígito de 1 a 9.
-                     Los registradores de archivos distribuidos usan también -fileloggerparameters,
-                     consulte la descripción de -distributedFileLogger.
+                     La presencia de este modificador implica el modificador
+                     -fileLogger[n] correspondiente.
+                     "n", si está presente, puede ser un dígito de 1 a 9.
+                     Los registradores de archivos distribuidos usan también
+                     -fileLoggerParameters, vea la descripción de -distributedFileLogger.
                      (Forma corta: -flp[n])
-                     Están disponibles los mismos parámetros enumerados para el registrador de la
-                     consola. Otros parámetros disponibles son:
-                        LogFile: ruta de acceso al archivo de registro en el que
-                            se escribirá el registro de compilación.
-                        Append: determina si el registro de compilación se adjuntará
-                            o sobrescribirá el archivo de registro. Si se establece el
-                            modificador, se adjunta el registro de compilación al archivo de registro.
-                            Si no se establece el modificador, se sobrescribe el
-                            contenido del archivo de registro existente.
-                            El valor predeterminado es no adjuntar el archivo de registro.
-                        Encoding: especifica la codificación del archivo,
+                     Están disponibles los mismos parámetros enumerados para el registrador
+                     de la consola. Otros parámetros disponibles son:
+                        LogFile: ruta de acceso al archivo de registro en el que se escribirá
+                            el registro de compilación.
+                        Append: determina si el registro de compilación se adjuntará o
+                            sobrescribirá el archivo de registro. Si se establece el
+                            modificador, se adjunta el registro de compilación al archivo de registro;
+                            Si no se especifica el modificador, se sobrescribe
+                            el contenido del archivo de registro existente. 
+                            El valor predeterminado es adjuntar el archivo de registro.
+                        Encoding: especifica la codificación del archivo, 
                             por ejemplo, UTF-8, Unicode o ASCII
                      El nivel de detalle predeterminado es Detailed.
                      Ejemplos:
@@ -831,9 +902,9 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      Habilita o deshabilita la reutilización de nodos MSBuild.
                      Los parámetros son:
                      True: los nodos se conservarán una vez completada la compilación
-                            y se volverán a utilizar en las siguientes compilaciones (predeterminado)
-                     False: los nodos no se conservarán una vez completada la compilación
-                     (Forma corta: /nr)
+                            y se volverán a usar en las compilaciones siguientes (predeterminado)
+                     False: los nodos no se conservarán cuando finalice la compilación
+                     (Forma corta: -nr)
                      Ejemplo:
                        -nr:true
     </target>
@@ -1048,6 +1119,16 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
         LOCALIZATION: The word "Logger" should be localized, the words "MSBuild" and "error" should NOT be localized.
       </note>
       </trans-unit>
+      <trans-unit id="MSBExePath">
+        <source>MSBuild executable path = "{0}"</source>
+        <target state="translated">Ruta de acceso al ejecutable de MSBuild: "{0}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MSBVersion">
+        <source>MSBuild version = "{0}"</source>
+        <target state="translated">Versión de MSBuild: "{0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MissingLoggerError">
         <source>MSBUILD : error MSB1007: Specify a logger.</source>
         <target state="translated">MSBUILD : error MSB1007: Especifique un registrador.</target>
@@ -1128,6 +1209,15 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
       LOCALIZATION: The prefix "MSBUILD : error MSBxxxx:" should not be localized.
     </note>
       </trans-unit>
+      <trans-unit id="OptionalLoggerCreationMessage">
+        <source>The specified logger could not be created and will not be used. {0}</source>
+        <target state="translated">No se pudo crear el registrador especificado y no se usará. {0}</target>
+        <note>
+      UE: This error is shown when a logger cannot be loaded and instantiated from its assembly.
+      LOCALIZATION: {0} contains the exception message explaining why the
+      logger could not be created -- this message comes from the CLR/FX and is localized.
+    </note>
+      </trans-unit>
       <trans-unit id="PickedUpSwitchesFromAutoResponse">
         <source>Some command line switches were read from the auto-response file "{0}". To disable this file, use the "-noAutoResponse" switch.</source>
         <target state="translated">Algunos modificadores de la línea de comandos se leyeron del archivo de respuesta automática "{0}". Para deshabilitar este archivo, use el modificador "-noAutoResponse".</target>
@@ -1136,6 +1226,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
       switches from the auto-response file msbuild.rsp: otherwise the user may be unaware
       where the switches are coming from.
     </note>
+      </trans-unit>
+      <trans-unit id="Process">
+        <source>Process = "{0}"</source>
+        <target state="translated">Proceso: "{0}"</target>
+        <note />
       </trans-unit>
       <trans-unit id="ProjectNotFoundError">
         <source>MSBUILD : error MSB1009: Project file does not exist.</source>
@@ -1203,6 +1298,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
         <note>{StrBegin="MSBUILD : error MSB1026: "}UE: This error is printed if the default schema does not exist or in the extremely unlikely event
     that an explicit schema file was passed and existed when the command line parameters were checked but was deleted from disk before this check was made.
     LOCALIZATION: The prefix "MSBUILD : error MSBxxxx:" should not be localized.</note>
+      </trans-unit>
+      <trans-unit id="TargetsCouldNotBePrinted">
+        <source>MSBUILD : error MSB1059: Targets could not be printed. {0}</source>
+        <target state="translated">MSBUILD : error MSB1059: No se pudieron imprimir los destinos. {0}</target>
+        <note>{StrBegin="MSBUILD : error MSB1059: "}</note>
       </trans-unit>
       <trans-unit id="UnexpectedParametersError">
         <source>MSBUILD : error MSB1002: This switch does not take any parameters.</source>
@@ -1331,7 +1431,7 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
       </trans-unit>
       <trans-unit id="AmbiguousProjectDirectoryError">
         <source>MSBUILD : error MSB1050: Specify which project or solution file to use because the folder "{0}" contains more than one project or solution file.</source>
-        <target state="translated">MSBUILD: error MSB1050: Especifique el archivo de proyecto o de solución que se va a utilizar ya que la carpeta "{0}" contiene más de un archivo de proyecto o de solución.</target>
+        <target state="translated">MSBUILD : error MSB1050: Especifique el archivo de proyecto o de solución que se va a utilizar ya que la carpeta "{0}" contiene más de un archivo de proyecto o de solución.</target>
         <note>
       {StrBegin="MSBUILD : error MSB1050: "}UE: If no project or solution file is explicitly specified on the MSBuild.exe command-line, then the engine searches for a
       project or solution file in the current directory by looking for *.*PROJ and *.SLN. If more than one file is found that matches this wildcard, we
@@ -1397,12 +1497,12 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
       </trans-unit>
       <trans-unit id="ParameterRequiredError">
         <source>MSBUILD : error MSB1049: The {0} parameter must be specified</source>
-        <target state="translated">MSBUILD: error MSB1049: Debe especificarse el parámetro {0}</target>
+        <target state="translated">MSBUILD : error MSB1049: Debe especificarse el parámetro {0}</target>
         <note>{StrBegin="MSBUILD : error MSB1049: "}</note>
       </trans-unit>
       <trans-unit id="MissingWarnAsMessageParameterError">
         <source>MSBUILD : error MSB1051: Specify one or more warning codes to treat as low importance messages when using the -warnAsMessage switch.</source>
-        <target state="translated">MSBUILD: error MSB1051: Especifique uno o varios códigos de advertencia para tratarlos como mensajes de baja importancia al utilizar el modificador -warnAsMessage.</target>
+        <target state="translated">MSBUILD : error MSB1051: Especifique uno o varios códigos de advertencia para tratarlos como mensajes de baja importancia al utilizar el modificador -warnAsMessage.</target>
         <note>
       {StrBegin="MSBUILD : error MSB1051: "}
       UE: This happens if the user does something like "msbuild.exe -warnAsMessage:" without any codes.
@@ -1561,11 +1661,11 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                      file is '.md', the result is generated in markdown
                      format. Otherwise, a tab separated file is produced.
     </source>
-        <target state="translated">  -profileEvaluation:&lt;archivo&gt;    
+        <target state="translated">  -profileEvaluation:&lt;archivo&gt;
                      Genera un perfil de la evaluación de MSBuild y escribe el resultado
-                     en el archivo especificado. Si la extensión del archivo especificado
-                     es ".md", el resultado se genera en formato Markdown.
-                     Si no es así, se genera un archivo separado por tabulaciones independiente.
+                     en el archivo especificado. Si la extensión del archivo
+                     especificado es ".md", el resultado se genera en formato
+                     Markdown. De lo contrario, se genera un archivo separado por tabuladores.
     </target>
         <note />
       </trans-unit>
@@ -1582,12 +1682,12 @@ Copyright (C) Microsoft Corporation. Todos los derechos reservados.
                        -restoreProperty:IsRestore=true;MyProperty=value
     </source>
         <target state="translated">  -restoreProperty:&lt;n&gt;=&lt;v&gt;
-                     Definir o invalidar estas propiedades de nivel de proyecto solo
-                     durante la restauración y no utilizar las propiedades especificadas
-                     con el argumento -property. &lt;n&gt; es el nombre
-                     de la propiedad, y &lt;v&gt; es el valor de la propiedad. Use un
+                     Establezca o invalide estas propiedades de nivel de proyecto solo
+                     durante la restauración y no use las propiedades especificadas
+                     con el argumento -property. &lt;n&gt; es el nombre de
+                     la propiedad y &lt;v&gt; es el valor de la propiedad. Use un
                      punto y coma o una coma para separar varias propiedades,
-                     o especifique cada propiedad de manera independiente.
+                     o especifique cada propiedad por separado.
                      (Forma corta: -rp)
                      Ejemplo:
                        -restoreProperty:IsRestore=true;MyProperty=value

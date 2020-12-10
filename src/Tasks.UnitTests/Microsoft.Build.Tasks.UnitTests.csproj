@@ -80,6 +80,7 @@
 
   <ItemGroup Condition="'$(MonoBuild)' == 'true'">
     <Compile Remove="LC_Tests.cs" />
+    <Compile Remove="SGen_Tests.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFrameworkIdentifier) != '.NETFramework'">
@@ -99,14 +100,14 @@
     <Compile Remove="DependentAssembly_Tests.cs" />
     <Compile Remove="ErrorWarningMessage_Tests.cs" />
     <Compile Remove="FindInvalidProjectReferences_Tests.cs" />
-    <Compile Remove="GenerateResourceOutOfProc_Tests.cs" />
+    <Compile Remove="ResourceHandling\GenerateResourceOutOfProc_Tests.cs" />
+    <Compile Remove="ResourceHandling\ResGen_Tests.cs" />
+    <Compile Remove="ResourceHandling\ResGenDependencies_Tests.cs" />
     <Compile Remove="GetInstalledSDKLocations_Tests.cs" />
     <Compile Remove="GetSDKReference_Tests.cs" />
     <Compile Remove="LC_Tests.cs" />
     <Compile Remove="MockTypeInfo.cs" />
     <Compile Remove="MockTypeLib.cs" />
-    <Compile Remove="ResGen_Tests.cs" />
-    <Compile Remove="ResGenDependencies_Tests.cs" />
     <Compile Remove="AssemblyDependency\AssemblyFoldersFromConfig_Tests.cs" />
     <Compile Remove="AssemblyDependency\FilePrimary.cs" />
     <Compile Remove="AssemblyDependency\GlobalAssemblyCacheTests.cs" />
@@ -124,15 +125,12 @@
     <Compile Remove="AssemblyDependency\VerifyTargetFrameworkHigherThanRedist.cs" />
     <Compile Remove="AssemblyDependency\WinMDTests.cs" />
     <Compile Remove="ResolveComReference_Tests.cs" />
-    <Compile Remove="ResolveNonMSBuildProjectOutput_Tests.cs" />
     <Compile Remove="ResolveSDKReference_Tests.cs" />
     <Compile Remove="SdkToolsPathUtility_Tests.cs" />
-    <Compile Remove="SGen_Tests.cs" />
     <Compile Remove="TlbImp_Tests.cs" />
     <Compile Remove="VisualBasicParserUtilitites_Tests.cs" />
     <Compile Remove="VisualBasicTokenizer_Tests.cs" />
     <Compile Remove="WinMDExp_Tests.cs" />
-    <Compile Remove="XslTransformation_Tests.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -140,6 +138,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ResourceHandling\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestResources\lorem.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

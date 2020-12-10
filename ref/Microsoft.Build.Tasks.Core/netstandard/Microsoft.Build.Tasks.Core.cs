@@ -110,6 +110,7 @@ namespace Microsoft.Build.Tasks
         [Microsoft.Build.Framework.OutputAttribute]
         public Microsoft.Build.Framework.ITaskItem[] DestinationFiles { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskItem DestinationFolder { get { throw null; } set { } }
+        public bool ErrorIfLinkFails { get { throw null; } set { } }
         public bool OverwriteReadOnlyFiles { get { throw null; } set { } }
         public int Retries { get { throw null; } set { } }
         public int RetryDelayMilliseconds { get { throw null; } set { } }
@@ -124,6 +125,7 @@ namespace Microsoft.Build.Tasks
     public partial class CreateCSharpManifestResourceName : Microsoft.Build.Tasks.CreateManifestResourceName
     {
         public CreateCSharpManifestResourceName() { }
+        protected override string SourceFileExtension { get { throw null; } }
         protected override string CreateManifestName(string fileName, string linkFileName, string rootNamespace, string dependentUponFileName, System.IO.Stream binaryStream) { throw null; }
         protected override bool IsSourceFile(string fileName) { throw null; }
     }
@@ -149,6 +151,8 @@ namespace Microsoft.Build.Tasks
         [Microsoft.Build.Framework.OutputAttribute]
         public Microsoft.Build.Framework.ITaskItem[] ResourceFilesWithManifestResourceNames { get { throw null; } set { } }
         public string RootNamespace { get { throw null; } set { } }
+        protected abstract string SourceFileExtension { get; }
+        public bool UseDependentUponConvention { get { throw null; } set { } }
         protected abstract string CreateManifestName(string fileName, string linkFileName, string rootNamespaceName, string dependentUponFileName, System.IO.Stream binaryStream);
         public override bool Execute() { throw null; }
         protected abstract bool IsSourceFile(string fileName);
@@ -166,6 +170,7 @@ namespace Microsoft.Build.Tasks
     public partial class CreateVisualBasicManifestResourceName : Microsoft.Build.Tasks.CreateManifestResourceName
     {
         public CreateVisualBasicManifestResourceName() { }
+        protected override string SourceFileExtension { get { throw null; } }
         protected override string CreateManifestName(string fileName, string linkFileName, string rootNamespace, string dependentUponFileName, System.IO.Stream binaryStream) { throw null; }
         protected override bool IsSourceFile(string fileName) { throw null; }
     }
@@ -354,6 +359,7 @@ namespace Microsoft.Build.Tasks
         public string TrackerLogDirectory { get { throw null; } set { } }
         public string TrackerSdkPath { get { throw null; } set { } }
         public bool TrackFileAccess { get { throw null; } set { } }
+        public bool UsePreserializedResources { get { throw null; } set { } }
         public bool UseSourcePath { get { throw null; } set { } }
         public override bool Execute() { throw null; }
     }
@@ -411,6 +417,8 @@ namespace Microsoft.Build.Tasks
         public string FrameworkVersion472Path { get { throw null; } }
         [Microsoft.Build.Framework.OutputAttribute]
         public string FrameworkVersion47Path { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public string FrameworkVersion48Path { get { throw null; } }
         [Microsoft.Build.Framework.OutputAttribute]
         public string Path { get { throw null; } }
         public override bool Execute() { throw null; }
@@ -645,6 +653,16 @@ namespace Microsoft.Build.Tasks
         public bool SuppressAutoClosePasswordPrompt { get { throw null; } set { } }
         public override bool Execute() { throw null; }
     }
+    public partial class ResolveNonMSBuildProjectOutput : Microsoft.Build.Tasks.ResolveProjectBase
+    {
+        public ResolveNonMSBuildProjectOutput() { }
+        public string PreresolvedProjectOutputs { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedOutputPaths { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] UnresolvedProjectReferences { get { throw null; } set { } }
+        public override bool Execute() { throw null; }
+    }
     public abstract partial class ResolveProjectBase : Microsoft.Build.Tasks.TaskExtension
     {
         protected ResolveProjectBase() { }
@@ -663,6 +681,32 @@ namespace Microsoft.Build.Tasks
         public Microsoft.Build.Framework.ITask CreateTask(Microsoft.Build.Framework.IBuildEngine taskFactoryLoggingHost) { throw null; }
         public Microsoft.Build.Framework.TaskPropertyInfo[] GetTaskParameters() { throw null; }
         public bool Initialize(string taskName, System.Collections.Generic.IDictionary<string, Microsoft.Build.Framework.TaskPropertyInfo> parameterGroup, string taskBody, Microsoft.Build.Framework.IBuildEngine taskFactoryLoggingHost) { throw null; }
+    }
+    public partial class SGen : Microsoft.Build.Tasks.ToolTaskExtension
+    {
+        public SGen() { }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public string BuildAssemblyName { get { throw null; } set { } }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public string BuildAssemblyPath { get { throw null; } set { } }
+        public bool DelaySign { get { throw null; } set { } }
+        public string KeyContainer { get { throw null; } set { } }
+        public string KeyFile { get { throw null; } set { } }
+        public string Platform { get { throw null; } set { } }
+        public string[] References { get { throw null; } set { } }
+        public string SdkToolsPath { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] SerializationAssembly { get { throw null; } set { } }
+        public string SerializationAssemblyName { get { throw null; } }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public bool ShouldGenerateSerializer { get { throw null; } set { } }
+        protected override string ToolName { get { throw null; } }
+        public string[] Types { get { throw null; } set { } }
+        public bool UseKeep { get { throw null; } set { } }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public bool UseProxyTypes { get { throw null; } set { } }
+        public override bool Execute() { throw null; }
+        protected override string GenerateFullPathToTool() { throw null; }
     }
     public abstract partial class TaskExtension : Microsoft.Build.Utilities.Task
     {
@@ -794,6 +838,20 @@ namespace Microsoft.Build.Tasks
         [Microsoft.Build.Framework.RequiredAttribute]
         public Microsoft.Build.Framework.ITaskItem Value { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskItem XmlInputPath { get { throw null; } set { } }
+        public override bool Execute() { throw null; }
+    }
+    public partial class XslTransformation : Microsoft.Build.Tasks.TaskExtension
+    {
+        public XslTransformation() { }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] OutputPaths { get { throw null; } set { } }
+        public string Parameters { get { throw null; } set { } }
+        public bool UseTrustedSettings { get { throw null; } set { } }
+        public string XmlContent { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] XmlInputPaths { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem XslCompiledDllPath { get { throw null; } set { } }
+        public string XslContent { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem XslInputPath { get { throw null; } set { } }
         public override bool Execute() { throw null; }
     }
     public sealed partial class ZipDirectory : Microsoft.Build.Tasks.TaskExtension

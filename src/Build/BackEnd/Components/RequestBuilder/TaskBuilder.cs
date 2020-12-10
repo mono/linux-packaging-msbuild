@@ -2,18 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Collections;
-using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Eventing;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
@@ -318,7 +316,7 @@ namespace Microsoft.Build.BackEnd
                 // Only create a hash table if there are more than one bucket as this is the only time a property can be overridden
                 if (buckets.Count > 1)
                 {
-                    lookupHash = lookupHash ?? new Dictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+                    lookupHash ??= new Dictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
                 }
 
                 WorkUnitResult aggregateResult = new WorkUnitResult();
@@ -326,6 +324,12 @@ namespace Microsoft.Build.BackEnd
                 // Loop through each of the batch buckets and execute them one at a time
                 for (int i = 0; i < buckets.Count; i++)
                 {
+                    // Some tests do not provide an actual taskNode; checking if _taskNode == null prevents those tests from failing.
+                    if (MSBuildEventSource.Log.IsEnabled())
+                    {
+                        TaskLoggingContext taskLoggingContext = _targetLoggingContext.LogTaskBatchStarted(_projectFullPath, _targetChildInstance);
+                        MSBuildEventSource.Log.ExecuteTaskStart(_taskNode?.Name, taskLoggingContext.BuildEventContext.TaskId);
+                    }
                     // Execute the batch bucket, pass in which bucket we are executing so that we know when to get a new taskId for the bucket.
                     taskResult = await ExecuteBucket(taskHost, (ItemBucket)buckets[i], mode, lookupHash);
 
@@ -335,8 +339,14 @@ namespace Microsoft.Build.BackEnd
                     {
                         break;
                     }
+                    // Some tests do not provide an actual taskNode; checking if _taskNode == null prevents those tests from failing.
+                    if (MSBuildEventSource.Log.IsEnabled())
+                    {
+                        TaskLoggingContext taskLoggingContext = _targetLoggingContext.LogTaskBatchStarted(_projectFullPath, _targetChildInstance);
+                        MSBuildEventSource.Log.ExecuteTaskStop(_taskNode?.Name, taskLoggingContext.BuildEventContext.TaskId);
+                    }
                 }
-
+                
                 taskResult = aggregateResult;
             }
             finally
@@ -420,6 +430,8 @@ namespace Microsoft.Build.BackEnd
                     if (requirements != null)
                     {
                         TaskLoggingContext taskLoggingContext = _targetLoggingContext.LogTaskBatchStarted(_projectFullPath, _targetChildInstance);
+                        _buildRequestEntry.Request.CurrentTaskContext = taskLoggingContext.BuildEventContext;
+
                         try
                         {
                             if (
@@ -461,6 +473,8 @@ namespace Microsoft.Build.BackEnd
                         }
                         finally
                         {
+                            _buildRequestEntry.Request.CurrentTaskContext = null;
+
                             // Flag the completion of the task.
                             taskLoggingContext.LogTaskBatchFinished(_projectFullPath, taskResult.ResultCode == WorkUnitResultCode.Success || taskResult.ResultCode == WorkUnitResultCode.Skipped);
 
@@ -543,7 +557,7 @@ namespace Microsoft.Build.BackEnd
         {
             WorkUnitResult taskResult = new WorkUnitResult(WorkUnitResultCode.Failed, WorkUnitActionCode.Stop, null);
             Thread staThread = null;
-            Exception exceptionFromExecution = null;
+            ExceptionDispatchInfo exceptionFromExecution = null;
             ManualResetEvent taskRunnerFinished = new ManualResetEvent(false);
             try
             {
@@ -554,14 +568,9 @@ namespace Microsoft.Build.BackEnd
                     {
                         taskResult = InitializeAndExecuteTask(taskLoggingContext, bucket, taskIdentityParameters, taskHost, howToExecuteTask).Result;
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (!ExceptionHandling.IsCriticalException(e))
                     {
-                        if (ExceptionHandling.IsCriticalException(e))
-                        {
-                            throw;
-                        }
-
-                        exceptionFromExecution = e;
+                        exceptionFromExecution = ExceptionDispatchInfo.Capture(e);
                     }
                     finally
                     {
@@ -588,8 +597,7 @@ namespace Microsoft.Build.BackEnd
 
             if (exceptionFromExecution != null)
             {
-                // Unfortunately this will reset the callstack
-                throw exceptionFromExecution;
+                exceptionFromExecution.Throw();
             }
 
             return taskResult;
@@ -811,13 +819,8 @@ namespace Microsoft.Build.BackEnd
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (!ExceptionHandling.IsCriticalException(ex) && Environment.GetEnvironmentVariable("MSBUILDDONOTCATCHTASKEXCEPTIONS") != "1")
                 {
-                    if (ExceptionHandling.IsCriticalException(ex) || (Environment.GetEnvironmentVariable("MSBUILDDONOTCATCHTASKEXCEPTIONS") == "1"))
-                    {
-                        throw;
-                    }
-
                     taskException = ex;
                 }
 
@@ -853,7 +856,6 @@ namespace Microsoft.Build.BackEnd
                         // Rethrow wrapped in order to avoid losing the callstack
                         throw new InternalLoggerException(taskException.Message, taskException, ex.BuildEventArgs, ex.ErrorCode, ex.HelpKeyword, ex.InitializationException);
                     }
-#if FEATURE_VARIOUS_EXCEPTIONS
                     else if (type == typeof(ThreadAbortException))
                     {
                         Thread.ResetAbort();
@@ -863,7 +865,6 @@ namespace Microsoft.Build.BackEnd
                         // Stack will be lost
                         throw taskException;
                     }
-#endif
                     else if (type == typeof(BuildAbortedException))
                     {
                         _continueOnError = ContinueOnError.ErrorAndStop;
@@ -995,7 +996,7 @@ namespace Microsoft.Build.BackEnd
                 return null;
             }
 
-            var projectReferenceItems = _taskExecutionHost.ProjectInstance.GetItems(MSBuildConstants.ProjectReferenceItemName);
+            var projectReferenceItems = _buildRequestEntry.RequestConfiguration.Project.GetItems(ItemTypeNames.ProjectReference);
 
             var declaredProjects = new HashSet<string>(projectReferenceItems.Count);
 
@@ -1013,7 +1014,9 @@ namespace Microsoft.Build.BackEnd
             {
                 var normalizedMSBuildProject = FileUtilities.NormalizePath(msbuildProject.ItemSpec);
 
-                if (!declaredProjects.Contains(normalizedMSBuildProject))
+                if (
+                    !(declaredProjects.Contains(normalizedMSBuildProject)
+                      || _buildRequestEntry.RequestConfiguration.ShouldSkipIsolationConstraintsForReference(normalizedMSBuildProject)))
                 {
                     if (undeclaredProjects == null)
                     {

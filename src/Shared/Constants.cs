@@ -3,14 +3,8 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 
-// This file is compiled into both Microsoft.Build.Framework and Microsoft.Build.Tasks which can cause collisions.
-#if MICROSOFT_BUILD_TASKS
-namespace Microsoft.Build.Tasks
-#else
 namespace Microsoft.Build.Shared
-#endif
 {
     /// <summary>
     /// Constants that we want to be shareable across all our assemblies.
@@ -79,12 +73,18 @@ namespace Microsoft.Build.Shared
         /// Current version of this MSBuild Engine assembly in the form, e.g, "12.0"
         /// </summary>
         internal const string CurrentProductVersion = "16.0";
-		
-		/// <summary>
-        /// The name of the item used to specify references to other msbuild projects
+        
+        /// <summary>
+        /// Symbol used in ProjectReferenceTarget items to represent default targets
         /// </summary>
-        internal const string ProjectReferenceItemName = "ProjectReference";
+        internal const string DefaultTargetsMarker = ".default";
 
+        /// <summary>
+        /// Symbol used in ProjectReferenceTarget items to represent targets specified on the ProjectReference item
+        /// with fallback to default targets if the ProjectReference item has no targets specified.
+        /// </summary>
+        internal const string ProjectReferenceTargetsOrDefaultTargetsMarker = ".projectReferenceTargetsOrDefaultTargets";
+        
         // One-time allocations to avoid implicit allocations for Split(), Trim().
         internal static readonly char[] SemicolonChar = { ';' };
         internal static readonly char[] SpaceChar = { ' ' };
@@ -104,6 +104,32 @@ namespace Microsoft.Build.Shared
         internal static readonly string[] EnvironmentNewLine = { Environment.NewLine };
         internal static readonly char[] PipeChar = { '|' };
         internal static readonly char[] PathSeparatorChar = { Path.PathSeparator };
+    }
+
+    internal static class PropertyNames
+    {
+        /// <summary>
+        /// Specifies whether the current evaluation / build is happening during a graph build
+        /// </summary>
+        internal const string IsGraphBuild = nameof(IsGraphBuild);
+
+        internal const string InnerBuildProperty = nameof(InnerBuildProperty);
+        internal const string InnerBuildPropertyValues = nameof(InnerBuildPropertyValues);
+    }
+
+    internal static class ItemTypeNames
+    {
+        /// <summary>
+        /// References to other msbuild projects
+        /// </summary>
+        internal const string ProjectReference = nameof(ProjectReference);
+
+        /// <summary>
+        /// Statically specifies what targets a project calls on its references
+        /// </summary>
+        internal const string ProjectReferenceTargets = nameof(ProjectReferenceTargets);
+
+        internal const string GraphIsolationExemptReference = nameof(GraphIsolationExemptReference);
     }
 
     /// <summary>
@@ -147,5 +173,9 @@ namespace Microsoft.Build.Shared
         internal const string projectReferenceOriginalItemSpec = "ProjectReferenceOriginalItemSpec";
         internal const string IgnoreVersionForFrameworkReference = "IgnoreVersionForFrameworkReference";
         internal const string frameworkFile = "FrameworkFile";
+        internal const string ProjectReferenceTargetsMetadataName = "Targets";
+        internal const string PropertiesMetadataName = "Properties";
+        internal const string UndefinePropertiesMetadataName = "UndefineProperties";
+        internal const string AdditionalPropertiesMetadataName = "AdditionalProperties";
     }
 }

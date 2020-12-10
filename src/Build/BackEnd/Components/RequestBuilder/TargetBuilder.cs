@@ -1,22 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text;
-using System.Threading;
-using System.Xml;
-using Microsoft.Build.Shared;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Evaluation;
 using Microsoft.Build.Collections;
-using ElementLocation = Microsoft.Build.Construction.ElementLocation;
-using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
-using ProjectLoggingContext = Microsoft.Build.BackEnd.Logging.ProjectLoggingContext;
-using BuildAbortedException = Microsoft.Build.Exceptions.BuildAbortedException;
-using System.Threading.Tasks;
+using Microsoft.Build.Eventing;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Shared;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using ProjectLoggingContext = Microsoft.Build.BackEnd.Logging.ProjectLoggingContext;
+using ElementLocation = Microsoft.Build.Construction.ElementLocation;
+using BuildAbortedException = Microsoft.Build.Exceptions.BuildAbortedException;
+using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -183,6 +181,7 @@ namespace Microsoft.Build.BackEnd
             }
 
             // Gather up outputs for the requested targets and return those.  All of our information should be in the base lookup now.
+            ComputeAfterTargetFailures(targetNames);
             BuildResult resultsToReport = new BuildResult(_buildResult, targetNames);
 
             // Return after-build project state if requested.
@@ -466,7 +465,9 @@ namespace Microsoft.Build.BackEnd
                             _requestEntry.RequestConfiguration.ActivelyBuildingTargets[currentTargetEntry.Name] = _requestEntry.Request.GlobalRequestId;
 
                             // Execute all of the tasks on this target.
+                            MSBuildEventSource.Log.TargetStart(currentTargetEntry.Name);
                             await currentTargetEntry.ExecuteTarget(taskBuilder, _requestEntry, _projectLoggingContext, _cancellationToken);
+                            MSBuildEventSource.Log.TargetStop(currentTargetEntry.Name);
                         }
 
                         break;
@@ -765,6 +766,40 @@ namespace Microsoft.Build.BackEnd
             }
 
             return false;
+        }
+
+        private void ComputeAfterTargetFailures(string[] targetNames)
+        {
+            foreach (string targetName in targetNames)
+            {
+                if (_buildResult.ResultsByTarget.ContainsKey(targetName))
+                {
+                    // Queue of targets waiting to be processed, seeded with the specific target for which we're computing AfterTargetsHaveFailed.
+                    var targetsToCheckForAfterTargets = new Queue<string>();
+                    targetsToCheckForAfterTargets.Enqueue(targetName);
+
+                    while (targetsToCheckForAfterTargets?.Count > 0)
+                    {
+                        string targetToCheck = targetsToCheckForAfterTargets.Dequeue();
+                        IList<TargetSpecification> targetsWhichRunAfter = _requestEntry.RequestConfiguration.Project.GetTargetsWhichRunAfter(targetToCheck);
+
+                        foreach (TargetSpecification afterTarget in targetsWhichRunAfter)
+                        {
+                            _buildResult.ResultsByTarget.TryGetValue(afterTarget.TargetName, out TargetResult result);
+                            if (result?.ResultCode == TargetResultCode.Failure && !result.TargetFailureDoesntCauseBuildFailure)
+                            {
+                                // Mark the target as having an after target failed, and break the loop to move to the next target.
+                                _buildResult.ResultsByTarget[targetName].AfterTargetsHaveFailed = true;
+                                targetsToCheckForAfterTargets = null;
+                                break;
+                            }
+
+                            // We haven't seen this target yet, add it to the list to check.
+                            targetsToCheckForAfterTargets.Enqueue(afterTarget.TargetName);
+                        }
+                    }
+                }
+            }
         }
     }
 }

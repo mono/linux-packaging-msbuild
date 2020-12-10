@@ -12,9 +12,9 @@
     <GenerateReferenceAssemblySources>true</GenerateReferenceAssemblySources>
     <!-- <CreateTlb>true</CreateTlb> --><!-- This was created in VS but not published, so I don't think it's needed -->
     <IsPackable>true</IsPackable>
-    <Description>This package contains the $(MSBuildProjectName) assembly which is used to implement custom MSBuild tasks.</Description>
+    <PackageDescription>This package contains the $(MSBuildProjectName) assembly which is used to implement custom MSBuild tasks.</PackageDescription>
     <IncludeSatelliteOutputInPack>false</IncludeSatelliteOutputInPack>
-    <ApplyPartialNgenOptimization>true</ApplyPartialNgenOptimization>
+    <ApplyNgenOptimization Condition="'$(TargetFramework)' == '$(FullFrameworkTFM)'">partial</ApplyNgenOptimization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'">
+    <PackageReference Include="System.Security.Permissions" />
     <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
 
@@ -62,9 +63,6 @@
     </Compile>
     <Compile Include="..\Shared\CanonicalError.cs">
       <Link>Shared\CanonicalError.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Constants.cs">
-      <Link>Shared\Constants.cs</Link>
     </Compile>
     <Compile Include="..\Shared\ExtensionFoldersRegistryKey.cs">
       <Link>Shared\ExtensionFoldersRegistryKey.cs</Link>

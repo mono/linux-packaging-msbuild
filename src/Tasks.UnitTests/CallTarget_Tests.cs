@@ -12,6 +12,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
 using System.Text.RegularExpressions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Build.UnitTests
@@ -111,6 +112,22 @@ namespace Microsoft.Build.UnitTests
             logger.AssertLogContains("Inside C");
         }
 
+        [Fact]
+        public void FailsWithOnlyTargetErrors()
+        {
+            MockLogger logger = ObjectModelHelpers.BuildProjectExpectFailure(@"
+                <Project>
+                  <Target Name='Init'>
+                    <CallTarget Targets='Inside' />
+                  </Target>
+                  <Target Name='Inside'>
+                    <Error />
+                  </Target>
+                </Project>");
+
+            logger.ErrorCount.ShouldBe (1);
+        }
+
         /// <summary>
         /// Test the CallTarget task, where we don't pass in any targets.  This is expected
         /// to succeed, so that callers of the task don't have to add a Condition to ensure
@@ -161,7 +178,7 @@ namespace Microsoft.Build.UnitTests
 
             ProjectInstance instance = project.CreateProjectInstance();
             bool success = instance.Build();
-            Assert.True(success); // "Build failed.  See Standard Out tab for details"
+            Assert.True(success); // "Build failed.  See test output (Attachments in Azure Pipelines) for details"
 
             IEnumerable<ProjectItemInstance> targetOutputs = instance.GetItems("myfancytargetoutputs");
 

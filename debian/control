@@ -4,13 +4,13 @@ Priority: optional
 Maintainer: Jo Shields <joshield@microsoft.com>
 Build-Depends: debhelper (>=7.0.50~), mono-devel (>= 4.0), cli-common-dev,
 	curl, unzip, libunwind8-dev, libicu-dev, ca-certificates-mono,
-	libcurl4-openssl-dev, coreutils
+	libcurl4-openssl-dev, coreutils, msbuild-libhostfxr
 Standards-Version: 3.9.6
 Homepage: https://github.com/mono/msbuild
 
 Package: msbuild
 Architecture: all
-Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr
+Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr (>= 3.0)
 Description: build platform for .NET and Visual Studio
  The Microsoft Build Engine is a platform for building applications.
  This engine, which is also known as MSBuild, provides an XML schema
@@ -24,7 +24,7 @@ Description: build platform for .NET and Visual Studio
 
 Package: msbuild-sdkresolver
 Architecture: all
-Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr
+Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}, msbuild-libhostfxr (>= 3.0)
 Breaks: msbuild (<< 15.3+xamarinxplat.2017.06.19.14.09)
 Replaces: msbuild (<< 15.3+xamarinxplat.2017.06.19.14.09)
 Description: build platform for .NET and Visual Studio

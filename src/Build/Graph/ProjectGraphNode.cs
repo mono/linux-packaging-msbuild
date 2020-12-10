@@ -2,25 +2,28 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Execution;
+using Microsoft.Build.Shared;
 
-namespace Microsoft.Build.Experimental.Graph
+namespace Microsoft.Build.Graph
 {
     /// <summary>
     /// Represents the node for a particular project in a project graph.
+    /// A node is defined by (ProjectPath, ToolsVersion, GlobalProperties).
     /// </summary>
+    [DebuggerDisplay(@"{DebugString()}")]
     public sealed class ProjectGraphNode
     {
-        private readonly List<ProjectGraphNode> _projectReferences = new List<ProjectGraphNode>();
-        private readonly List<ProjectGraphNode> _referencingProjects = new List<ProjectGraphNode>();
+        private readonly HashSet<ProjectGraphNode> _projectReferences = new HashSet<ProjectGraphNode>();
+        private readonly HashSet<ProjectGraphNode> _referencingProjects = new HashSet<ProjectGraphNode>();
 
         // No public creation.
-        internal ProjectGraphNode(
-            ProjectInstance projectInstance,
-            IReadOnlyDictionary<string, string> globalProperties)
+        internal ProjectGraphNode(ProjectInstance projectInstance)
         {
+            ErrorUtilities.VerifyThrowInternalNull(projectInstance, nameof(projectInstance));
             ProjectInstance = projectInstance;
-            GlobalProperties = globalProperties;
         }
 
         /// <summary>
@@ -38,13 +41,39 @@ namespace Microsoft.Build.Experimental.Graph
         /// </summary>
         public ProjectInstance ProjectInstance { get; }
 
-        /// <summary>
-        /// Gets the global properties which should be used to evaluate and execute this node in the graph.
-        /// </summary>
-        public IReadOnlyDictionary<string, string> GlobalProperties { get; }
+        private string DebugString()
+        {
+            var truncatedProjectFile = FileUtilities.TruncatePathToTrailingSegments(ProjectInstance.FullPath, 2);
 
-        internal void AddProjectReference(ProjectGraphNode projectGraphNode) => _projectReferences.Add(projectGraphNode);
+            return
+                $"{truncatedProjectFile}, #GlobalProps={ProjectInstance.GlobalProperties.Count}, #Props={ProjectInstance.Properties.Count}, #Items={ProjectInstance.Items.Count}, #in={ReferencingProjects.Count}, #out={ProjectReferences.Count}";
+        }
 
-        internal void AddReferencingProject(ProjectGraphNode projectGraphNode) => _referencingProjects.Add(projectGraphNode);
+        internal void AddProjectReference(ProjectGraphNode reference, ProjectItemInstance projectReferenceItem, GraphBuilder.GraphEdges edges)
+        {
+            _projectReferences.Add(reference);
+            reference._referencingProjects.Add(this);
+
+            // First edge wins, in accordance with vanilla msbuild behaviour when multiple msbuild tasks call into the same logical project
+            edges[(this, reference)] = projectReferenceItem;
+        }
+
+        internal void RemoveReferences(GraphBuilder.GraphEdges edges)
+        {
+            foreach (var reference in _projectReferences)
+            {
+                ErrorUtilities.VerifyThrow(reference._referencingProjects.Contains(this), "references should point to the nodes referencing them");
+                reference._referencingProjects.Remove(this);
+
+                edges.RemoveEdge((this, reference));
+            }
+
+            _projectReferences.Clear();
+        }
+
+        internal ConfigurationMetadata ToConfigurationMetadata()
+        {
+            return new ConfigurationMetadata(ProjectInstance.FullPath, ProjectInstance.GlobalPropertiesDictionary);
+        }
     }
 }
