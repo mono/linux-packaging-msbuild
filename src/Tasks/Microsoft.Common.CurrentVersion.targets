@@ -4518,13 +4518,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_TransitiveItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(ContentWithTargetPath->'%(FullPath)')" Condition="'%(ContentWithTargetPath.CopyToOutputDirectory)'=='PreserveNewest' AND '%(ContentWithTargetPath.MSBuildSourceProjectFile)'!=''"/>
     </ItemGroup>
 
-  </Target>
-
-  <Target
-      Name="_GetCopyToOutputDirectoryItemsFromThisProject"
-      DependsOnTargets="AssignTargetPaths;_PopulateCommonStateForGetCopyToOutputDirectoryItems"
-      Returns="@(_ThisProjectItemsToCopyToOutputDirectory)">
-
     <ItemGroup>
       <_TransitiveItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(EmbeddedResource->'%(FullPath)')" Condition="'%(EmbeddedResource.CopyToOutputDirectory)'=='Always' AND '%(EmbeddedResource.MSBuildSourceProjectFile)'!=''"/>
       <_TransitiveItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(EmbeddedResource->'%(FullPath)')" Condition="'%(EmbeddedResource.CopyToOutputDirectory)'=='PreserveNewest' AND '%(EmbeddedResource.MSBuildSourceProjectFile)'!=''"/>
@@ -4559,24 +4552,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_ThisProjectItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(ContentWithTargetPath->'%(FullPath)')" Condition="'%(ContentWithTargetPath.CopyToOutputDirectory)'=='Always' AND '%(ContentWithTargetPath.MSBuildSourceProjectFile)'==''"/>
       <_ThisProjectItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(ContentWithTargetPath->'%(FullPath)')" Condition="'%(ContentWithTargetPath.CopyToOutputDirectory)'=='PreserveNewest' AND '%(ContentWithTargetPath.MSBuildSourceProjectFile)'==''"/>
     </ItemGroup>
-
-  </Target>
-
-  <Target
-      Name="GetCopyToOutputDirectoryItems"
-      Returns="@(AllItemsFullPathWithTargetPath)"
-      KeepDuplicateOutputs=" '$(MSBuildDisableGetCopyToOutputDirectoryItemsOptimization)' == '' "
-      DependsOnTargets="$(GetCopyToOutputDirectoryItemsDependsOn)">
-
-    <!-- Compose the content items as the union between transitive content items and content items from this project. -->
-    <!-- Use CallTarget to avoid breaking targets that hook right before GetCopyToOutputDirectoryItems but expect to run after _GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences and _GetCopyToOutputDirectoryItemsFromThisProject -->
-    <CallTarget Targets="_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences">
-      <Output TaskParameter="TargetOutputs" ItemName="_TransitiveItemsToCopyToOutputDirectory" />
-    </CallTarget>
-
-    <CallTarget Targets="_GetCopyToOutputDirectoryItemsFromThisProject">
-      <Output TaskParameter="TargetOutputs" ItemName="_ThisProjectItemsToCopyToOutputDirectory" />
-    </CallTarget>
 
     <ItemGroup>
       <_ThisProjectItemsToCopyToOutputDirectory       KeepMetadata="$(_GCTODIKeepMetadata)" Include="@(EmbeddedResource->'%(FullPath)')" Condition="'%(EmbeddedResource.CopyToOutputDirectory)'=='Always' AND '%(EmbeddedResource.MSBuildSourceProjectFile)'==''"/>

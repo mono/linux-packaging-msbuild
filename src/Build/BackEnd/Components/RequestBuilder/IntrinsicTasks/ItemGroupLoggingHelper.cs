@@ -32,11 +32,6 @@ namespace Microsoft.Build.BackEnd
         internal static string OutputItemParameterMessagePrefix = ResourceUtilities.GetResourceString("OutputItemParameterMessagePrefix");
         internal static string TaskParameterPrefix = ResourceUtilities.GetResourceString("TaskParameterPrefix");
 
-        internal static string ItemGroupIncludeLogMessagePrefix = ResourceUtilities.GetResourceString("ItemGroupIncludeLogMessagePrefix");
-        internal static string ItemGroupRemoveLogMessage = ResourceUtilities.GetResourceString("ItemGroupRemoveLogMessage");
-        internal static string OutputItemParameterMessagePrefix = ResourceUtilities.GetResourceString("OutputItemParameterMessagePrefix");
-        internal static string TaskParameterPrefix = ResourceUtilities.GetResourceString("TaskParameterPrefix");
-
         /// <summary>
         /// Gets a text serialized value of a parameter for logging.
         /// </summary>

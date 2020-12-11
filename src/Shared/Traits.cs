@@ -54,8 +54,6 @@ namespace Microsoft.Build.Utilities
 
         public readonly bool UseSimpleProjectRootElementCacheConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleProjectRootElementCacheConcurrency"));
 
-        public readonly bool UseSimpleProjectRootElementCacheConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleProjectRootElementCacheConcurrency"));
-
         /// <summary>
         /// Cache wildcard expansions for the entire process
         /// </summary>
