@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 #if FEATURE_SYSTEM_CONFIGURATION
 using System.Configuration;
 #endif
@@ -625,10 +626,20 @@ namespace Microsoft.Build.CommandLine
                         Environment.SetEnvironmentVariable("MSBUILDLOADALLFILESASWRITEABLE", "1");
                     }
 
-                    // Honor the low priority flag, we place our selves below normal
-                    // priority and let sub processes inherit that priority.
-                    ProcessPriorityClass priority = lowPriority ? ProcessPriorityClass.BelowNormal : ProcessPriorityClass.Normal;
-                    Process.GetCurrentProcess().PriorityClass = priority;
+                    // Honor the low priority flag, we place our selves below normal priority and let sub processes inherit
+                    // that priority. Idle priority would prevent the build from proceeding as the user does normal actions.
+                    try
+                    {
+                        if (lowPriority && Process.GetCurrentProcess().PriorityClass != ProcessPriorityClass.Idle)
+                        {
+                            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
+                        }
+                    }
+                    // We avoid increasing priority because that causes failures on mac/linux, but there is no good way to
+                    // verify that a particular priority is lower than "BelowNormal." If the error appears, ignore it and
+                    // leave priority where it was.
+                    catch (Win32Exception) { }
+
 
                     DateTime t1 = DateTime.Now;
 
