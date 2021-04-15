@@ -1,15 +1,14 @@
-Index: xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-===================================================================
---- xamarin-pkg-msbuild.orig/eng/cibuild_bootstrapped_msbuild.sh
-+++ xamarin-pkg-msbuild/eng/cibuild_bootstrapped_msbuild.sh
-@@ -61,6 +61,7 @@ function DownloadMSBuildForMono {
-     unzip -q "$msbuild_zip" -d "$artifacts_dir"
+diff -urNad msbuild-16.9.old/eng/cibuild_bootstrapped_msbuild.sh msbuild-16.9/eng/cibuild_bootstrapped_msbuild.sh
+--- msbuild-16.9.old/eng/cibuild_bootstrapped_msbuild.sh	2021-04-15 11:57:47.842467086 -0400
++++ msbuild-16.9/eng/cibuild_bootstrapped_msbuild.sh	2021-04-15 11:58:07.890620649 -0400
+@@ -62,6 +62,7 @@
      # rename just to make it obvious when reading logs!
      mv $artifacts_dir/msbuild $mono_msbuild_dir
-+    cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so $artifacts_dir/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
-     sed -i 's#/sh$#/bash#' $artifacts_dir/mono-msbuild/msbuild
      chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
++    cp /usr/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.so $artifacts_dir/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
  
+     if [[ `uname -s` != 'Darwin' ]]; then
+         # with no .so available, this ends up breaking the build
 Index: xamarin-pkg-msbuild/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
 ===================================================================
 --- xamarin-pkg-msbuild.orig/mono/build/sdks_and_nugets/update_sdks_and_nugets.proj
