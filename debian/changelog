@@ -1,3 +1,9 @@
+msbuild (1:16.9+xamarinxplat.2021.03.07.08.05-0xamarin3) preview; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 15 Apr 2021 15:52:19 +0000
+
 msbuild (1:16.9+xamarinxplat.2021.03.07.08.05-0xamarin2) preview; urgency=medium
 
   * Packaging bugfix:
