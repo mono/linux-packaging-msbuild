@@ -3,14 +3,10 @@
 
 using Microsoft.Build.Shared;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -264,7 +260,7 @@ namespace Microsoft.Build.Tasks.ResourceHandling
         /// </summary>
         /// <remarks>
         /// We can't hard-code byte[] type name due to version number
-        /// updates & potential whitespace issues with ResX files.
+        /// updates and potential whitespace issues with ResX files.
         ///
         /// Comment and logic from https://github.com/dotnet/winforms/blob/16b192389b377c647ab3d280130781ab1a9d3385/src/System.Windows.Forms/src/System/Resources/ResXDataNode.cs#L411-L416
         /// </remarks>
@@ -347,6 +343,5 @@ namespace Microsoft.Build.Tasks.ResourceHandling
             }
             return result;
         }
-
     }
 }

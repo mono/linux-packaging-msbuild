@@ -2,16 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Reflection;
-using System.Collections;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Shared;
-using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Text;
 using Xunit;
 
 namespace Microsoft.Build.UnitTests
@@ -43,8 +37,8 @@ namespace Microsoft.Build.UnitTests
          */
         private static string[] Parse(string cl)
         {
-            int emptySplits = 0;
-            string[] pieces = (string[])QuotingUtilities.SplitUnquoted(cl, int.MaxValue, false, true, out emptySplits, ' ', '\n').ToArray(typeof(string));
+            int emptySplits;
+            string[] pieces = QuotingUtilities.SplitUnquoted(cl, int.MaxValue, false, true, out emptySplits, ' ', '\n').ToArray();
             return pieces;
         }
 
@@ -175,10 +169,10 @@ namespace Microsoft.Build.UnitTests
                     // Skip anything shorter than the compare string.
                     continue;
                 }
-                if (String.Compare(s.Substring(0, startsWith.Length), startsWith, StringComparison.OrdinalIgnoreCase) == 0)
+                if (String.Equals(s.Substring(0, startsWith.Length), startsWith, StringComparison.OrdinalIgnoreCase))
                 {
                     // If this doesn't match the 'except' then this is an error.
-                    if (String.Compare(s, except, StringComparison.Ordinal) != 0)
+                    if (!String.Equals(s, except, StringComparison.Ordinal))
                     {
                         msg += String.Format(" Found something!\r\n");
                         Console.WriteLine(msg);
@@ -262,8 +256,7 @@ namespace Microsoft.Build.UnitTests
                 t.AddCommandLineCommands(b);
 
             string cl = b.ToString();
-            string msg;
-            msg = String.Format("Command-line = [{0}]\r\n", cl);
+            string msg = String.Format("Command-line = [{0}]\r\n", cl);
             msg += String.Format("Expected     = [{0}]\r\n", lookFor);
 
             if (cl != lookFor)

@@ -3,12 +3,8 @@
 
 using System;
 using System.Xml;
-using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.BackEnd;
@@ -923,6 +919,26 @@ namespace Microsoft.Build.UnitTests.BackEnd
         }
 
         /// <summary>
+        /// Test a project that has a cycle in AfterTargets
+        /// </summary>
+        [Fact]
+        public void TestAfterTargetsWithCycleDoesNotHang()
+        {
+            string projectBody = @"
+<Target Name='Build' AfterTargets='After2' />
+
+<Target Name='After1' AfterTargets='Build' />
+
+<Target Name='After2' AfterTargets='After1' />
+";
+
+            BuildResult result = BuildSimpleProject(projectBody, new string[] { "Build" }, failTaskNumber: int.MaxValue /* no task failure needed here */);
+            result.ResultsByTarget["Build"].ResultCode.ShouldBe(TargetResultCode.Success);
+            result.ResultsByTarget["Build"].AfterTargetsHaveFailed.ShouldBe(false);
+        }
+
+
+        /// <summary>
         /// Test after target on a skipped target
         /// </summary>
         [Fact]
@@ -1232,6 +1248,34 @@ namespace Microsoft.Build.UnitTests.BackEnd
             Project project = new Project(new XmlTextReader(reader), null, null);
             bool success = project.Build(_mockLogger);
             Assert.False(success);
+        }
+
+        /// <summary>
+        /// Tests a circular dependency target.
+        /// </summary>
+        [Fact]
+        public void TestCircularDependencyTarget()
+        {
+            string projectContents = @"
+<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+    <Target Name=""TargetA"" AfterTargets=""Build"" DependsOnTargets=""TargetB"">
+        <Message Text=""TargetA""></Message>
+    </Target>
+    <Target Name=""TargetB"" DependsOnTargets=""TargetC"">
+        <Message Text=""TargetB""></Message>
+    </Target>
+    <Target Name=""TargetC"" DependsOnTargets=""TargetA"">
+        <Message Text=""TargetC""></Message>
+    </Target>
+</Project>
+      ";
+            string errorMessage = @"There is a circular dependency in the target dependency graph involving target ""TargetA"". Since ""TargetC"" has ""DependsOn"" dependence on ""TargetA"", the circular is ""TargetA<-TargetC<-TargetB<-TargetA"".";
+
+            StringReader reader = new StringReader(projectContents);
+            Project project = new Project(new XmlTextReader(reader), null, null);
+            project.Build(_mockLogger).ShouldBeFalse();
+            _mockLogger.ErrorCount.ShouldBe(1);
+            _mockLogger.Errors[0].Message.ShouldBe(errorMessage);
         }
 
         /// <summary>
@@ -1690,32 +1734,17 @@ namespace Microsoft.Build.UnitTests.BackEnd
             /// <returns>The component</returns>
             public IBuildComponent GetComponent(BuildComponentType type)
             {
-                switch (type)
+                return type switch
                 {
-                    case BuildComponentType.ConfigCache:
-                        return (IBuildComponent)_configCache;
-
-                    case BuildComponentType.LoggingService:
-                        return (IBuildComponent)_loggingService;
-
-                    case BuildComponentType.ResultsCache:
-                        return (IBuildComponent)_resultsCache;
-
-                    case BuildComponentType.RequestBuilder:
-                        return (IBuildComponent)_requestBuilder;
-
-                    case BuildComponentType.TaskBuilder:
-                        return (IBuildComponent)_taskBuilder;
-
-                    case BuildComponentType.TargetBuilder:
-                        return (IBuildComponent)_targetBuilder;
-
-                    case BuildComponentType.SdkResolverService:
-                        return (IBuildComponent)_sdkResolverService;
-
-                    default:
-                        throw new ArgumentException("Unexpected type " + type);
-                }
+                    BuildComponentType.ConfigCache => (IBuildComponent)_configCache,
+                    BuildComponentType.LoggingService => (IBuildComponent)_loggingService,
+                    BuildComponentType.ResultsCache => (IBuildComponent)_resultsCache,
+                    BuildComponentType.RequestBuilder => (IBuildComponent)_requestBuilder,
+                    BuildComponentType.TaskBuilder => (IBuildComponent)_taskBuilder,
+                    BuildComponentType.TargetBuilder => (IBuildComponent)_targetBuilder,
+                    BuildComponentType.SdkResolverService => (IBuildComponent)_sdkResolverService,
+                    _ => throw new ArgumentException("Unexpected type " + type),
+                };
             }
 
             /// <summary>

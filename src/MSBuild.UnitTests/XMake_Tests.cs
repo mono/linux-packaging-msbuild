@@ -44,7 +44,7 @@ namespace Microsoft.Build.UnitTests
         {
             CommandLineSwitches switches = new CommandLineSwitches();
 
-            ArrayList arguments = new ArrayList();
+            var arguments = new List<string>();
             arguments.AddRange(new string[] { "/p:a=b", "/p:c=d" });
 
             MSBuildApp.GatherCommandLineSwitches(arguments, switches);
@@ -59,7 +59,7 @@ namespace Microsoft.Build.UnitTests
         {
             CommandLineSwitches switches = new CommandLineSwitches();
 
-            ArrayList arguments = new ArrayList();
+            var arguments = new List<string>();
             arguments.AddRange(new string[] { "/m:2" });
 
             MSBuildApp.GatherCommandLineSwitches(arguments, switches);
@@ -76,13 +76,13 @@ namespace Microsoft.Build.UnitTests
         {
             CommandLineSwitches switches = new CommandLineSwitches();
 
-            ArrayList arguments = new ArrayList();
+            var arguments = new List<string>();
             arguments.AddRange(new string[] { "/m:3", "/m" });
 
             MSBuildApp.GatherCommandLineSwitches(arguments, switches);
 
             string[] parameters = switches[CommandLineSwitches.ParameterizedSwitch.MaxCPUCount];
-            parameters[1].ShouldBe(Convert.ToString(Environment.ProcessorCount));
+            parameters[1].ShouldBe(Convert.ToString(NativeMethodsShared.GetLogicalCoreCount()));
             parameters.Length.ShouldBe(2);
 
             switches.HaveErrors().ShouldBeFalse();
@@ -96,7 +96,7 @@ namespace Microsoft.Build.UnitTests
         {
             CommandLineSwitches switches = new CommandLineSwitches();
 
-            ArrayList arguments = new ArrayList();
+            var arguments = new List<string>();
             arguments.AddRange(new string[] { "/m:" });
 
             MSBuildApp.GatherCommandLineSwitches(arguments, switches);
@@ -137,7 +137,7 @@ namespace Microsoft.Build.UnitTests
         [Fact]
         public void SplitUnquotedTest()
         {
-            ArrayList sa;
+            List<string> sa;
             int emptySplits;
 
             // nothing quoted
@@ -437,15 +437,35 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
-        public void Help()
+        public void GetLengthOfSwitchIndicatorTest()
         {
-                MSBuildApp.Execute(
+            var commandLineSwitchWithSlash = "/Switch";
+            var commandLineSwitchWithSingleDash = "-Switch";
+            var commandLineSwitchWithDoubleDash = "--Switch";
+
+            var commandLineSwitchWithNoneOrIncorrectIndicator = "zSwitch";
+
+            MSBuildApp.GetLengthOfSwitchIndicator(commandLineSwitchWithSlash).ShouldBe(1);
+            MSBuildApp.GetLengthOfSwitchIndicator(commandLineSwitchWithSingleDash).ShouldBe(1);
+            MSBuildApp.GetLengthOfSwitchIndicator(commandLineSwitchWithDoubleDash).ShouldBe(2);
+
+            MSBuildApp.GetLengthOfSwitchIndicator(commandLineSwitchWithNoneOrIncorrectIndicator).ShouldBe(0);
+        }
+
+        [Theory]
+        [InlineData("-?")]
+        [InlineData("-h")]
+        [InlineData("--help")]
+        [InlineData(@"/h")]
+        public void Help(string indicator)
+        {
+            MSBuildApp.Execute(
 #if FEATURE_GET_COMMANDLINE
-                    @"c:\bin\msbuild.exe -? "
+                @$"c:\bin\msbuild.exe {indicator} "
 #else
-                    new [] {@"c:\bin\msbuild.exe", "-?"}
+                new [] {@"c:\bin\msbuild.exe", indicator}
 #endif
-                ).ShouldBe(MSBuildApp.ExitType.Success);
+            ).ShouldBe(MSBuildApp.ExitType.Success);
         }
 
         [Fact]
@@ -566,7 +586,7 @@ namespace Microsoft.Build.UnitTests
             MSBuildApp.SetConsoleUI();
 
             // Make sure this doesn't throw an exception.
-            string bar = String.Format(CultureInfo.CurrentUICulture, "{0}", (int)1);
+            string bar = String.Format(CultureInfo.CurrentUICulture, "{0}", 1);
 
             // Restore the current UI culture back to the way it was at the beginning of this unit test.
             thisThread.CurrentUICulture = originalUICulture;
@@ -658,7 +678,6 @@ namespace Microsoft.Build.UnitTests
             // If there's a space in the %TEMP% path, the config file is read in the static constructor by the URI class and we catch there;
             // if there's not, we will catch when we try to read the toolsets. Either is fine; we just want to not crash.
             (output.Contains("MSB1043") || output.Contains("MSB4136")).ShouldBeTrue("Output should contain 'MSB1043' or 'MSB4136'");
-
 
         }
 #endif
@@ -1215,7 +1234,7 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// Test that low priority builds actually execute with low priority.
         /// </summary>
-        [Fact]
+        [Fact(Skip = "https://github.com/microsoft/msbuild/issues/5229")]
         public void LowPriorityBuild()
         {
             RunPriorityBuildTest(expectedPrority: ProcessPriorityClass.BelowNormal, arguments: "/low");
@@ -1224,7 +1243,7 @@ namespace Microsoft.Build.UnitTests
         /// <summary>
         /// Test that normal builds execute with normal priority.
         /// </summary>
-        [Fact]
+        [Fact(Skip = "https://github.com/microsoft/msbuild/issues/5229")]
         public void NormalPriorityBuild()
         {
             // In case we are already running at a  different priority, validate
@@ -1260,7 +1279,23 @@ namespace Microsoft.Build.UnitTests
             logContents.ShouldContain(expected, () => logContents);
         }
 
-#region IgnoreProjectExtensionTests
+        /// <summary>
+        /// Test the default file to build in cases involving at least one solution filter file.
+        /// </summary>
+        [Theory]
+        [InlineData(new string[] { "my.proj", "my.sln", "my.slnf" }, "my.sln")]
+        [InlineData(new string[] { "abc.proj", "bcd.csproj", "slnf.slnf", "other.slnf" }, "abc.proj")]
+        [InlineData(new string[] { "abc.sln", "slnf.slnf", "abc.slnf" }, "abc.sln")]
+        [InlineData(new string[] { "abc.csproj", "abc.slnf", "not.slnf" }, "abc.csproj")]
+        [InlineData(new string[] { "abc.slnf" }, "abc.slnf")]
+        public void TestDefaultBuildWithSolutionFilter(string[] projects, string answer)
+        {
+            string[] extensionsToIgnore = Array.Empty<string>();
+            IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(projects);
+            MSBuildApp.ProcessProjectSwitch(Array.Empty<string>(), extensionsToIgnore, projectHelper.GetFiles).ShouldBe(answer, StringCompareShould.IgnoreCase);
+        }
+
+        #region IgnoreProjectExtensionTests
 
         /// <summary>
         /// Test the case where the extension is a valid extension but is not a project
@@ -1286,6 +1321,7 @@ namespace Microsoft.Build.UnitTests
             IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(projects);
             MSBuildApp.ProcessProjectSwitch(new string[0] { }, extensionsToIgnore, projectHelper.GetFiles).ShouldBe("my.proj", StringCompareShould.IgnoreCase); // "Expected my.proj to be only project found"
         }
+
         /// <summary>
         /// Pass a null and an empty list of project extensions to ignore, this simulates the switch not being set on the commandline
         /// </summary>
@@ -1293,7 +1329,7 @@ namespace Microsoft.Build.UnitTests
         public void TestProcessProjectSwitchNullandEmptyProjectsToIgnore()
         {
             string[] projects = new string[] { "my.proj" };
-            string[] extensionsToIgnore = (string[])null;
+            string[] extensionsToIgnore = null;
             IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(projects);
             MSBuildApp.ProcessProjectSwitch(new string[0] { }, extensionsToIgnore, projectHelper.GetFiles).ShouldBe("my.proj", StringCompareShould.IgnoreCase); // "Expected my.proj to be only project found"
 
@@ -1316,6 +1352,7 @@ namespace Microsoft.Build.UnitTests
             }
            );
         }
+
         /// <summary>
         /// Pass in one extension and an empty string
         /// </summary>
@@ -1424,13 +1461,11 @@ namespace Microsoft.Build.UnitTests
             projectHelper = new IgnoreProjectExtensionsHelper(projects);
             MSBuildApp.ProcessProjectSwitch(new string[0] { }, extensionsToIgnore, projectHelper.GetFiles).ShouldBe("test.sln", StringCompareShould.IgnoreCase); // "Expected test.sln to be only solution found"
 
-
             projects = new string[] { "test.sln~", "test.sln" };
             extensionsToIgnore = new string[] { };
             projectHelper = new IgnoreProjectExtensionsHelper(projects);
             MSBuildApp.ProcessProjectSwitch(new string[0] { }, extensionsToIgnore, projectHelper.GetFiles).ShouldBe("test.sln", StringCompareShould.IgnoreCase); // "Expected test.sln to be only solution found"
         }
-
 
         /// <summary>
         /// Ignore .sln and .vcproj files to replicate Building_DF_LKG functionality
@@ -1443,7 +1478,6 @@ namespace Microsoft.Build.UnitTests
             IgnoreProjectExtensionsHelper projectHelper = new IgnoreProjectExtensionsHelper(projects);
             MSBuildApp.ProcessProjectSwitch(new string[0] { }, extensionsToIgnore, projectHelper.GetFiles).ShouldBe("test.proj"); // "Expected test.proj to be only project found"
         }
-
 
         /// <summary>
         /// Test the case where we remove all of the project extensions that exist in the directory
@@ -1584,14 +1618,14 @@ namespace Microsoft.Build.UnitTests
                 List<string> fileNamesToReturn = new List<string>();
                 foreach (string file in _directoryFileNameList)
                 {
-                    if (String.Compare(searchPattern, "*.sln", StringComparison.OrdinalIgnoreCase) == 0)
+                    if (String.Equals(searchPattern, "*.sln", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (String.Compare(Path.GetExtension(file), ".sln", StringComparison.OrdinalIgnoreCase) == 0)
+                        if (FileUtilities.IsSolutionFilename(file))
                         {
                             fileNamesToReturn.Add(file);
                         }
                     }
-                    else if (String.Compare(searchPattern, "*.*proj", StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(searchPattern, "*.*proj", StringComparison.OrdinalIgnoreCase))
                     {
                         if (Path.GetExtension(file).Contains("proj"))
                         {
@@ -1663,7 +1697,7 @@ namespace Microsoft.Build.UnitTests
             string[] fileLoggerParameters = null;
             List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             MSBuildApp.ProcessDistributedFileLogger
                        (
                            distributedFileLogger,
@@ -1686,7 +1720,7 @@ namespace Microsoft.Build.UnitTests
             string[] fileLoggerParameters = null;
             List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             MSBuildApp.ProcessDistributedFileLogger
                        (
                            distributedFileLogger,
@@ -1709,7 +1743,7 @@ namespace Microsoft.Build.UnitTests
             string[] fileLoggerParameters = null;
             List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             MSBuildApp.ProcessDistributedFileLogger
                        (
                            distributedFileLogger,
@@ -1724,7 +1758,7 @@ namespace Microsoft.Build.UnitTests
             // add a set of parameters and make sure the logger has those parameters
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[1] { "Parameter" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1739,7 +1773,7 @@ namespace Microsoft.Build.UnitTests
 
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[2] { "Parameter1", "Parameter" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1763,7 +1797,7 @@ namespace Microsoft.Build.UnitTests
             string[] fileLoggerParameters = null;
             List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             MSBuildApp.ProcessDistributedFileLogger
                        (
                            distributedFileLogger,
@@ -1779,7 +1813,7 @@ namespace Microsoft.Build.UnitTests
             // Not add a set of parameters and make sure the logger has those parameters
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[1] { "verbosity=Normal;" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1796,7 +1830,7 @@ namespace Microsoft.Build.UnitTests
             // Not add a set of parameters and make sure the logger has those parameters
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[2] { "verbosity=Normal", "" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1813,7 +1847,7 @@ namespace Microsoft.Build.UnitTests
             // Not add a set of parameters and make sure the logger has those parameters
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[2] { "", "Parameter1" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1830,7 +1864,7 @@ namespace Microsoft.Build.UnitTests
             // Not add a set of parameters and make sure the logger has those parameters
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[2] { "Parameter1", "verbosity=Normal;logfile=" + (NativeMethodsShared.IsWindows ? "c:\\temp\\cat.log" : "/tmp/cat.log") };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1845,7 +1879,7 @@ namespace Microsoft.Build.UnitTests
             distributedLoggerRecords[0].ForwardingLoggerDescription.LoggerSwitchParameters.ShouldBe(fileLoggerParameters[0] + ";" + fileLoggerParameters[1], StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameter passed in"
 
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             fileLoggerParameters = new string[2] { "Parameter1", "verbosity=Normal;logfile=" + Path.Combine("..", "cat.log") + ";Parameter1" };
             MSBuildApp.ProcessDistributedFileLogger
                        (
@@ -1859,7 +1893,7 @@ namespace Microsoft.Build.UnitTests
             distributedLoggerRecords.Count.ShouldBe(1); // "Expected a distributed logger to be attached"
             distributedLoggerRecords[0].ForwardingLoggerDescription.LoggerSwitchParameters.ShouldBe($"Parameter1;verbosity=Normal;logFile={Path.Combine(Directory.GetCurrentDirectory(), "..", "cat.log")};Parameter1", StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameter passed in"
 
-            loggers = new ArrayList();
+            loggers = new List<ILogger>();
             distributedLoggerRecords = new List<DistributedLoggerRecord>();
             fileLoggerParameters = new string[6] { "Parameter1", ";Parameter;", "", ";", ";Parameter", "Parameter;" };
             MSBuildApp.ProcessDistributedFileLogger
@@ -1883,7 +1917,7 @@ namespace Microsoft.Build.UnitTests
             string[] fileLoggerParameters = null;
             List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>();
 
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             MSBuildApp.ProcessDistributedFileLogger
                        (
                            distributedFileLogger,
@@ -1901,9 +1935,9 @@ namespace Microsoft.Build.UnitTests
         [Fact]
         public void ProcessConsoleLoggerSwitches()
         {
-            ArrayList loggers = new ArrayList();
+            var loggers = new List<ILogger>();
             LoggerVerbosity verbosity = LoggerVerbosity.Normal;
-            List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>(); ;
+            List<DistributedLoggerRecord> distributedLoggerRecords = new List<DistributedLoggerRecord>(); 
             string[] consoleLoggerParameters = new string[6] { "Parameter1", ";Parameter;", "", ";", ";Parameter", "Parameter;" };
 
             MSBuildApp.ProcessConsoleLoggerSwitch
@@ -1928,7 +1962,7 @@ namespace Microsoft.Build.UnitTests
                            loggers
                        );
             loggers.Count.ShouldBe(1); // "Expected a central loggers to be attached"
-            ((ILogger)loggers[0]).Parameters.ShouldBe("EnableMPLogging;SHOWPROJECTFILE=TRUE;Parameter1;Parameter;;;parameter;Parameter", StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameters passed in"
+            loggers[0].Parameters.ShouldBe("EnableMPLogging;SHOWPROJECTFILE=TRUE;Parameter1;Parameter;;;parameter;Parameter", StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameters passed in"
 
             MSBuildApp.ProcessConsoleLoggerSwitch
                        (
@@ -1941,7 +1975,7 @@ namespace Microsoft.Build.UnitTests
                       );
             loggers.Count.ShouldBe(1); // "Expected a central loggers to be attached"
             distributedLoggerRecords.Count.ShouldBe(1); // "Expected a distributed logger to be attached"
-            DistributedLoggerRecord distributedLogger = ((DistributedLoggerRecord)distributedLoggerRecords[0]);
+            DistributedLoggerRecord distributedLogger = distributedLoggerRecords[0];
             distributedLogger.CentralLogger.Parameters.ShouldBe("SHOWPROJECTFILE=TRUE;Parameter1;Parameter;;;parameter;Parameter", StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameters passed in"
             distributedLogger.ForwardingLoggerDescription.LoggerSwitchParameters.ShouldBe("SHOWPROJECTFILE=TRUE;Parameter1;Parameter;;;Parameter;Parameter", StringCompareShould.IgnoreCase); // "Expected parameter in logger to match parameter passed in"
         }
@@ -2181,6 +2215,26 @@ namespace Microsoft.Build.UnitTests
             }
         }
 
+        [Fact]
+        public void EndToEndWarnAsErrors()
+        {
+            using TestEnvironment testEnvironment = UnitTests.TestEnvironment.Create();
+
+            string projectContents = ObjectModelHelpers.CleanupFileContents(@"<Project>
+
+  <Target Name=""IssueWarning"">
+    <Warning Text=""Warning!"" />
+  </Target>
+  
+</Project>");
+
+            TransientTestProjectWithFiles testProject = testEnvironment.CreateTestProjectWithFiles(projectContents);
+
+            RunnerUtilities.ExecMSBuild($"\"{testProject.ProjectFile}\" -warnaserror", out bool success, _output);
+
+            success.ShouldBeFalse();
+        }
+
 #if FEATURE_ASSEMBLYLOADCONTEXT
         /// <summary>
         /// Ensure that tasks get loaded into their own <see cref="System.Runtime.Loader.AssemblyLoadContext"/>.
@@ -2207,7 +2261,6 @@ namespace Microsoft.Build.UnitTests
         }
 
 #endif
-
 
         private string CopyMSBuild()
         {

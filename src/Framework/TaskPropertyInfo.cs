@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Reflection;
 
 namespace Microsoft.Build.Framework
 {
@@ -17,7 +16,7 @@ namespace Microsoft.Build.Framework
         /// </summary>
         /// <param name="name">Name of the parameter</param>
         /// <param name="typeOfParameter">The actual type of the parameter</param>
-        /// <param name="output">True if the parameter is both an output and and input parameter. False if the parameter is only an input parameter</param>
+        /// <param name="output">True if the parameter is both an output and input parameter. False if the parameter is only an input parameter</param>
         /// <param name="required">True if the parameter must be supplied to each invocation of the task.</param>
         public TaskPropertyInfo(string name, Type typeOfParameter, bool output, bool required)
         {
@@ -46,5 +45,20 @@ namespace Microsoft.Build.Framework
         /// This task parameter is required (analogous to the [Required] attribute)
         /// </summary>
         public bool Required { get; private set; }
+
+        /// <summary>
+        /// This task parameter should be logged when LogTaskInputs is set. Defaults to true.
+        /// </summary>
+        public bool Log { get; set; } = true;
+
+        /// <summary>
+        /// When this task parameter is an item list, determines whether to log item metadata. Defaults to true.
+        /// </summary>
+        public bool LogItemMetadata { get; set; } = true;
+
+        /// <summary>
+        /// Whether the Log and LogItemMetadata properties have been assigned already.
+        /// </summary>
+        internal bool Initialized = false;
     }
 }

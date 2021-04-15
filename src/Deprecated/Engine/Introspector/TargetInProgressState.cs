@@ -2,12 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
-
-using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
@@ -59,7 +55,7 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         private void ProcessBuildContext(EngineCallback engineCallback, ProjectBuildState buildContext, Target target)
         {
-            BuildRequest parentRequest = null;
+            BuildRequest parentRequest;
             TargetIdWrapper parentName = FindParentTarget(engineCallback, buildContext, target, out parentRequest);
 
             if (parentName != null)
@@ -201,7 +197,7 @@ namespace Microsoft.Build.BuildEngine
             {
                 // The build context must have formed due to IBuildEngine call
                 ErrorUtilities.VerifyThrow(
-                    String.Compare(EscapingUtilities.UnescapeAll(buildContext.NameOfTargetInProgress), target.Name, StringComparison.OrdinalIgnoreCase) == 0,
+                    String.Equals(EscapingUtilities.UnescapeAll(buildContext.NameOfTargetInProgress), target.Name, StringComparison.OrdinalIgnoreCase),
                     "The target should be the in progress target for the context");
                 // This target is called due to IBuildEngine or host request
                 return FindParentTargetForBuildRequest(engineCallback, buildContext.BuildRequest, out parentRequest);
@@ -254,7 +250,6 @@ namespace Microsoft.Build.BuildEngine
             return null;
         }
 
-
         /// <summary>
         /// This function checks if the given ProjectBuildState is caused by a given parent target (via
         /// a dependency, onerror or IBuildEngine relationship)
@@ -267,11 +262,11 @@ namespace Microsoft.Build.BuildEngine
             ProjectBuildState projectBuildState
         )
         {
-            BuildRequest parentRequest = null;
+            BuildRequest parentRequest;
             TargetInProgessState.TargetIdWrapper parentName =
                 FindParentTarget(engineCallback, projectBuildState, target, out parentRequest);
 
-            if (parentName != null && parentName.Equals(parentId))
+            if (parentName?.Equals(parentId) == true)
             {
                 return true;
             }
@@ -582,7 +577,7 @@ namespace Microsoft.Build.BuildEngine
                 if (other != null)
                 {
                     if (other.projectId == projectId && other.nodeId == nodeId &&
-                        (String.Compare(other.name, name, StringComparison.OrdinalIgnoreCase) == 0))
+                        (String.Equals(other.name, name, StringComparison.OrdinalIgnoreCase)))
                     {
                         return true;
                     }

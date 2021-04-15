@@ -3,11 +3,6 @@
 
 using System;
 using System.IO;
-using System.Text;
-using System.Resources;
-using System.Reflection;
-using System.Collections;
-using System.Globalization;
 
 namespace Microsoft.Build.Shared.LanguageParser
 {
@@ -132,7 +127,7 @@ namespace Microsoft.Build.Shared.LanguageParser
                 ++count;
             }
 
-            return (count > 0);
+            return count > 0;
         }
     }
 }

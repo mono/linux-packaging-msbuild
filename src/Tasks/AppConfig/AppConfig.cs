@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Xml;
 
 using Microsoft.Build.Shared;
@@ -95,7 +94,7 @@ namespace Microsoft.Build.Tasks
         /// <returns></returns>
         internal static bool StringEquals(string a, string b)
         {
-            return String.Compare(a, b, StringComparison.OrdinalIgnoreCase) == 0;
+            return String.Equals(a, b, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

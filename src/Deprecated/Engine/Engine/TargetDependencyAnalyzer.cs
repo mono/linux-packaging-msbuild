@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Text;
-using System.Threading;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
@@ -238,7 +237,7 @@ namespace Microsoft.Build.BuildEngine
                 // 1) they do not reference any item vector
                 // 2) they reference item vectors that are not referenced by any input item
                 if ((discreteItemsInTargetOutputs.Count > 0) ||
-                    ((itemVectorsReferencedOnlyInTargetOutputs != null) && (itemVectorsReferencedOnlyInTargetOutputs.Count > 0)))
+                    ((itemVectorsReferencedOnlyInTargetOutputs?.Count > 0)))
                 {
                     result = PerformDependencyAnalysisIfDiscreteOutputs(
                                 itemVectorsInTargetInputs, itemVectorTransformsInTargetInputs, discreteItemsInTargetInputs,
@@ -254,9 +253,8 @@ namespace Microsoft.Build.BuildEngine
                     // Log the target inputs & outputs
                     if (!loggingService.OnlyLogCriticalEvents)
                     {
-                        string inputs = null;
-                        string outputs = null;
-
+                        string inputs;
+                        string outputs;
                         // Extract the unique inputs and outputs gatheres during TLDA
                         ExtractUniqueInputsAndOutputs(out inputs, out outputs);
 
@@ -609,7 +607,6 @@ namespace Microsoft.Build.BuildEngine
 
                             for (int i = 0; i < inputItemsAssumedToBeUpToDate.Length; i++)
                             {
-
                                 // if we haven't already determined that this input item has changed
                                 if (inputItemsAssumedToBeUpToDate[i] != null)
                                 {
@@ -720,7 +717,6 @@ namespace Microsoft.Build.BuildEngine
                     loggingService.LogComment(buildEventContext, "BuildTargetCompletely", this.targetToAnalyze.Name);
                     loggingService.LogComment(buildEventContext, "BuildTargetCompletelyNoInputsSpecified");
 
-
                     // otherwise, do a full build
                     result = DependencyAnalysisResult.FullBuild;
                 }
@@ -782,8 +778,7 @@ namespace Microsoft.Build.BuildEngine
                 BuildItemGroup itemVectorContents = bucket.Expander.ExpandSingleItemListExpressionIntoItemsLeaveEscaped(item, attributeContainingItems, out itemVectorMatch);
                 if (itemVectorContents != null)
                 {
-                    Hashtable itemVectorCollection = null;
-
+                    Hashtable itemVectorCollection;
                     if ((itemVectorTransforms == null) ||
                         (itemVectorMatch.Groups["TRANSFORM_SPECIFICATION"].Length == 0))
                     {
@@ -925,7 +920,7 @@ namespace Microsoft.Build.BuildEngine
 
             string oldestOutput = EscapingUtilities.UnescapeAll((string)outputs[0]);
 
-            FileInfo oldestOutputInfo = null;
+            FileInfo oldestOutputInfo;
             try
             {
                 string oldestOutputFullPath = Path.Combine(projectDirectory, oldestOutput);
@@ -953,7 +948,7 @@ namespace Microsoft.Build.BuildEngine
             {
                 string candidateOutput = EscapingUtilities.UnescapeAll((string)outputs[i]);
 
-                FileInfo candidateOutputInfo = null;
+                FileInfo candidateOutputInfo;
                 try
                 {
                     string candidateOutputFullPath = Path.Combine(projectDirectory, candidateOutput);
@@ -1140,10 +1135,10 @@ namespace Microsoft.Build.BuildEngine
         /// </returns>
         private int CompareLastWriteTimes(string path1, string path2, out bool path1DoesNotExist, out bool path2DoesNotExist)
         {
-            ErrorUtilities.VerifyThrow((path1 != null) && (path1.Length > 0) && (path2 != null) && (path2.Length > 0),
+            ErrorUtilities.VerifyThrow(!string.IsNullOrEmpty(path1) && !string.IsNullOrEmpty(path2),
                 "Need to specify paths to compare.");
 
-            FileInfo path1Info = null;
+            FileInfo path1Info;
             try
             {
                 path1 = Path.Combine(projectDirectory, path1);
@@ -1158,7 +1153,7 @@ namespace Microsoft.Build.BuildEngine
                 path1Info = null;
             }
 
-            FileInfo path2Info = null;
+            FileInfo path2Info;
             try
             {
                 path2 = Path.Combine(projectDirectory, path2);

@@ -30,7 +30,8 @@ namespace Microsoft.Build.Evaluation
             //  This is used only when evaluating an expression, which instantiates
             //  the items and then removes them
             protected readonly IItemFactory<I, I> _itemFactory;
-
+            internal ItemSpec<P, I> Spec => _itemSpec;
+            
             protected LazyItemOperation(OperationBuilder builder, LazyItemEvaluator<P, I, M, D> lazyEvaluator)
             {
                 _itemElement = builder.ItemElement;
@@ -157,7 +158,7 @@ namespace Microsoft.Build.Evaluation
 
                 private string RouteCall(string itemType, string name, Func<IMetadataTable, string, string, string> getEscapedValueFunc)
                 {
-                    if (itemType == null || itemType.Equals(_operationItem.Key, StringComparison.OrdinalIgnoreCase))
+                    if (itemType?.Equals(_operationItem.Key, StringComparison.OrdinalIgnoreCase) != false)
                     {
                         return getEscapedValueFunc(_operationItem, itemType, name);
                     }
@@ -298,7 +299,7 @@ namespace Microsoft.Build.Evaluation
 
                 bool needToExpandMetadataForEachItem = false;
 
-                if (itemsAndMetadataFound.Metadata != null && itemsAndMetadataFound.Metadata.Values.Count > 0)
+                if (itemsAndMetadataFound.Metadata?.Values.Count > 0)
                 {
                     // If there is bare metadata of any kind, and the Include involved an item list, we should
                     // run items individually, as even non-built-in metadata might differ between items
@@ -322,6 +323,39 @@ namespace Microsoft.Build.Evaluation
                 }
 
                 return needToExpandMetadataForEachItem;
+            }
+
+            /// <summary>
+            /// Is this spec a single reference to a specific item?
+            /// </summary>
+            /// <returns>True if the item is a simple reference to the referenced item type.</returns>
+            protected static bool ItemspecContainsASingleBareItemReference(ItemSpec<P, I> itemSpec, string referencedItemType)
+            {
+                if (itemSpec.Fragments.Count != 1)
+                {
+                    return false;
+                }
+
+                var itemExpressionFragment = itemSpec.Fragments[0] as ItemSpec<P, I>.ItemExpressionFragment;
+                if (itemExpressionFragment == null)
+                {
+                    return false;
+                }
+
+                if (!itemExpressionFragment.Capture.ItemType.Equals(referencedItemType, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                // If the itemSpec is a single call to an item function, like @(X->Something(...)), it may get this
+                // far, but shouldn't be treated as a single reference: the item function may return entirely
+                // different results from a bare reference like @(X).
+                if (itemExpressionFragment.Capture.Captures is object)
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
     }

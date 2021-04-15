@@ -54,10 +54,8 @@ namespace Microsoft.Build.Utilities
     /// Base class used for tasks that spawn an executable. This class implements the ToolPath property which can be used to
     /// override the default path.
     /// </summary>
-    /// <remarks>
-    /// INTERNAL WARNING: DO NOT USE the Log property in this class! Log points to resources in the task assembly itself, and 
-    /// we want to use resources from Utilities. Use LogPrivate (for private Utilities resources) and LogShared (for shared MSBuild resources)
-    /// </remarks>
+    // INTERNAL WARNING: DO NOT USE the Log property in this class! Log points to resources in the task assembly itself, and 
+    // we want to use resources from Utilities. Use LogPrivate (for private Utilities resources) and LogShared (for shared MSBuild resources)
     public abstract class ToolTask : Task, ICancelableTask
     {
         private static readonly bool s_preserveTempFiles = string.Equals(Environment.GetEnvironmentVariable("MSBUILDPRESERVETOOLTEMPFILES"), "1", StringComparison.Ordinal);
@@ -458,7 +456,7 @@ namespace Microsoft.Build.Utilities
                 pathToTool = Path.Combine(ToolPath, ToolExe);
             }
 
-            if (string.IsNullOrWhiteSpace(pathToTool) || ToolPath == null && !FileSystems.Default.FileExists(pathToTool))
+            if (string.IsNullOrWhiteSpace(pathToTool) || (ToolPath == null && !FileSystems.Default.FileExists(pathToTool)))
             {
                 // Otherwise, try to find the tool ourselves.
                 pathToTool = GenerateFullPathToTool();
@@ -607,7 +605,7 @@ namespace Microsoft.Build.Utilities
 
             // Generally we won't set a working directory, and it will use the current directory
             string workingDirectory = GetWorkingDirectory();
-            if (null != workingDirectory)
+            if (workingDirectory != null)
             {
                 startInfo.WorkingDirectory = workingDirectory;
             }
@@ -615,7 +613,7 @@ namespace Microsoft.Build.Utilities
             // Old style environment overrides
 #pragma warning disable 0618 // obsolete
             Dictionary<string, string> envOverrides = EnvironmentOverride;
-            if (null != envOverrides)
+            if (envOverrides != null)
             {
                 foreach (KeyValuePair<string, string> entry in envOverrides)
                 {
@@ -1307,7 +1305,7 @@ namespace Microsoft.Build.Utilities
                 {
                     string[] nameValuePair = entry.Split(s_equalsSplitter, 2);
 
-                    if (nameValuePair.Length == 1 || nameValuePair.Length == 2 && nameValuePair[0].Length == 0)
+                    if (nameValuePair.Length == 1 || (nameValuePair.Length == 2 && nameValuePair[0].Length == 0))
                     {
                         LogPrivate.LogErrorWithCodeFromResources("ToolTask.InvalidEnvironmentParameter", nameValuePair[0]);
                         return false;
@@ -1367,7 +1365,6 @@ namespace Microsoft.Build.Utilities
                     }
                     else
                     {
-
                         Encoding encoding;
 
                         if (Traits.Instance.EscapeHatches.AvoidUnicodeWhenWritingToolTaskBatch)
@@ -1454,7 +1451,7 @@ namespace Microsoft.Build.Utilities
                 // Old style environment overrides
 #pragma warning disable 0618 // obsolete
                 Dictionary<string, string> envOverrides = EnvironmentOverride;
-                if (null != envOverrides)
+                if (envOverrides != null)
                 {
                     foreach (KeyValuePair<string, string> entry in envOverrides)
                     {

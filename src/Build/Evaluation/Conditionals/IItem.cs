@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.Build.Collections;
 using Microsoft.Build.Construction;
 
 namespace Microsoft.Build.Evaluation
@@ -29,5 +26,7 @@ namespace Microsoft.Build.Evaluation
         /// Predecessor is any preceding overridden metadata
         /// </summary>
         M SetMetadata(ProjectMetadataElement metadataElement, string evaluatedValue);
+
+        IEnumerable<M> Metadata { get; }
     }
 }

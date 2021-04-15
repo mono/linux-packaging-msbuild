@@ -3,10 +3,6 @@
 
 using System;
 using System.Collections;
-using System.Security.Permissions;
-using System.Diagnostics;
-
-using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
 using System.Collections.Generic;
 
@@ -120,7 +116,7 @@ namespace Microsoft.Build.BuildEngine
 
             GetReferencedItemNamesAndMetadata(expression, 0, expression.Length, ref pair, ShredderOptions.MetadataOutsideTransforms);
 
-            bool result = (pair.Metadata != null && pair.Metadata.Count > 0);
+            bool result = (pair.Metadata?.Count > 0);
 
             return result;
         }
@@ -372,7 +368,7 @@ namespace Microsoft.Build.BuildEngine
         {
             if (i < end - 1 && expression[i] == c1 && expression[i + 1] == c2)
             {
-                i = i + 2;
+                i += 2;
                 return true;
             }
 

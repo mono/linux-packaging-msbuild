@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Build.BuildEngine.Shared;
 using System.Xml;
-using System.Collections;
 
 namespace Microsoft.Build.BuildEngine
 {
@@ -38,7 +36,6 @@ namespace Microsoft.Build.BuildEngine
         {
             this.element = ownerDocument.CreateElement(name, XMakeAttributes.defaultXmlNamespace);
             this.Include = include;
-
         }
 
         internal BuildItemGroupChildXml(XmlElement element, ChildType childTypeExpected)
@@ -362,5 +359,4 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         Any = BuildItemAdd | BuildItemRemove | BuildItemModify
     }
-
 }

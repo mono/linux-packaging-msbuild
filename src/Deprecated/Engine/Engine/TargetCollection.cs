@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Data;
 using System.Xml;
 using System.Collections;
-using System.Globalization;
 
 #if (!STANDALONEBUILD)
 using Microsoft.Internal.Performance;
@@ -159,7 +157,6 @@ namespace Microsoft.Build.BuildEngine
             return this.targetTable.Values.GetEnumerator();
         }
 
-
         /// <summary>
         /// Adds a new Target to our collection.  This method does nothing
         /// to manipulate the project's XML content.
@@ -218,7 +215,7 @@ namespace Microsoft.Build.BuildEngine
             Target targetToRemove
         )
         {
-            error.VerifyThrowArgumentNull(targetToRemove, "targetToRemove");
+            error.VerifyThrowArgumentNull(targetToRemove, nameof(targetToRemove));
 
             // Confirm that it's not an imported target.
             error.VerifyThrowInvalidOperation(!targetToRemove.IsImported,

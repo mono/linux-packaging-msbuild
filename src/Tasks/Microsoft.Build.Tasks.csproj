@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\Shared\FileSystemSources.proj" />
   <Import Project="..\Shared\DebuggingSources.proj" />
@@ -81,6 +81,16 @@
     <Compile Include="..\Shared\NGen.cs">
       <Link>NGen.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\IConstrainedEqualityComparer.cs"/>
+    <Compile Include="..\Shared\IInternable.cs">
+      <Link>IInternable.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\WeakStringCache.cs">
+      <Link>WeakStringCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\WeakStringCache.Concurrent.cs">
+      <Link>WeakStringCache.Concurrent.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\OpportunisticIntern.cs">
       <Link>OpportunisticIntern.cs</Link>
     </Compile>
@@ -140,6 +150,7 @@
       <Link>Modifiers.cs</Link>
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="..\Shared\MSBuildNameIgnoreCaseComparer.cs" />
     <Compile Include="..\Shared\ReadOnlyCollection.cs" />
     <Compile Include="..\Shared\ReadOnlyEmptyDictionary.cs" />
     <Compile Include="..\Shared\Tracing.cs" />
@@ -318,6 +329,9 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AssignTargetPath.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
+    <Compile Include="BootstrapperUtil\*.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="CallTarget.cs">
@@ -548,9 +562,6 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AxTlbBaseTask.cs" />
-    <Compile Include="BootstrapperUtil\*.cs">
-      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
-    </Compile>
     <Compile Include="ComDependencyWalker.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
@@ -585,6 +596,9 @@
     <Compile Include="GenerateDeploymentManifest.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="GenerateLauncher.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="GenerateManifestBase.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
@@ -602,14 +616,17 @@
     <Compile Include="Interop.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="ManifestUtil\CngLightup.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="RCWForCurrentContext.cs" />
     <Compile Include="LC.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="ManifestUtil\*.cs" Condition="'$(MonoBuild)' != 'true'">
+    <Compile Include="ManifestUtil\*.cs" Exclude="ManifestUtil\CngLightup.cs" Condition="'$(MonoBuild)' != 'true'">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="ManifestUtil\*.cs" Exclude="ManifestUtil\ComImporter.cs" Condition="'$(MonoBuild)' == 'true'">
+    <Compile Include="ManifestUtil\*.cs" Exclude="ManifestUtil\ComImporter.cs;ManifestUtil\CngLightup.cs" Condition="'$(MonoBuild)' == 'true'">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="PiaReference.cs">
@@ -1001,6 +1018,9 @@
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.Reflection.Metadata" />
     <PackageReference Include="System.Reflection.TypeExtensions" />
+    <PackageReference Include="System.Runtime.InteropServices" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="System.Security.Permissions" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" />
 

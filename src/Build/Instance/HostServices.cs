@@ -5,9 +5,7 @@ using Microsoft.Build.Shared;
 using Microsoft.Build.Framework;
 using System.Collections.Generic;
 using System;
-using System.Collections;
 using System.Diagnostics;
-using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices;
 using System.Linq;
 using Microsoft.Build.BackEnd;
@@ -67,9 +65,9 @@ namespace Microsoft.Build.Execution
         /// </summary>
         public ITaskHost GetHostObject(string projectFile, string targetName, string taskName)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
-            ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
-            ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, nameof(projectFile));
+            ErrorUtilities.VerifyThrowArgumentNull(targetName, nameof(targetName));
+            ErrorUtilities.VerifyThrowArgumentNull(taskName, nameof(taskName));
 
             HostObjects hostObjects;
             if (_hostObjectMap == null || !_hostObjectMap.TryGetValue(projectFile, out hostObjects))
@@ -89,11 +87,6 @@ namespace Microsoft.Build.Execution
                 if (monikerNameOrITaskHost.IsMoniker)
                 {
 #if FEATURE_COM_INTEROP
-
-                    if (Environment.Is64BitProcess)
-                    {
-                        throw new PlatformNotSupportedException("GetHostObject with monikerName is only supported in 32 bit");
-                    }
 
                     try
                     {
@@ -126,16 +119,25 @@ namespace Microsoft.Build.Execution
         /// </summary>
         public void RegisterHostObject(string projectFile, string targetName, string taskName, ITaskHost hostObject)
         {
+
+/* Unmerged change from project 'Microsoft.Build (netcoreapp2.1)'
+Before:
             ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
             ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
-            ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
+After:
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile));
+            ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName));
+*/
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, nameof(projectFile));
+            ErrorUtilities.VerifyThrowArgumentNull(targetName, nameof(targetName));
+            ErrorUtilities.VerifyThrowArgumentNull(taskName, nameof(taskName));
 
             // We can only set the host object to a non-null value if the affinity for the project is not out of proc, or if it is, it is only implicitly
             // out of proc, in which case it will become in-proc after this call completes.  See GetNodeAffinity.
             bool isExplicit;
-            bool hasExplicitOutOfProcAffinity = (GetNodeAffinity(projectFile, out isExplicit) == NodeAffinity.OutOfProc) && (isExplicit == true);
+            bool hasExplicitOutOfProcAffinity = (GetNodeAffinity(projectFile, out isExplicit) == NodeAffinity.OutOfProc) && isExplicit;
             ErrorUtilities.VerifyThrowInvalidOperation(!hasExplicitOutOfProcAffinity || hostObject == null, "InvalidHostObjectOnOutOfProcProject");
-            _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
+            _hostObjectMap ??= new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
 
             HostObjects hostObjects = GetHostObjectsFromMapByKeyOrCreateNew(projectFile);
 
@@ -153,20 +155,18 @@ namespace Microsoft.Build.Execution
         /// Register and unregister from ROT.
         /// Ensure the host object has appropriate COM interface that can be used in task.
         /// </summary>
+        /// <param name="projectFile">project file name</param>
+        /// <param name="targetName">target name</param>
+        /// <param name="taskName">task name</param>
         /// <param name="monikerName">the Moniker used to register host object in ROT</param>
         public void RegisterHostObject(string projectFile, string targetName, string taskName, string monikerName)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
-            ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
-            ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
-            ErrorUtilities.VerifyThrowArgumentNull(monikerName, "monikerName");
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, nameof(projectFile));
+            ErrorUtilities.VerifyThrowArgumentNull(targetName, nameof(targetName));
+            ErrorUtilities.VerifyThrowArgumentNull(taskName, nameof(taskName));
+            ErrorUtilities.VerifyThrowArgumentNull(monikerName, nameof(monikerName));
 
-            if (Environment.Is64BitProcess)
-            {
-                throw new PlatformNotSupportedException("RegisterHostObject with monikerName is only supported in 32 bit");
-            }
-
-            _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
+            _hostObjectMap ??= new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
 
             HostObjects hostObjects = GetHostObjectsFromMapByKeyOrCreateNew(projectFile);
 
@@ -181,12 +181,12 @@ namespace Microsoft.Build.Execution
         {
             if (projectFullPath != null)
             {
-                if (_hostObjectMap != null && _hostObjectMap.ContainsKey(projectFullPath))
+                if (_hostObjectMap?.ContainsKey(projectFullPath) == true)
                 {
                     _hostObjectMap.Remove(projectFullPath);
                 }
 
-                if (_projectAffinities != null && _projectAffinities.ContainsKey(projectFullPath))
+                if (_projectAffinities?.ContainsKey(projectFullPath) == true)
                 {
                     _projectAffinities.Remove(projectFullPath);
                 }
@@ -281,8 +281,7 @@ namespace Microsoft.Build.Execution
             // Now see if a specific affinity has been provided.
             if (_projectAffinities != null)
             {
-                NodeAffinity affinity = NodeAffinity.Any;
-
+                NodeAffinity affinity;
                 if (_projectAffinities.TryGetValue(projectFile, out affinity))
                 {
                     isExplicit = true;

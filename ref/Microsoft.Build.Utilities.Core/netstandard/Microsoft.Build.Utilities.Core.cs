@@ -197,6 +197,7 @@ namespace Microsoft.Build.Utilities
         public Microsoft.Build.Framework.IBuildEngine4 BuildEngine4 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine5 BuildEngine5 { get { throw null; } }
         public Microsoft.Build.Framework.IBuildEngine6 BuildEngine6 { get { throw null; } }
+        public Microsoft.Build.Framework.IBuildEngine7 BuildEngine7 { get { throw null; } }
         protected string HelpKeywordPrefix { get { throw null; } set { } }
         public Microsoft.Build.Framework.ITaskHost HostObject { get { throw null; } set { } }
         public Microsoft.Build.Utilities.TaskLoggingHelper Log { get { throw null; } }
@@ -242,6 +243,7 @@ namespace Microsoft.Build.Utilities
         public void LogCriticalMessage(string subcategory, string code, string helpKeyword, string file, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber, string message, params object[] messageArgs) { }
         public void LogError(string message, params object[] messageArgs) { }
         public void LogError(string subcategory, string errorCode, string helpKeyword, string file, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber, string message, params object[] messageArgs) { }
+        public void LogError(string subcategory, string errorCode, string helpKeyword, string helpLink, string file, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber, string message, params object[] messageArgs) { }
         public void LogErrorFromException(System.Exception exception) { }
         public void LogErrorFromException(System.Exception exception, bool showStackTrace) { }
         public void LogErrorFromException(System.Exception exception, bool showStackTrace, bool showDetail, string file) { }
@@ -263,6 +265,7 @@ namespace Microsoft.Build.Utilities
         public void LogTelemetry(string eventName, System.Collections.Generic.IDictionary<string, string> properties) { }
         public void LogWarning(string message, params object[] messageArgs) { }
         public void LogWarning(string subcategory, string warningCode, string helpKeyword, string file, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber, string message, params object[] messageArgs) { }
+        public void LogWarning(string subcategory, string warningCode, string helpKeyword, string helpLink, string file, int lineNumber, int columnNumber, int endLineNumber, int endColumnNumber, string message, params object[] messageArgs) { }
         public void LogWarningFromException(System.Exception exception) { }
         public void LogWarningFromException(System.Exception exception, bool showStackTrace) { }
         public void LogWarningFromResources(string messageResourceName, params object[] messageArgs) { }

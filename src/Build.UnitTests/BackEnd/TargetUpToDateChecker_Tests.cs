@@ -3,12 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Xml;
-using System.Text;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
@@ -19,7 +16,6 @@ using Xunit.Abstractions;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace Microsoft.Build.UnitTests.BackEnd
 {
@@ -1003,8 +999,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
 
                     long symlinkWriteTimeTicks = symlinkWriteTime.ToFileTimeUtc();
 
-                    if (SetFileTime(handle, ref symlinkWriteTimeTicks, ref symlinkWriteTimeTicks,
-                            ref symlinkWriteTimeTicks) != true)
+                    if (!SetFileTime(handle, ref symlinkWriteTimeTicks, ref symlinkWriteTimeTicks,
+                            ref symlinkWriteTimeTicks))
                     {
                         Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                     }

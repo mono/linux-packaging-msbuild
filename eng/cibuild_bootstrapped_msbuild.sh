@@ -62,6 +62,11 @@ function DownloadMSBuildForMono {
     # rename just to make it obvious when reading logs!
     mv $artifacts_dir/msbuild $mono_msbuild_dir
     chmod +x $artifacts_dir/mono-msbuild/MSBuild.dll
+
+    if [[ `uname -s` != 'Darwin' ]]; then
+        # with no .so available, this ends up breaking the build
+        rm -Rf $mono_msbuild_dir/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver
+    fi
     rm "$msbuild_zip"
   fi
 }

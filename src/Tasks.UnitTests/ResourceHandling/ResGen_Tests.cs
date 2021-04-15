@@ -7,10 +7,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
-using System.Text.RegularExpressions;
-using System.Globalization;
 
 using ResGen = Microsoft.Build.Tasks.GenerateResource.ResGen;
 using Xunit;
@@ -317,7 +314,7 @@ namespace Microsoft.Build.UnitTests
             t.References = references.ToArray();
 
             commandLineLength = CommandLine.GetCommandLine(t, false).Length;
-            Assert.Equal(commandLineLength, (maxCommandLineLength + 1));
+            Assert.Equal(commandLineLength, maxCommandLineLength + 1);
 
             ExecuteTaskAndVerifyLogContainsErrorFromResource
             (

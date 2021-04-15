@@ -2,13 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 #if FEATURE_SECURITY_PERMISSIONS
 using System.Security.Permissions;
 #endif
-using System.Diagnostics;
-
-using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using System.Collections.Generic;
 using Microsoft.Build.Collections;
@@ -90,7 +86,7 @@ namespace Microsoft.Build.Evaluation
 
             GetReferencedItemNamesAndMetadata(expression, 0, expression.Length, ref pair, ShredderOptions.MetadataOutsideTransforms);
 
-            bool result = (pair.Metadata != null && pair.Metadata.Count > 0);
+            bool result = (pair.Metadata?.Count > 0);
 
             return result;
         }
@@ -127,10 +123,8 @@ namespace Microsoft.Build.Evaluation
                 if (Sink(expression, ref i, end, '@', '('))
                 {
                     List<ItemExpressionCapture> transformExpressions = null;
-                    string itemName = null;
                     string separator = null;
                     int separatorStart = -1;
-                    int separatorLength = -1;
 
                     // Start of a possible item list expression
 
@@ -164,7 +158,7 @@ namespace Microsoft.Build.Evaluation
                     string name = expression.Substring(startOfName, i - startOfName);
 
                     // return the item that we're working with
-                    itemName = name;
+                    string itemName = name;
 
                     SinkWhitespace(expression, ref i);
                     bool transformOrFunctionFound = true;
@@ -235,8 +229,7 @@ namespace Microsoft.Build.Evaluation
                         }
 
                         separatorStart = i - startPoint;
-                        separatorLength = closingQuote - i;
-                        separator = expression.Substring(i, separatorLength);
+                        separator = expression.Substring(i, closingQuote - i);
 
                         i = closingQuote + 1;
                     }
@@ -386,7 +379,7 @@ namespace Microsoft.Build.Evaluation
                     // well formed, so make sure the name's in the table
                     if ((whatToShredFor & ShredderOptions.ItemTypes) != 0)
                     {
-                        pair.Items = pair.Items ?? new HashSet<string>(MSBuildNameIgnoreCaseComparer.Default);
+                        pair.Items ??= new HashSet<string>(MSBuildNameIgnoreCaseComparer.Default);
                         pair.Items.Add(name);
                     }
 
@@ -455,7 +448,7 @@ namespace Microsoft.Build.Evaluation
 
                     if ((whatToShredFor & ShredderOptions.MetadataOutsideTransforms) != 0)
                     {
-                        pair.Metadata = pair.Metadata ?? new Dictionary<string, MetadataReference>(MSBuildNameIgnoreCaseComparer.Default);
+                        pair.Metadata ??= new Dictionary<string, MetadataReference>(MSBuildNameIgnoreCaseComparer.Default);
                         pair.Metadata[qualifiedMetadataName] = new MetadataReference(itemName, metadataName);
                     }
 
@@ -667,7 +660,7 @@ namespace Microsoft.Build.Evaluation
         {
             if (i < end - 1 && expression[i] == c1 && expression[i + 1] == c2)
             {
-                i = i + 2;
+                i += 2;
                 return true;
             }
 

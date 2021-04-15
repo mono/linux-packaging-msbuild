@@ -364,7 +364,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             Utilities.AssertLogContainsResource(t2, "GenerateResource.ResourceNotFound", t2.Sources[0].ItemSpec);
         }
 
-
         /// <summary>
         ///  Force out-of-date with ShouldRebuildResgenOutputFile on the linked file
         /// </summary>
@@ -803,7 +802,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
 
                 File.GetLastWriteTime(incrementalUpToDate.OutputResources[0].ItemSpec).ShouldBe(firstWriteTime);
 
-
                 _output.WriteLine("** Touch the reference, and repeat, it should now rebuild");
                 DateTime newTime = DateTime.Now + new TimeSpan(0, 1, 0);
                 File.SetLastWriteTime(localSystemDll, newTime);
@@ -890,8 +888,8 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             {
                 if (resxFile != null) File.Delete(resxFile);
                 if (resourcesFile != null) File.Delete(resourcesFile);
-                if (additionalInputs != null && additionalInputs[0] != null && File.Exists(additionalInputs[0].ItemSpec)) File.Delete(additionalInputs[0].ItemSpec);
-                if (additionalInputs != null && additionalInputs[1] != null && File.Exists(additionalInputs[1].ItemSpec)) File.Delete(additionalInputs[1].ItemSpec);
+                if (additionalInputs?[0] != null && File.Exists(additionalInputs[0].ItemSpec)) File.Delete(additionalInputs[0].ItemSpec);
+                if (additionalInputs?[1] != null && File.Exists(additionalInputs[1].ItemSpec)) File.Delete(additionalInputs[1].ItemSpec);
             }
         }
 
@@ -1164,15 +1162,13 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             string resxFile = null;
             string resourcesFile = null;
             string strFile = null;
-            string stateFile = null;
-
             try
             {
                 GenerateResource t = Utilities.CreateTask(_output);
                 resxFile = Utilities.WriteTestResX(false, null, null);
                 resourcesFile = Utilities.GetTempFileName(".resources");
                 strFile = Path.ChangeExtension(resourcesFile, ".cs"); // STR filename should be generated from output not input filename
-                stateFile = Utilities.GetTempFileName(".cache");
+                string stateFile = Utilities.GetTempFileName(".cache");
 
                 // Make sure the .cs file isn't already there.
                 File.Delete(strFile);
@@ -1455,7 +1451,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
                 generatedSource.ShouldNotContain("object MyString", "Strongly-typed resource accessor is returning type `object` instead of `string`");
                 generatedSource.ShouldContain("static string MyString");
                 generatedSource.ShouldMatch("//.*Looks up a localized string similar to MyValue", "Couldn't find a comment in the usual format for a string resource.");
-
             }
             finally
             {
@@ -1470,7 +1465,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
                 }
             }
         }
-
 
         /// <summary>
         ///  STR with resource namespace yields proper output, message (CS)
@@ -1543,10 +1537,8 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
                 // another invalid escape, this one more serious, "unsupported or invalid escape character"
                 new string[] {   @"foo=\ujjjjbar", "MSB3569"},
             };
-
-            GenerateResource t = null;
-            string textFile = null;
-
+            GenerateResource t;
+            string textFile;
             foreach (string[] test in tests)
             {
                 t = Utilities.CreateTask(_output);
@@ -1623,10 +1615,10 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-                if (null != resxFile1) File.Delete(resxFile1);
-                if (null != resxFile2) File.Delete(resxFile2);
-                if (null != resourcesFile1) File.Delete(resourcesFile1);
-                if (null != resourcesFile2) File.Delete(resourcesFile2);
+                if (resxFile1 != null) File.Delete(resxFile1);
+                if (resxFile2 != null) File.Delete(resxFile2);
+                if (resourcesFile1 != null) File.Delete(resourcesFile1);
+                if (resourcesFile2 != null) File.Delete(resourcesFile2);
             }
         }
 
@@ -1680,10 +1672,10 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-                if (null != resxFile1) File.Delete(resxFile1);
-                if (null != resxFile2) File.Delete(resxFile2);
-                if (null != resourcesFile1) File.Delete(resourcesFile1);
-                if (null != resourcesFile2) File.Delete(resourcesFile2);
+                if (resxFile1 != null) File.Delete(resxFile1);
+                if (resxFile2 != null) File.Delete(resxFile2);
+                if (resourcesFile1 != null) File.Delete(resourcesFile1);
+                if (resourcesFile2 != null) File.Delete(resourcesFile2);
             }
         }
 
@@ -1765,8 +1757,8 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-                if (null != resxFile) File.Delete(resxFile);
-                if (null != resourcesFile) File.Delete(resourcesFile);
+                if (resxFile != null) File.Delete(resxFile);
+                if (resourcesFile != null) File.Delete(resourcesFile);
             }
         }
 
@@ -1883,7 +1875,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
                 Assert.False(result);
 
                 // Should have not written any files
-                Assert.True(t.FilesWritten != null && t.FilesWritten.Length == 0);
+                Assert.True(t.FilesWritten?.Length == 0);
                 Assert.False(File.Exists(resourcesFile));
             }
             finally
@@ -2021,7 +2013,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
 
             Utilities.ExecuteTask(t);
 
-            int i = 0;
+            int i;
 
             // should be four files written, not including the tlogs
             for (i = 0; i < 4; i++)
@@ -2495,10 +2487,10 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-                if (null != resxFile) File.Delete(resxFile);
-                if (null != resxFile2) File.Delete(resxFile2);
-                if (null != resxFile) File.Delete(Path.ChangeExtension(resxFile, ".resources"));
-                if (null != resxFile2) File.Delete(Path.ChangeExtension(resxFile2, ".resources"));
+                if (resxFile != null) File.Delete(resxFile);
+                if (resxFile2 != null) File.Delete(resxFile2);
+                if (resxFile != null) File.Delete(Path.ChangeExtension(resxFile, ".resources"));
+                if (resxFile2 != null) File.Delete(Path.ChangeExtension(resxFile2, ".resources"));
             }
         }
 
@@ -2638,7 +2630,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-                if (null != txtFile) File.Delete(txtFile);
+                if (txtFile != null) File.Delete(txtFile);
             }
         }
 
@@ -3353,16 +3345,12 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             string resxDataName = "DataWithNewline";
             string data = "<data name=\"" + resxDataName + "\">" + newline +
                 "<value>" + resxValue + "</value>" + newline + "</data>";
-
-            string resxFile = null;
-
             GenerateResource t = Utilities.CreateTask(_output);
             t.StateFile = new TaskItem(Utilities.GetTempFileName(".cache"));
 
             try
             {
-                resxFile = Utilities.WriteTestResX(false, null, data);
-
+                string resxFile = Utilities.WriteTestResX(false, null, data);
                 t.Sources = new ITaskItem[] { new TaskItem(resxFile) };
 
                 Utilities.ExecuteTask(t);
@@ -3389,7 +3377,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
             }
             finally
             {
-
                 File.Delete(t.Sources[0].ItemSpec);
                 foreach (ITaskItem item in t.FilesWritten)
                 {
@@ -3447,7 +3434,6 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests.InProc
                 Utilities.FileUpdated(resourcesFile, initialWriteTime).ShouldBeFalse();
             }
         }
-
     }
 }
 
@@ -3473,7 +3459,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests
         /// </summary>
         public static bool FileUpdated(string fileName, DateTime previousWriteTime)
         {
-            return (File.GetLastWriteTime(fileName) > previousWriteTime);
+            return File.GetLastWriteTime(fileName) > previousWriteTime;
         }
 
         /// <summary>
@@ -3542,7 +3528,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests
         {
             GenerateResource t = CreateTask(output);
 
-            string sourceFile = null;
+            string sourceFile;
             if (useResX)
                 sourceFile = WriteTestResX(false, null, null);
             else
@@ -3572,7 +3558,7 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests
             bool success = t.Execute();
             Assert.True(success);
 
-            if (t.OutputResources != null && t.OutputResources[0] != null && t.Sources[0] != null)
+            if (t.OutputResources?[0] != null && t.Sources[0] != null)
             {
                 File.GetLastWriteTime(t.OutputResources[0].ItemSpec).ShouldBeGreaterThanOrEqualTo(File.GetLastWriteTime(t.Sources[0].ItemSpec), $"we're talking here about {t.OutputResources[0].ItemSpec} and {t.Sources[0].ItemSpec}");
             }
@@ -3964,12 +3950,11 @@ namespace Microsoft.Build.UnitTests.GenerateResource_Tests
                     Assert.Contains("namespace " + classNamespace.ToLower(), Utilities.ReadFileContent(STRFile).ToLower());
                 }
 
-
                 // Verify log is as expected
                 Utilities.AssertLogContainsResource(t, "GenerateResource.ProcessingFile", textFile, resourcesFile);
                 Utilities.AssertLogContainsResource(t, "GenerateResource.ReadResourceMessage", 4, textFile);
 
-                string typeName = null;
+                string typeName;
                 if (t.StronglyTypedNamespace != null)
                     typeName = t.StronglyTypedNamespace + ".";
                 else

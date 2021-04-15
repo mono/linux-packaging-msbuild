@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -31,6 +29,8 @@ namespace Microsoft.Build.Evaluation
 
         private static readonly Lazy<Regex> RegistrySdkRegex = new Lazy<Regex>(() => new Regex(@"^HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Microsoft SDKs\\Windows\\v(\d+\.\d+)$", RegexOptions.IgnoreCase));
 #endif // FEATURE_WIN32_REGISTRY
+
+        private static readonly Lazy<NuGetFrameworkWrapper> NuGetFramework = new Lazy<NuGetFrameworkWrapper>(() => new NuGetFrameworkWrapper());
 
         /// <summary>
         /// Add two doubles
@@ -187,7 +187,6 @@ namespace Microsoft.Build.Evaluation
             return GetRegistryValueFromView(keyName, valueName, defaultValue, new ArraySegment<object>(views));
         }
 
-
         /// <summary>
         /// Get the value of the registry key from one of the RegistryView's specified
         /// </summary>
@@ -224,7 +223,7 @@ namespace Microsoft.Build.Evaluation
 
                         // See if this asks for a specific SDK
                         var m = RegistrySdkRegex.Value.Match(keyName);
-                        
+
                         if (m.Success && m.Groups.Count >= 1 && valueName.Equals("InstallRoot", StringComparison.OrdinalIgnoreCase))
                         {
                             return Path.Combine(NativeMethodsShared.FrameworkBasePath, m.Groups[0].Value) + Path.DirectorySeparatorChar;
@@ -312,6 +311,7 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         /// <param name="startingDirectory">The directory to start the search in.</param>
         /// <param name="fileName">The name of the file to search for.</param>
+        /// <param name="fileSystem">The file system abstraction to use that implements file system operations</param>
         /// <returns>The full path of the directory containing the file if it is found, otherwise an empty string. </returns>
         internal static string GetDirectoryNameOfFileAbove(string startingDirectory, string fileName, IFileSystem fileSystem)
         {
@@ -323,6 +323,7 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         /// <param name="file">The name of the file to search for.</param>
         /// <param name="startingDirectory">An optional directory to start the search in.  The default location is the directory
+        /// <param name="fileSystem">The file system abstraction to use that implements file system operations</param>
         /// of the file containing the property function.</param>
         /// <returns>The full path of the file if it is found, otherwise an empty string.</returns>
         internal static string GetPathOfFileAbove(string file, string startingDirectory, IFileSystem fileSystem)
@@ -344,6 +345,14 @@ namespace Microsoft.Build.Evaluation
             {
                 return conditionValue;
             }
+        }
+
+        ///<summary>
+        /// Hash the string independent of bitness and target framework.
+        /// </summary>
+        internal static int StableStringHash(string toHash)
+        {
+            return CommunicationsUtilities.GetHashCode(toHash);
         }
 
         /// <summary>
@@ -379,7 +388,7 @@ namespace Microsoft.Build.Evaluation
             parameters.Add(XMakeAttributes.runtime, runtime);
             parameters.Add(XMakeAttributes.architecture, architecture);
 
-            TaskHostContext desiredContext = CommunicationsUtilities.GetTaskHostContext(parameters);
+            HandshakeOptions desiredContext = CommunicationsUtilities.GetHandshakeOptions(taskHost: true, taskHostParameters: parameters);
             string taskHostLocation = NodeProviderOutOfProcTaskHost.GetMSBuildLocationFromHostContext(desiredContext);
 
             if (taskHostLocation != null && FileUtilities.FileExistsNoThrow(taskHostLocation))
@@ -480,6 +489,36 @@ namespace Microsoft.Build.Evaluation
             return SimpleVersion.Parse(a) <= SimpleVersion.Parse(b);
         }
 
+        internal static string GetTargetFrameworkIdentifier(string tfm)
+        {
+            return NuGetFramework.Value.GetTargetFrameworkIdentifier(tfm);
+        }
+
+        internal static string GetTargetFrameworkVersion(string tfm, int versionPartCount = 2)
+        {
+            return NuGetFramework.Value.GetTargetFrameworkVersion(tfm, versionPartCount);
+        }
+
+        internal static bool IsTargetFrameworkCompatible(string target, string candidate)
+        {
+            return NuGetFramework.Value.IsCompatible(target, candidate);
+        }
+
+        internal static string GetTargetPlatformIdentifier(string tfm)
+        {
+            return NuGetFramework.Value.GetTargetPlatformIdentifier(tfm);
+        }
+
+        internal static string GetTargetPlatformVersion(string tfm, int versionPartCount = 2)
+        {
+            return NuGetFramework.Value.GetTargetPlatformVersion(tfm, versionPartCount);
+        }
+
+        internal static bool AreFeaturesEnabled(Version wave)
+        {
+            return ChangeWaves.AreFeaturesEnabled(wave);
+        }
+
         public static string GetCurrentToolsDirectory()
         {
             return BuildEnvironmentHelper.Instance.CurrentMSBuildToolsDirectory;
@@ -544,7 +583,7 @@ namespace Microsoft.Build.Evaluation
         {
             if (keyName == null)
             {
-                throw new ArgumentNullException("keyName");
+                throw new ArgumentNullException(nameof(keyName));
             }
 
             string basekeyName;

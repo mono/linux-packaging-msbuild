@@ -58,6 +58,11 @@ namespace Microsoft.Build.UnitTests.BackEnd
         private readonly ITestOutputHelper _output;
 
         /// <summary>
+        /// The transient state corresponding to setting MSBUILDINPROCENVCHECK to 1.
+        /// </summary>
+        private readonly TransientTestState _inProcEnvCheckTransientEnvironmentVariable;
+
+        /// <summary>
         /// SetUp
         /// </summary>
         public BuildManager_Tests(ITestOutputHelper output)
@@ -77,7 +82,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             _projectCollection = new ProjectCollection();
 
             _env = TestEnvironment.Create(output);
-            _env.SetEnvironmentVariable("MSBUILDINPROCENVCHECK", "1");
+            _inProcEnvCheckTransientEnvironmentVariable = _env.SetEnvironmentVariable("MSBUILDINPROCENVCHECK", "1");
         }
 
         /// <summary>
@@ -1500,7 +1505,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
         /// <summary>
         /// A canceled build
         /// </summary>
-        [Fact]
+        [Fact(Timeout = 20_000)]
         public void CancelledBuild()
         {
             string contents = CleanupFileContents(@"
@@ -1517,7 +1522,10 @@ namespace Microsoft.Build.UnitTests.BackEnd
 
             asyncResult.ExecuteAsync(null, null);
             _buildManager.CancelAllSubmissions();
-            asyncResult.WaitHandle.WaitOne();
+            // This test intermittently hangs. This timeout is designed to prevent that, turning a hang into a failure.
+            // Todo: Investigate why this test sometimes hangs.
+            asyncResult.WaitHandle.WaitOne(TimeSpan.FromSeconds(10));
+            asyncResult.IsCompleted.ShouldBeTrue("Failing to complete by this point indicates a hang.");
             BuildResult result = asyncResult.BuildResult;
             _buildManager.EndBuild();
 
@@ -3978,7 +3986,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
                 var buildParameters = new BuildParameters()
                 {
                     DisableInProcNode = true,
-                    MaxNodeCount = Environment.ProcessorCount,
+                    MaxNodeCount = NativeMethodsShared.GetLogicalCoreCount(),
                     EnableNodeReuse = false,
                     Loggers = new List<ILogger>()
                     {
@@ -4087,6 +4095,35 @@ $@"<Project InitialTargets=`Sleep`>
                     manager.EndBuild();
                     manager.Dispose();
                 }
+            }
+        }
+
+        [Fact]
+        public void BuildWithZeroConnectionTimeout()
+        {
+            string contents = CleanupFileContents(@"
+<Project>
+ <Target Name='test'>
+    <Message Text='Text'/>
+ </Target>
+</Project>
+");
+            // Do not use MSBUILDINPROCENVCHECK because this test case is expected to leave a defunct in-proc node behind.
+            _inProcEnvCheckTransientEnvironmentVariable.Revert();
+            _env.SetEnvironmentVariable("MSBUILDNODECONNECTIONTIMEOUT", "0");
+
+            BuildRequestData data = GetBuildRequestData(contents);
+            try
+            {
+                BuildResult result = _buildManager.Build(_parameters, data);
+
+                // The build should either finish successfully (very unlikely).
+                result.OverallResult.ShouldBe(BuildResultCode.Success);
+            }
+            catch (Exception e)
+            {
+                // Or it should throw InternalErrorException because the node didn't get connected within 0ms.
+                e.ShouldBeOfType<InternalErrorException>();
             }
         }
 

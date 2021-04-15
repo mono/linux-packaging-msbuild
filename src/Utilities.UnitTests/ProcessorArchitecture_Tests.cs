@@ -6,7 +6,6 @@ using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
 using Shouldly;
 using Xunit;
-using BuildUtilities = Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.UnitTests
 {
@@ -14,24 +13,15 @@ namespace Microsoft.Build.UnitTests
     {
         internal static string ProcessorArchitectureIntToString()
         {
-            switch (NativeMethodsShared.ProcessorArchitecture)
+            return NativeMethodsShared.ProcessorArchitecture switch
             {
-                case NativeMethodsShared.ProcessorArchitectures.X86:
-                    return ProcessorArchitecture.X86;
-
-                case NativeMethodsShared.ProcessorArchitectures.X64:
-                    return ProcessorArchitecture.AMD64;
-
-                case NativeMethodsShared.ProcessorArchitectures.IA64:
-                    return ProcessorArchitecture.IA64;
-
-                case NativeMethodsShared.ProcessorArchitectures.ARM:
-                    return ProcessorArchitecture.ARM;
-
+                NativeMethodsShared.ProcessorArchitectures.X86 => ProcessorArchitecture.X86,
+                NativeMethodsShared.ProcessorArchitectures.X64 => ProcessorArchitecture.AMD64,
+                NativeMethodsShared.ProcessorArchitectures.IA64 => ProcessorArchitecture.IA64,
+                NativeMethodsShared.ProcessorArchitectures.ARM => ProcessorArchitecture.ARM,
                 // unknown architecture? return null
-                default:
-                    return null;
-            }
+                _ => null,
+            };
         }
 
         [Fact]
@@ -73,7 +63,7 @@ namespace Microsoft.Build.UnitTests
                     procArchitecture = ToolLocationHelper.ConvertDotNetFrameworkArchitectureToProcessorArchitecture(Utilities.DotNetFrameworkArchitecture.Bitness64);
 
                     //We should also allow NULL if the machine is true x86 only.
-                    bool isValidResult = procArchitecture == null || procArchitecture.Equals(ProcessorArchitecture.AMD64) || procArchitecture.Equals(ProcessorArchitecture.IA64);
+                    bool isValidResult = procArchitecture?.Equals(ProcessorArchitecture.AMD64) != false || procArchitecture.Equals(ProcessorArchitecture.IA64);
 
                     isValidResult.ShouldBeTrue();
                     break;

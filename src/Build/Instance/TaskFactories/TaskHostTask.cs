@@ -5,13 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Text;
 
 using Microsoft.Build.Exceptions;
-using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
@@ -89,7 +86,7 @@ namespace Microsoft.Build.BackEnd
         /// The task host context of the task host we're launching -- used to 
         /// communicate with the task host. 
         /// </summary>
-        private TaskHostContext _requiredContext = TaskHostContext.Invalid;
+        private HandshakeOptions _requiredContext = HandshakeOptions.None;
 
         /// <summary>
         /// True if currently connected to the task host; false otherwise. 
@@ -131,7 +128,7 @@ namespace Microsoft.Build.BackEnd
 #endif
             )
         {
-            ErrorUtilities.VerifyThrowInternalNull(taskType, "taskType");
+            ErrorUtilities.VerifyThrowInternalNull(taskType, nameof(taskType));
 
             _taskLocation = taskLocation;
             _taskLoggingContext = taskLoggingContext;
@@ -206,7 +203,7 @@ namespace Microsoft.Build.BackEnd
 
                 // If we returned an exception, then we want to throw it when we 
                 // do the get.  
-                if (value != null && (value as Exception) != null)
+                if (value is Exception)
                 {
                     throw (Exception)value;
                 }
@@ -281,7 +278,7 @@ namespace Microsoft.Build.BackEnd
             {
                 lock (_taskHostLock)
                 {
-                    _requiredContext = CommunicationsUtilities.GetTaskHostContext(_taskHostParameters);
+                    _requiredContext = CommunicationsUtilities.GetHandshakeOptions(taskHost: true, taskHostParameters: _taskHostParameters);
                     _connectedToTaskHost = _taskHostProvider.AcquireAndSetUpHost(_requiredContext, this, this, hostConfiguration);
                 }
 
@@ -464,7 +461,6 @@ namespace Microsoft.Build.BackEnd
                 }
                 else
                 {
-                    exceptionMessage = "TaskInstantiationFailureError";
                     exceptionMessageArgs = new string[] { _taskType.Type.Name,
                         AssemblyUtilities.GetAssemblyLocation(_taskType.Type.GetTypeInfo().Assembly),
                         string.Empty };
@@ -549,30 +545,12 @@ namespace Microsoft.Build.BackEnd
         /// Since we log that we weren't able to connect to the task host in a couple of different places,
         /// extract it out into a separate method. 
         /// </summary>
-        private void LogErrorUnableToCreateTaskHost(TaskHostContext requiredContext, string runtime, string architecture, NodeFailedToLaunchException e)
+        private void LogErrorUnableToCreateTaskHost(HandshakeOptions requiredContext, string runtime, string architecture, NodeFailedToLaunchException e)
         {
-            string msbuildLocation = NodeProviderOutOfProcTaskHost.GetMSBuildLocationFromHostContext(requiredContext);
-
-            if (msbuildLocation == null)
-            {
+            string msbuildLocation = NodeProviderOutOfProcTaskHost.GetMSBuildLocationFromHostContext(requiredContext) ??
                 // We don't know the path -- probably we're trying to get a 64-bit assembly on a 
                 // 32-bit machine.  At least give them the exe name to look for, though ...
-                switch (requiredContext)
-                {
-                    case TaskHostContext.X32CLR2:
-                    case TaskHostContext.X64CLR2:
-                        msbuildLocation = "MSBuildTaskHost.exe";
-                        break;
-                    case TaskHostContext.X32CLR4:
-                    case TaskHostContext.X64CLR4:
-                        msbuildLocation = "MSBuild.exe";
-                        break;
-                    case TaskHostContext.Invalid:
-                    default:
-                        ErrorUtilities.ThrowInternalErrorUnreachable();
-                        break;
-                }
-            }
+                ((requiredContext & HandshakeOptions.CLR2) == HandshakeOptions.CLR2 ? "MSBuildTaskHost.exe" : "MSBuild.exe");
 
             if (e == null)
             {

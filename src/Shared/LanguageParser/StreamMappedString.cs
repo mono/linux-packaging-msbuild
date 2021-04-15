@@ -4,11 +4,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Resources;
-using System.Reflection;
-using System.Collections;
-using System.Globalization;
-using System.Diagnostics;
 
 namespace Microsoft.Build.Shared.LanguageParser
 {
@@ -71,7 +66,8 @@ namespace Microsoft.Build.Shared.LanguageParser
         /// <summary>
         /// Construct.
         /// </summary>
-        /// <param name="binaryStream"></param>
+        /// <param name="binaryStream">The raw binary stream that's being read.</param>
+        /// <param name="forceANSI">When false, try to guess the encoding of binaryStream. When true, force the encoding to ANSI.</param>
         public StreamMappedString(Stream binaryStream, bool forceANSI)
             : this(binaryStream, forceANSI, /* pageSize */ DefaultPageSize)
         {
@@ -80,7 +76,9 @@ namespace Microsoft.Build.Shared.LanguageParser
         /// <summary>
         /// Construct.
         /// </summary>
-        /// <param name="binaryStream"></param>
+        /// <param name="binaryStream">The raw binary stream that's being read.</param>
+        /// <param name="forceANSI">When false, try to guess the encoding of binaryStream. When true, force the encoding to ANSI.</param>
+        /// <param name="pageSize">Size of pages to use for reading from source file.</param>
         internal StreamMappedString(Stream binaryStream, bool forceANSI, int pageSize)
         {
             _binaryStream = binaryStream;
@@ -92,7 +90,6 @@ namespace Microsoft.Build.Shared.LanguageParser
         /// <summary>
         /// Restart the stream reader at the beginning.
         /// </summary>
-        /// <param name="binaryStream"></param>
         private void RestartReader()
         {
             _currentPageNumber = -1;
@@ -161,7 +158,7 @@ namespace Microsoft.Build.Shared.LanguageParser
             // If null now, then the requested character is out of range.
             if (page == null)
             {
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             }
 
             // Get the relative offset within the buffer.
@@ -340,7 +337,6 @@ namespace Microsoft.Build.Shared.LanguageParser
         /// COnvert from absolute offset to relative offset within a particular page.
         /// </summary>
         /// <param name="offset"></param>
-        /// <param name="pageNumber"></param>
         /// <returns></returns>
         private int AbsoluteOffsetToPageOffset(int offset)
         {
@@ -360,7 +356,7 @@ namespace Microsoft.Build.Shared.LanguageParser
         /// <summary>
         /// Returns true of the given position is passed the end of the file.
         /// </summary>
-        /// <param name="position"></param>
+        /// <param name="offset"></param>
         /// <returns></returns>
         public bool IsPastEnd(int offset)
         {
@@ -377,7 +373,7 @@ namespace Microsoft.Build.Shared.LanguageParser
         {
             StringBuilder result = new StringBuilder(length);
 
-            int charactersExtracted = 0;
+            int charactersExtracted;
             for (int i = 0; i < length; i += charactersExtracted)
             {
                 char[] page = GetPage(startPosition + i);
@@ -385,7 +381,7 @@ namespace Microsoft.Build.Shared.LanguageParser
                 // If we weren't able to read enough characters then throw an exception.
                 if (page == null)
                 {
-                    throw new ArgumentOutOfRangeException("length");
+                    throw new ArgumentOutOfRangeException(nameof(length));
                 }
 
                 int relativeStartPosition = AbsoluteOffsetToPageOffset(startPosition + i);

@@ -2,19 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
     using Microsoft.Build.Evaluation;
-    using Microsoft.Build.Tasks;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class LinkedEvaluationModify_Tests : IClassFixture<LinkedEvaluationModify_Tests.MyTestCollectionGroup>
     {
@@ -26,7 +19,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         public TestCollectionGroup StdGroup { get; }
         public LinkedEvaluationModify_Tests(MyTestCollectionGroup group)
         {
-
             this.StdGroup = group;
             group.Clear();
         }
@@ -105,7 +97,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 
             // and finally just ensure that all is identical
             ViewValidation.Verify(viewProj, realProj);
-
         }
 
         [Fact]
@@ -130,7 +121,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
             };
 
             /// test AddItems
-
             // add a new files in the view, ensure it is added correctly and also the real object will immediately reflect that add as well
             Assert.Null(pair.GetSingleItemWithVerify(ObjectType.View, "foo.cpp"));
             var fooView = pair.AddSingleItemWithVerify(ObjectType.View, "cpp", "foo.cpp");

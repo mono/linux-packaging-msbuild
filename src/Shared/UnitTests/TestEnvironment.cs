@@ -17,6 +17,7 @@ using Xunit.Abstractions;
 
 using TempPaths = System.Collections.Generic.Dictionary<string, string>;
 using CommonWriterType = System.Action<string, string, System.Collections.Generic.IEnumerable<string>>;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.UnitTests
 {
@@ -87,6 +88,9 @@ namespace Microsoft.Build.UnitTests
                 // Assert invariants
                 foreach (var item in _invariants)
                     item.AssertInvariant(Output);
+
+                SetEnvironmentVariable("MSBUILDDISABLEFEATURESFROMVERSION", "");
+                BuildEnvironmentHelper.ResetInstance_ForUnitTestsOnly();
             }
         }
 
@@ -460,6 +464,21 @@ namespace Microsoft.Build.UnitTests
 
             // Assert file count is equal minus any files that were OK
             Assert.Equal(_originalFiles.Length, newFilesCount);
+        }
+    }
+
+    public class CustomConditionInvariant : TestInvariant
+    {
+        private readonly Func<bool> _condition;
+
+        public CustomConditionInvariant(Func<bool> condition)
+        {
+            _condition = condition;
+        }
+
+        public override void AssertInvariant(ITestOutputHelper output)
+        {
+            _condition().ShouldBeTrue();
         }
     }
 

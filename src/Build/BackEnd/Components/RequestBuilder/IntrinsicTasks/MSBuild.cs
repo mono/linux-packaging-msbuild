@@ -7,7 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
 
@@ -236,7 +235,7 @@ namespace Microsoft.Build.BackEnd
             }
 
             // We have been asked to unescape all escaped characters before processing
-            if (TargetAndPropertyListSeparators != null && TargetAndPropertyListSeparators.Length > 0)
+            if (TargetAndPropertyListSeparators?.Length > 0)
             {
                 ExpandAllTargetsAndProperties();
             }
@@ -484,7 +483,7 @@ namespace Microsoft.Build.BackEnd
             // of the RunEachTargetSeparately parameter, we each just call the engine to run all 
             // the targets together, or we call the engine separately for each target.
             var targetLists = new List<string[]>();
-            if ((runEachTargetSeparately) && (targets != null) && (targets.Length > 0))
+            if (runEachTargetSeparately && targets?.Length > 0)
             {
                 // Separate target invocations for each individual target.
                 foreach (string targetName in targets)

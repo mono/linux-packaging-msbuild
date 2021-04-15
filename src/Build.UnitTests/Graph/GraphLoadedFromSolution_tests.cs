@@ -194,7 +194,7 @@ namespace Microsoft.Build.Graph.UnitTests
             }
         }
 
-        [Theory]
+        [Theory(Skip = "hangs in CI, can't repro locally: https://github.com/dotnet/msbuild/issues/5453")]
         [MemberData(nameof(GraphsWithUniformSolutionConfigurations))]
         public void GraphConstructionCanLoadEntryPointsFromSolution(
             Dictionary<int, int[]> edges,
@@ -204,7 +204,7 @@ namespace Microsoft.Build.Graph.UnitTests
             AssertSolutionBasedGraph(edges, currentSolutionConfiguration, solutionConfigurations);
         }
 
-        [Theory]
+        [Theory(Skip = "hangs in CI, can't repro locally: https://github.com/dotnet/msbuild/issues/5453")]
         [MemberData(nameof(GraphsWithUniformSolutionConfigurations))]
         public void SolutionBasedGraphCanMatchProjectSpecificConfigurations(
             Dictionary<int, int[]> edges,
@@ -581,8 +581,8 @@ namespace Microsoft.Build.Graph.UnitTests
                 Projects = new Dictionary<string, string>
                 {
                     {"1", GraphTestingUtilities.CreateProjectFile(_env, 1, new[] {2}).Path},
-                    {"2", GraphTestingUtilities.CreateProjectFile(_env, 2, extraContent: MultitargetingSpecification).Path},
-                    {"3", GraphTestingUtilities.CreateProjectFile(_env, 3, new[] {4}, extraContent: MultitargetingSpecification).Path},
+                    {"2", GraphTestingUtilities.CreateProjectFile(_env, 2, extraContent: MultitargetingSpecificationPropertyGroup).Path},
+                    {"3", GraphTestingUtilities.CreateProjectFile(_env, 3, new[] {4}, extraContent: MultitargetingSpecificationPropertyGroup).Path},
                     {"4", GraphTestingUtilities.CreateProjectFile(_env, 4).Path}
                 },
                 SolutionDependencies = new[] {("1", "2"), ("3", "4")}
@@ -687,10 +687,10 @@ namespace Microsoft.Build.Graph.UnitTests
             if (projectConfigurations == null || graphFromSolution.ProjectNodes.All(n => n.ProjectReferences.Count == 0))
             {
                 graphFromSolution.GraphRoots.Select(GetProjectPath)
-                    .ShouldBeEquivalentTo(graph.GraphRoots.Select(GetProjectPath));
+                    .ShouldBeSameIgnoringOrder(graph.GraphRoots.Select(GetProjectPath));
 
                 graphFromSolution.ProjectNodes.Select(GetProjectPath)
-                    .ShouldBeEquivalentTo(graph.ProjectNodes.Select(GetProjectPath));
+                    .ShouldBeSameIgnoringOrder(graph.ProjectNodes.Select(GetProjectPath));
             }
 
             var expectedCurrentConfiguration = currentSolutionConfiguration ?? solutionConfigurations.First();

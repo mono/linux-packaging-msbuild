@@ -12,7 +12,7 @@ using Microsoft.Build.Shared;
 namespace Microsoft.Build.Tasks
 {
     /// <summary>
-    /// Base class for task that determines the appropriate manifest resource name to 
+    /// Base class for task that determines the appropriate manifest resource name to
     /// assign to a given resx or other resource.
     /// </summary>
     public class CreateCSharpManifestResourceName : CreateManifestResourceName
@@ -20,8 +20,8 @@ namespace Microsoft.Build.Tasks
         protected override string SourceFileExtension => ".cs";
 
         /// <summary>
-        /// Utility function for creating a C#-style manifest name from 
-        /// a resource name. 
+        /// Utility function for creating a C#-style manifest name from
+        /// a resource name.
         /// </summary>
         /// <param name="fileName">The file name of the dependent (usually a .resx)</param>
         /// <param name="linkFileName">The file name of the dependent (usually a .resx)</param>
@@ -39,9 +39,13 @@ namespace Microsoft.Build.Tasks
         )
         {
             string culture = null;
+            bool treatAsCultureNeutral = false;
             if (fileName != null && itemSpecToTaskitem.TryGetValue(fileName, out ITaskItem item))
             {
                 culture = item.GetMetadata("Culture");
+                // If 'WithCulture' is explicitly set to false, treat as 'culture-neutral' and keep the original name of the resource.
+                // https://github.com/dotnet/msbuild/issues/3064
+                treatAsCultureNeutral = item.GetMetadata("WithCulture").Equals("false", StringComparison.OrdinalIgnoreCase);
             }
 
             /*
@@ -59,12 +63,13 @@ namespace Microsoft.Build.Tasks
                 dependentUponFileName,
                 culture,
                 binaryStream,
-                Log
+                Log,
+                treatAsCultureNeutral
             );
         }
 
         /// <summary>
-        /// Utility function for creating a C#-style manifest name from 
+        /// Utility function for creating a C#-style manifest name from
         /// a resource name. Note that this function attempts to emulate the
         /// Everret implementation of this code which can be found by searching for
         /// ComputeNonWFCResourceName() or ComputeWFCResourceName() in
@@ -78,6 +83,7 @@ namespace Microsoft.Build.Tasks
         /// <param name="culture">The override culture of this resource, if any</param>
         /// <param name="binaryStream">File contents binary stream, may be null</param>
         /// <param name="log">Task's TaskLoggingHelper, for logging warnings or errors</param>
+        /// <param name="treatAsCultureNeutral">Whether to treat the current file as 'culture-neutral' and retain the culture in the name.</param>
         /// <returns>Returns the manifest name</returns>
         internal static string CreateManifestNameImpl
         (
@@ -88,7 +94,8 @@ namespace Microsoft.Build.Tasks
             string dependentUponFileName, // May be null
             string culture, // may be null 
             Stream binaryStream, // File contents binary stream, may be null
-            TaskLoggingHelper log
+            TaskLoggingHelper log,
+            bool treatAsCultureNeutral = false
         )
         {
             // Use the link file name if there is one, otherwise, fall back to file name.
@@ -99,10 +106,10 @@ namespace Microsoft.Build.Tasks
             }
 
             dependentUponFileName = FileUtilities.FixFilePath(dependentUponFileName);
-            Culture.ItemCultureInfo info = Culture.GetItemCultureInfo(embeddedFileName, dependentUponFileName);
+            Culture.ItemCultureInfo info = Culture.GetItemCultureInfo(embeddedFileName, dependentUponFileName, treatAsCultureNeutral);
 
             // If the item has a culture override, respect that. 
-            if (!String.IsNullOrEmpty(culture))
+            if (!string.IsNullOrEmpty(culture))
             {
                 info.culture = culture;
             }
@@ -126,7 +133,7 @@ namespace Microsoft.Build.Tasks
                     // Append the culture if there is one.        
                     if (!string.IsNullOrEmpty(info.culture))
                     {
-                        manifestName.Append(".").Append(info.culture);
+                        manifestName.Append('.').Append(info.culture);
                     }
                 }
             }
@@ -139,25 +146,30 @@ namespace Microsoft.Build.Tasks
                 // Empty namespaces are allowed.
                 if (!string.IsNullOrEmpty(rootNamespace))
                 {
-                    manifestName.Append(rootNamespace).Append(".");
+                    manifestName.Append(rootNamespace).Append('.');
                 }
 
-                // Replace spaces in the directory name with underscores. Needed for compatibility with Everett.
-                // Note that spaces in the file name itself are preserved.
-                string everettCompatibleDirectoryName = MakeValidEverettIdentifier(Path.GetDirectoryName(info.cultureNeutralFilename));
-
                 // only strip extension for .resx and .restext files
-
                 string sourceExtension = Path.GetExtension(info.cultureNeutralFilename);
+                string directoryName = Path.GetDirectoryName(info.cultureNeutralFilename);
+
+                // append the directory name
+                manifestName.Append(MakeValidEverettIdentifier(directoryName));
                 if (
-                        (0 == String.Compare(sourceExtension, ".resx", StringComparison.OrdinalIgnoreCase))
+                        string.Equals(sourceExtension, resxFileExtension, StringComparison.OrdinalIgnoreCase)
                         ||
-                        (0 == String.Compare(sourceExtension, ".restext", StringComparison.OrdinalIgnoreCase))
+                        string.Equals(sourceExtension, restextFileExtension, StringComparison.OrdinalIgnoreCase)
                         ||
-                        (0 == String.Compare(sourceExtension, ".resources", StringComparison.OrdinalIgnoreCase))
+                        string.Equals(sourceExtension, resourcesFileExtension, StringComparison.OrdinalIgnoreCase)
                     )
                 {
-                    manifestName.Append(Path.Combine(everettCompatibleDirectoryName, Path.GetFileNameWithoutExtension(info.cultureNeutralFilename)));
+                    if (!string.IsNullOrEmpty(directoryName))
+                    {
+                        manifestName.Append('.');
+                    }
+
+                    // append the file name without extension
+                    manifestName.Append(Path.GetFileNameWithoutExtension(info.cultureNeutralFilename));
 
                     // Replace all '\' with '.'
                     manifestName.Replace(Path.DirectorySeparatorChar, '.');
@@ -166,18 +178,23 @@ namespace Microsoft.Build.Tasks
                     // Append the culture if there is one.        
                     if (!string.IsNullOrEmpty(info.culture))
                     {
-                        manifestName.Append(".").Append(info.culture);
+                        manifestName.Append('.').Append(info.culture);
                     }
 
                     // If the original extension was .resources, add it back
-                    if (String.Equals(sourceExtension, ".resources", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(sourceExtension, resourcesFileExtension, StringComparison.OrdinalIgnoreCase))
                     {
                         manifestName.Append(sourceExtension);
                     }
                 }
                 else
                 {
-                    manifestName.Append(Path.Combine(everettCompatibleDirectoryName, Path.GetFileName(info.cultureNeutralFilename)));
+                    if (!string.IsNullOrEmpty(directoryName))
+                    {
+                        manifestName.Append('.');
+                    }
+
+                    manifestName.Append(Path.GetFileName(info.cultureNeutralFilename));
 
                     // Replace all '\' with '.'
                     manifestName.Replace(Path.DirectorySeparatorChar, '.');
@@ -206,7 +223,7 @@ namespace Microsoft.Build.Tasks
         protected override bool IsSourceFile(string fileName)
         {
             string extension = Path.GetExtension(fileName);
-            return (String.Compare(extension, ".cs", StringComparison.OrdinalIgnoreCase) == 0);
+            return string.Equals(extension, SourceFileExtension, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

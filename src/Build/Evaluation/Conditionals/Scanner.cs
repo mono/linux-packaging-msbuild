@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 
 using Microsoft.Build.Shared;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Evaluation
 {
@@ -26,7 +27,7 @@ namespace Microsoft.Build.Evaluation
         private string _expression;
         private int _parsePoint;
         private Token _lookahead;
-        private bool _errorState;
+        internal bool _errorState;
         private int _errorPosition;
         // What we found instead of what we were looking for
         private string _unexpectedlyFound = null;
@@ -134,7 +135,7 @@ namespace Microsoft.Build.Evaluation
             if (_errorState)
                 return false;
 
-            if (_lookahead != null && _lookahead.IsToken(Token.TokenType.EndOfInput))
+            if (_lookahead?.IsToken(Token.TokenType.EndOfInput) == true)
                 return true;
 
             SkipWhiteSpace();
@@ -283,8 +284,17 @@ namespace Microsoft.Build.Evaluation
                 return null;
             }
 
-            _parsePoint = ScanForPropertyExpressionEnd(_expression, _parsePoint++);
+            var result = ScanForPropertyExpressionEnd(_expression, _parsePoint++, out int indexResult);
+            if (!result)
+            {
+                _errorState = true;
+                _errorPosition = indexResult;
+                _errorResource = "IllFormedPropertySpaceInCondition";
+                _unexpectedlyFound = Convert.ToString(_expression[indexResult], CultureInfo.InvariantCulture);
+                return null;
+            }
 
+            _parsePoint = indexResult;
             // Maybe we need to generate an error for invalid characters in property/metadata name?
             // For now, just wait and let the property/metadata evaluation handle the error case.
             if (_parsePoint >= _expression.Length)
@@ -303,10 +313,17 @@ namespace Microsoft.Build.Evaluation
         /// <summary>
         /// Scan for the end of the property expression
         /// </summary>
-        private static int ScanForPropertyExpressionEnd(string expression, int index)
+        /// <param name="expression">property expression to parse</param>
+        /// <param name="index">current index to start from</param>
+        /// <param name="indexResult">If successful, the index corresponds to the end of the property expression.
+        /// In case of scan failure, it is the error position index.</param>
+        /// <returns>result indicating whether or not the scan was successful.</returns>
+        private static bool ScanForPropertyExpressionEnd(string expression, int index, out int indexResult)
         {
             int nestLevel = 0;
-
+            bool whitespaceFound = false;
+            bool nonIdentifierCharacterFound = false;
+            indexResult = -1;
             unsafe
             {
                 fixed (char* pchar = expression)
@@ -322,13 +339,37 @@ namespace Microsoft.Build.Evaluation
                         {
                             nestLevel--;
                         }
+                        else if (char.IsWhiteSpace(character))
+                        {
+                            whitespaceFound = true;
+                            indexResult = index;
+                        }
+                        else if (!XmlUtilities.IsValidSubsequentElementNameCharacter(character))
+                        {
+                            nonIdentifierCharacterFound = true;
+                        }
+
+                        if (character == '$' && index < expression.Length - 1 && pchar[index + 1] == '(')
+                        {
+                            if (!ScanForPropertyExpressionEnd(expression, index + 1, out index))
+                            {
+                                indexResult = index;
+                                return false;
+                            }
+                        }
 
                         // We have reached the end of the parenthesis nesting
                         // this should be the end of the property expression
                         // If it is not then the calling code will determine that
                         if (nestLevel == 0)
                         {
-                            return index;
+                            if (whitespaceFound && !nonIdentifierCharacterFound && ChangeWaves.AreFeaturesEnabled(ChangeWaves.Wave16_10))
+                            {
+                                return false;
+                            }
+
+                            indexResult = index;
+                            return true;
                         }
                         else
                         {
@@ -337,7 +378,8 @@ namespace Microsoft.Build.Evaluation
                     }
                 }
             }
-            return index;
+            indexResult = index;
+            return true;
         }
 
         /// <summary>
@@ -538,7 +580,7 @@ namespace Microsoft.Build.Evaluation
                     // If it's %(a.b) the name is just 'b'
                     if (_parsePoint + 3 < _expression.Length)
                     {
-                        name = _expression.Substring(_parsePoint + 2, (endOfName - _parsePoint - 2 + 1));
+                        name = _expression.Substring(_parsePoint + 2, endOfName - _parsePoint - 2 + 1);
                     }
 
                     if (!CheckForUnexpectedMetadata(name))
@@ -627,11 +669,11 @@ namespace Microsoft.Build.Evaluation
         private bool ParseSimpleStringOrFunction(int start)
         {
             SkipSimpleStringChars();
-            if (0 == string.Compare(_expression.Substring(start, _parsePoint - start), "and", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(_expression.Substring(start, _parsePoint - start), "and", StringComparison.OrdinalIgnoreCase))
             {
                 _lookahead = Token.And;
             }
-            else if (0 == string.Compare(_expression.Substring(start, _parsePoint - start), "or", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(_expression.Substring(start, _parsePoint - start), "or", StringComparison.OrdinalIgnoreCase))
             {
                 _lookahead = Token.Or;
             }

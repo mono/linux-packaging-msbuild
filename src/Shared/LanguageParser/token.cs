@@ -2,12 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
-using System.Text;
-using System.Resources;
-using System.Reflection;
-using System.Collections;
-using System.Globalization;
 
 namespace Microsoft.Build.Shared.LanguageParser
 {
@@ -59,7 +53,7 @@ namespace Microsoft.Build.Shared.LanguageParser
          */
         internal bool EqualsIgnoreCase(string compareTo)
         {
-            return (String.Compare(_innerText, compareTo, StringComparison.OrdinalIgnoreCase) == 0);
+            return String.Equals(_innerText, compareTo, StringComparison.OrdinalIgnoreCase);
         }
     }
 

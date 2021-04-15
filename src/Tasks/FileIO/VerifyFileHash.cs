@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.Tasks
@@ -44,7 +42,7 @@ namespace Microsoft.Build.Tasks
                 return false;
             }
 
-            if (!GetFileHash.SupportsAlgorithm(Algorithm))
+            if (!GetFileHash.SupportedAlgorithms.TryGetValue(Algorithm, out var algorithmFactory))
             {
                 Log.LogErrorWithCodeFromResources("FileHash.UnrecognizedHashAlgorithm", Algorithm);
                 return false;
@@ -56,7 +54,7 @@ namespace Microsoft.Build.Tasks
                 return false;
             }
 
-            byte[] hash = GetFileHash.ComputeHash(Algorithm, File);
+            byte[] hash = GetFileHash.ComputeHash(algorithmFactory, File);
             string actualHash = GetFileHash.EncodeHash(encoding, hash);
             var comparison = encoding == Tasks.HashEncoding.Hex
                 ? StringComparison.OrdinalIgnoreCase

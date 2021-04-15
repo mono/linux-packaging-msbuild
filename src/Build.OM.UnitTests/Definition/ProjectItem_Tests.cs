@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Engine.UnitTests;
 using Microsoft.Build.Engine.UnitTests.Globbing;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
@@ -402,6 +400,34 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 File.Delete(file);
                 FileUtilities.DeleteWithoutTrailingBackslash(subdirectory);
                 FileUtilities.DeleteWithoutTrailingBackslash(directory);
+            }
+        }
+
+        [Theory]
+        [InlineData(@"<i Condition='false' Include='\**\*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='/**/*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='/**\*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='\**/*.cs'/>")]
+        public void FullFileSystemScanGlobWithFalseCondition(string itemDefinition)
+        {
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(itemDefinition, allItems: false, ignoreCondition: true);
+            items.ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData(@"<i Condition='false' Include='somedir\**\*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='somedir/**/*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='somedir/**\*.cs'/>")]
+        [InlineData(@"<i Condition='false' Include='somedir\**/*.cs'/>")]
+        public void PartialFileSystemScanGlobWithFalseCondition(string itemDefinition)
+        {
+            using (TestEnvironment env = TestEnvironment.Create())
+            {
+                TransientTestFolder directory = env.CreateFolder(createFolder: true);
+                TransientTestFile file = env.CreateFile(directory, "a.cs", String.Empty);
+
+                IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(itemDefinition.Replace("somedir", directory.Path), allItems: false, ignoreCondition: true);
+                items.ShouldNotBeEmpty();
             }
         }
 
@@ -899,7 +925,6 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 var testFiles = env.CreateTestProjectWithFiles(projectContents, files,relativePathFromRootToProject);
                 ObjectModelHelpers.AssertItems(expectedInclude, new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection).Items.ToList());
             }
-
         }
 
         [Theory(Skip = "https://github.com/Microsoft/msbuild/issues/1576")]
@@ -920,7 +945,6 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 var testFiles = env.CreateTestProjectWithFiles(projectContents, files, relativePathFromRootToProject);
                 ObjectModelHelpers.AssertItems(expectedInclude, new Project(testFiles.ProjectFile, new Dictionary<string, string>(), MSBuildConstants.CurrentToolsVersion, projectCollection).Items.ToList());
             }
-
         }
 
         /// <summary>
@@ -958,7 +982,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         /// Expression like @(x) should not clone metadata, even if the item type is different.
         /// It's obvious that it shouldn't clone it if the item type is the same.
         /// If it is different, it doesn't clone it for performance; even if the item definition metadata
-        /// changes later (this is design time), the inheritors of that item definition type 
+        /// changes later (this is design time), the inheritors of that item definition type
         /// (even those that have subsequently been transformed to a different itemtype) should see
         /// the changes, by design.
         /// Just to make sure we don't change that behavior, we test it here.
@@ -1341,7 +1365,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         }
 
         /// <summary>
-        /// Metadata condition should work correctly with built-in metadata 
+        /// Metadata condition should work correctly with built-in metadata
         /// </summary>
         [Fact]
         public void BuiltInMetadataInMetadataCondition()
@@ -2079,7 +2103,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 );
 
             Assert.Equal(2, items.Count);
-            Assert.Equal(@"a.txt;b.cs", string.Join(";", items.Select(i => i.EvaluatedInclude))); ;
+            Assert.Equal(@"a.txt;b.cs", string.Join(";", items.Select(i => i.EvaluatedInclude))); 
         }
 
         [Fact]
@@ -2092,7 +2116,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 );
 
             Assert.Equal(2, items.Count);
-            Assert.Equal(@"a;c", string.Join(";", items.Select(i => i.EvaluatedInclude))); ;
+            Assert.Equal(@"a;c", string.Join(";", items.Select(i => i.EvaluatedInclude))); 
         }
 
         [Theory]
@@ -2111,7 +2135,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             Assert.Empty(items);
         }
-        
+
         [Fact]
         public void RemoveShouldRespectCondition()
         {
@@ -2142,6 +2166,305 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             var project = ObjectModelHelpers.CreateInMemoryProject(projectContents);
 
             Assert.Equal(@"a;b;c", string.Join(";", project.ItemsIgnoringCondition.Select(i => i.EvaluatedInclude)));
+        }
+
+        [Fact]
+        public void RemoveWithItemReferenceOnMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' M1='1' M2='a'/>
+                <I1 Include='b1' M1='2' M2='x'/>
+                <I1 Include='c1' M1='3' M2='y'/>
+                <I1 Include='d1' M1='4' M2='b'/>
+
+                <I2 Include='a2' M1='x' m2='c'/>
+                <I2 Include='b2' M1='2' m2='x'/>
+                <I2 Include='c2' M1='3' m2='Y'/>
+                <I2 Include='d2' M1='y' m2='d'/>
+
+                <I2 Remove='@(I1)' MatchOnMetadata='m1'/>");
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(content);
+            var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+            items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "d2" });
+
+            items.ElementAt(0).GetMetadataValue("M1").ShouldBe("x");
+            items.ElementAt(0).GetMetadataValue("M2").ShouldBe("c");
+            items.ElementAt(1).GetMetadataValue("M1").ShouldBe("y");
+            items.ElementAt(1).GetMetadataValue("M2").ShouldBe("d");
+        }
+
+        [Fact]
+        public void RemoveWithItemReferenceOnCaseInsensitiveMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' M1='1' M2='a'/>
+                <I1 Include='b1' M1='2' M2='x'/>
+                <I1 Include='c1' M1='3' M2='y'/>
+                <I1 Include='d1' M1='4' M2='b'/>
+
+                <I2 Include='a2' M1='x' m2='c'/>
+                <I2 Include='b2' M1='2' m2='x'/>
+                <I2 Include='c2' M1='3' m2='Y'/>
+                <I2 Include='d2' M1='y' m2='d'/>
+
+                <I2 Remove='@(I1)' MatchOnMetadata='m2' MatchOnMetadataOptions='CaseInsensitive' />");
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(content);
+            var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+            items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "d2" });
+
+            items.ElementAt(0).GetMetadataValue("M1").ShouldBe("x");
+            items.ElementAt(0).GetMetadataValue("M2").ShouldBe("c");
+            items.ElementAt(1).GetMetadataValue("M1").ShouldBe("y");
+            items.ElementAt(1).GetMetadataValue("M2").ShouldBe("d");
+        }
+
+        [Fact]
+        public void RemoveWithItemReferenceOnFilePathMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                $@"<I1 Include='a1' M1='foo.txt\' M2='a'/>
+                <I1 Include='b1' M1='foo/bar.cs' M2='x'/>
+                <I1 Include='c1' M1='foo/bar.vb' M2='y'/>
+                <I1 Include='d1' M1='foo\foo\foo' M2='b'/>
+                <I1 Include='e1' M1='a/b/../c/./d' M2='1'/>
+                <I1 Include='f1' M1='{ ObjectModelHelpers.TempProjectDir }\b\c' M2='6'/>
+
+                <I2 Include='a2' M1='FOO.TXT' m2='c'/>
+                <I2 Include='b2' M1='foo/bar.txt' m2='x'/>
+                <I2 Include='c2' M1='/foo/BAR.vb\\/' m2='Y'/>
+                <I2 Include='d2' M1='foo/foo/foo/' m2='d'/>
+                <I2 Include='e2' M1='foo/foo/foo/' m2='c'/>
+                <I2 Include='f2' M1='b\c' m2='e'/>
+                <I2 Include='g2' M1='b\d\c' m2='f'/>
+
+                <I2 Remove='@(I1)' MatchOnMetadata='m1' MatchOnMetadataOptions='PathLike' />");
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(content);
+            var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+            if (FileUtilities.GetIsFileSystemCaseSensitive())
+            {
+                items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "b2", "c2", "g2" });
+
+                items.ElementAt(0).GetMetadataValue("M1").ShouldBe(@"FOO.TXT");
+                items.ElementAt(0).GetMetadataValue("M2").ShouldBe("c");
+                items.ElementAt(1).GetMetadataValue("M1").ShouldBe("foo/bar.txt");
+                items.ElementAt(1).GetMetadataValue("M2").ShouldBe("x");
+                items.ElementAt(2).GetMetadataValue("M1").ShouldBe(@"/foo/BAR.vb\\/");
+                items.ElementAt(2).GetMetadataValue("M2").ShouldBe("Y");
+                items.ElementAt(3).GetMetadataValue("M1").ShouldBe(@"b\d\c");
+                items.ElementAt(3).GetMetadataValue("M2").ShouldBe("f");
+            }
+            else
+            {
+                items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "b2", "c2", "g2" });
+
+                items.ElementAt(0).GetMetadataValue("M1").ShouldBe("foo/bar.txt");
+                items.ElementAt(0).GetMetadataValue("M2").ShouldBe("x");
+                items.ElementAt(1).GetMetadataValue("M1").ShouldBe(@"/foo/BAR.vb\\/");
+                items.ElementAt(1).GetMetadataValue("M2").ShouldBe("Y");
+                items.ElementAt(2).GetMetadataValue("M1").ShouldBe(@"b\d\c");
+                items.ElementAt(2).GetMetadataValue("M2").ShouldBe("f");
+            }
+        }
+
+        [Fact]
+        public void RemoveWithItemReferenceOnIntrinsicMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                $@"<I1 Include='foo.txt' />
+                <I1 Include='bar.cs' />
+                <I1 Include='../bar.cs' />
+                <I1 Include='/foo/../bar.txt' />
+
+                <I2 Include='foo.txt' />
+                <I2 Include='../foo.txt' />
+                <I2 Include='/bar.txt' />
+                <I2 Include='/foo/bar.txt' />
+
+                <I2 Remove='@(I1)' MatchOnMetadata='FullPath' MatchOnMetadataOptions='PathLike' />");
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(content);
+            var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+            items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "../foo.txt", "/foo/bar.txt" });
+        }
+
+        [Fact]
+        public void RemoveWithPropertyReferenceInMatchOnMetadata()
+        {
+            string content =
+                @"<Project>
+                    <PropertyGroup>
+                        <Meta1>v0</Meta1>
+                    </PropertyGroup>
+                    <ItemGroup>
+                        <I1 Include='a1' v0='1' M2='a'/>
+                        <I1 Include='b1' v0='2' M2='x'/>
+                        <I1 Include='c1' v0='3' M2='y'/>
+                        <I1 Include='d1' v0='4' M2='b'/>
+
+                        <I2 Include='a2' v0='x' m2='c'/>
+                        <I2 Include='b2' v0='2' m2='x'/>
+                        <I2 Include='c2' v0='3' m2='Y'/>
+                        <I2 Include='d2' v0='y' m2='d'/>
+
+                        <I2 Remove='@(I1)' MatchOnMetadata='$(Meta1)' />
+                    </ItemGroup>
+                </Project>";
+
+            using (var env = TestEnvironment.Create())
+            {
+                var project = ObjectModelHelpers.CreateInMemoryProject(env.CreateProjectCollection().Collection, content, null, null);
+
+                var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+                items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "d2" });
+
+                items.ElementAt(0).GetMetadataValue("v0").ShouldBe("x");
+                items.ElementAt(0).GetMetadataValue("M2").ShouldBe("c");
+                items.ElementAt(1).GetMetadataValue("v0").ShouldBe("y");
+                items.ElementAt(1).GetMetadataValue("M2").ShouldBe("d");
+            }
+        }
+
+        [Fact]
+        public void RemoveWithItemReferenceInMatchOnMetadata()
+        {
+            string content =
+                @"<Project>
+                    <ItemGroup>
+                        <Meta2 Include='M2'/>
+
+                        <I1 Include='a1' v0='1' M2='a'/>
+                        <I1 Include='b1' v0='2' M2='x'/>
+                        <I1 Include='c1' v0='3' M2='y'/>
+                        <I1 Include='d1' v0='4' M2='b'/>
+
+                        <I2 Include='a2' v0='x' m2='c'/>
+                        <I2 Include='b2' v0='2' m2='x'/>
+                        <I2 Include='c2' v0='3' m2='Y'/>
+                        <I2 Include='d2' v0='y' m2='d'/>
+
+                        <I2 Remove='@(I1)' MatchOnMetadata='@(Meta2)' />
+                    </ItemGroup>
+                </Project>";
+
+            using (var env = TestEnvironment.Create())
+            {
+                var project = ObjectModelHelpers.CreateInMemoryProject(env.CreateProjectCollection().Collection, content, null, null);
+
+                var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+                items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "c2", "d2" });
+
+                items.ElementAt(0).GetMetadataValue("v0").ShouldBe("x");
+                items.ElementAt(0).GetMetadataValue("M2").ShouldBe("c");
+                items.ElementAt(1).GetMetadataValue("v0").ShouldBe("3");
+                items.ElementAt(1).GetMetadataValue("M2").ShouldBe("Y");
+                items.ElementAt(2).GetMetadataValue("v0").ShouldBe("y");
+                items.ElementAt(2).GetMetadataValue("M2").ShouldBe("d");
+            }
+        }
+
+        [Fact]
+        public void KeepWithItemReferenceOnNonmatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' a='1' b='a'/>
+                <I1 Include='b1' a='2' b='x'/>
+                <I1 Include='c1' a='3' b='y'/>
+                <I1 Include='d1' a='4' b='b'/>
+
+                <I2 Include='a2' c='x' d='c'/>
+                <I2 Include='b2' c='2' d='x'/>
+                <I2 Include='c2' c='3' d='Y'/>
+                <I2 Include='d2' c='y' d='d'/>
+
+                <I2 Remove='@(I1)' MatchOnMetadata='e' />");
+
+            var project = ObjectModelHelpers.CreateInMemoryProject(content);
+            var items = project.ItemsIgnoringCondition.Where(i => i.ItemType.Equals("I2"));
+
+            items.Select(i => i.EvaluatedInclude).ShouldBe(new[] { "a2", "b2", "c2", "d2" });
+
+            items.ElementAt(0).GetMetadataValue("c").ShouldBe("x");
+            items.ElementAt(1).GetMetadataValue("c").ShouldBe("2");
+            items.ElementAt(2).GetMetadataValue("c").ShouldBe("3");
+            items.ElementAt(3).GetMetadataValue("c").ShouldBe("y");
+            items.ElementAt(0).GetMetadataValue("d").ShouldBe("c");
+            items.ElementAt(1).GetMetadataValue("d").ShouldBe("x");
+            items.ElementAt(2).GetMetadataValue("d").ShouldBe("Y");
+            items.ElementAt(3).GetMetadataValue("d").ShouldBe("d");
+        }
+
+        [Fact]
+        public void FailWithMatchingMultipleMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' M1='1' M2='a'/>
+                <I1 Include='b1' M1='2' M2='x'/>
+                <I1 Include='c1' M1='3' M2='y'/>
+                <I1 Include='d1' M1='4' M2='b'/>
+
+                <I2 Include='a2' M1='x' m2='c'/>
+                <I2 Include='b2' M1='2' m2='x'/>
+                <I2 Include='c2' M1='3' m2='Y'/>
+                <I2 Include='d2' M1='y' m2='d'/>
+
+                <I2 Remove='@(I1)' MatchOnMetadata='M1;M2'/>");
+
+            Should.Throw<InvalidProjectFileException>(() => ObjectModelHelpers.CreateInMemoryProject(content))
+                .HelpKeyword.ShouldBe("MSBuild.OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem");
+        }
+
+        [Fact]
+        public void FailWithMultipleItemReferenceOnMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' M1='1' M2='a'/>
+                <I1 Include='b1' M1='2' M2='x'/>
+                <I1 Include='c1' M1='3' M2='y'/>
+                <I1 Include='d1' M1='4' M2='b'/>
+
+                <I2 Include='a2' M1='x' m2='c'/>
+                <I2 Include='b2' M1='2' m2='x'/>
+                <I2 Include='c2' M1='3' m2='Y'/>
+                <I2 Include='d2' M1='y' m2='d'/>
+
+                <I3 Include='a3' M1='1' m2='b'/>
+                <I3 Include='b3' M1='x' m2='a'/>
+                <I3 Include='c3' M1='3' m2='2'/>
+                <I3 Include='d3' M1='y' m2='d'/>
+
+                <I3 Remove='@(I1);@(I2)' MatchOnMetadata='M1' />");
+
+            Should.Throw<InvalidProjectFileException>(() => ObjectModelHelpers.CreateInMemoryProject(content))
+                .HelpKeyword.ShouldBe("MSBuild.OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem");
+        }
+
+        [Fact]
+        public void FailWithMetadataItemReferenceOnMatchingMetadata()
+        {
+            string content = ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(
+                @"<I1 Include='a1' M1='1' M2='a'/>
+                <I1 Include='b1' M1='2' M2='x'/>
+                <I1 Include='c1' M1='3' M2='y'/>
+                <I1 Include='d1' M1='4' M2='b'/>
+
+                <I2 Include='a2' M1='x' m2='c'/>
+                <I2 Include='b2' M1='2' m2='x'/>
+                <I2 Include='c2' M1='3' m2='Y'/>
+                <I2 Include='d2' M1='y' m2='d'/>
+
+                <I2 Remove='%(I1.M1)' MatchOnMetadata='M1' />");
+
+            Should.Throw<InvalidProjectFileException>(() => ObjectModelHelpers.CreateInMemoryProject(content))
+                .HelpKeyword.ShouldBe("MSBuild.OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem");
         }
 
         [Fact]
@@ -2195,7 +2518,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                               <i Update='c'>
                                   <m1 Condition='1 == 0'>from_false_metadata</m1>
                               </i>";
-            
+
             var project = ObjectModelHelpers.CreateInMemoryProject(ObjectModelHelpers.FormatProjectContentsWithItemGroupFragment(projectContents));
 
             var expectedInitial = new Dictionary<string, string>
@@ -2258,7 +2581,6 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             ObjectModelHelpers.AssertItemHasMetadata(expectedUpdateFromUnconditionedElement, itemsIgnoringCondition[3]);
         }
 
-
         [Fact]
         public void LastUpdateWins()
         {
@@ -2280,6 +2602,92 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             };
 
             ObjectModelHelpers.AssertItemHasMetadata(expectedUpdate, items[0]);
+        }
+
+        [Theory]
+        [InlineData("abc", "def", "abc")]
+        [InlineData("abc", "de*", "abc")]
+        [InlineData("a*c", "def", "abc")]
+        [InlineData("abc", "def", "*bc")]
+        [InlineData("abc", "d*f", "*bc")]
+        [InlineData("*c", "d*f", "*bc")]
+        [InlineData("a*", "d*", "abc")]
+        public void UpdatesProceedInOrder(string first, string second, string third)
+        {
+            string contents = $@"
+<i Include='abc'>
+    <m1>m1_contents</m1>
+</i>
+<j Include='def'>
+    <m1>m1_contents</m1>
+</j>
+<i Update='{first}'>
+    <m1>first</m1>
+</i>
+<j Update='{second}'>
+    <m1>second</m1>
+</j>
+<i Update='{third}'>
+    <m1>third</m1>
+</i>
+";
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(contents, allItems: true);
+            Dictionary<string, string> expectedUpdatei = new Dictionary<string, string>
+            {
+                {"m1", "third" }
+            };
+            Dictionary<string, string> expectedUpdatej = new Dictionary<string, string>
+            {
+                {"m1", "second" }
+            };
+
+            ObjectModelHelpers.AssertItemHasMetadata(expectedUpdatei, items[0]);
+            ObjectModelHelpers.AssertItemHasMetadata(expectedUpdatej, items[1]);
+        }
+
+        [Fact]
+        public void UpdatingIndividualItemsProceedsInOrder()
+        {
+            string contents = @"
+<i Include='a;b;c'>
+    <m1>m1_contents</m1>
+</i>
+<i Update='a'>
+    <m1>second</m1>
+</i>
+<i Update='b'>
+    <m1>third</m1>
+</i>
+<i Update='c'>
+    <m1>fourth</m1>
+</i>
+<afterFirst Include='@(i)' />
+<i Update='*'>
+    <m1>sixth</m1>
+</i>
+<afterSecond Include='@(i)' />
+<i Update='b'>
+    <m1>seventh</m1>
+</i>
+<afterThird Include='@(i)' />
+<i Update='c'>
+    <m1>eighth</m1>
+</i>
+<afterFourth Include='@(i)' />
+";
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(contents, allItems: true);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "second", items[3]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "third", items[4]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "fourth", items[5]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[6]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[7]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[8]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[9]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "seventh", items[10]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[11]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "sixth", items[12]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "seventh", items[13]);
+            ObjectModelHelpers.AssertItemHasMetadata("m1", "eighth", items[14]);
         }
 
         [Fact]
@@ -2452,6 +2860,17 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             ObjectModelHelpers.AssertItemHasMetadata(expectedMetadataC, items[4]);
         }
 
+        [Fact]
+        public void OptimizedRemoveOperationRespectsCondition()
+        {
+            string content = @"<TheItem Include=""InitialValue"" />
+                               <TheItem Remove=""@(TheItem)"" Condition=""false"" />
+                               <TheItem Include=""ReplacedValue"" Condition=""false"" /> ";
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content, true);
+
+            items[0].EvaluatedInclude.ShouldBe("InitialValue");
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -2498,7 +2917,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         public void UpdateFromReferencedItemShouldBeCaseInsensitive()
         {
             string content = @"
-                              <from Include='a'>
+                              <from Include='A'>
                                   <metadata>m1_contents</metadata>
                               </from>
 
@@ -2515,6 +2934,25 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             items[1].ItemType.ShouldBe("to");
             ObjectModelHelpers.AssertItemHasMetadata(expectedMetadataA, items[1]);
+        }
+
+        [Fact]
+        public void UpdateMetadataWithoutItemReferenceShouldBeCaseInsensitive()
+        {
+            string content = @"
+                              <to Include='a' />
+
+                              <to Update='A' m='m1_contents' />";
+
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content, true);
+
+            var expectedMetadataA = new Dictionary<string, string>
+            {
+                {"m", "m1_contents"},
+            };
+
+            items[0].ItemType.ShouldBe("to");
+            ObjectModelHelpers.AssertItemHasMetadata(expectedMetadataA, items[0]);
         }
 
         [Fact]
@@ -2855,7 +3293,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content);
 
-            Assert.Single(items);
+            items.ShouldHaveSingleItem();
 
             var expectedUpdated = new Dictionary<string, string>
             {
@@ -3041,7 +3479,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
         /// <summary>
         /// Get the item of type "i" using the item Xml fragment provided.
-        /// If there is more than one, fail. 
+        /// If there is more than one, fail.
         /// </summary>
         private static ProjectItem GetOneItemFromFragment(string fragment)
         {
@@ -3053,7 +3491,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
         /// <summary>
         /// Get the item of type "i" in the project provided.
-        /// If there is more than one, fail. 
+        /// If there is more than one, fail.
         /// </summary>
         private static ProjectItem GetOneItem(string content)
         {

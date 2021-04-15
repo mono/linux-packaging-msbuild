@@ -1,6 +1,6 @@
 <Project DefaultTargets="DeploySdksAndNuGets">
     <Import Project="$(MSBuildThisFileDirectory)\..\common.props" />
-    <Import Project="$(MSBuildThisFileDirectory)\..\DotnetBitsVersions.props" />
+    <Import Project="$(MSBuildThisFileDirectory)\..\DotNetBitsVersions.props" />
 
     <PropertyGroup>
         <HostOSName Condition="'$(HostOSName)' == ''">osx</HostOSName>
@@ -49,7 +49,7 @@
                     DependencyPackageName=Microsoft.DotNet.MSBuildSdkResolver;
                     DependencyPackageVersion=$(MicrosoftDotNetMSBuildSdkResolverVersion);
                     NuGetPackagesDir=$(NuGetPackagesDir);
-                    DotnetSdkResolverDir=$(MSBuildSdkResolverOutDir)
+                    DotNetSdkResolverDir=$(MSBuildSdkResolverOutDir)
                 </Properties>
             </NuGetsToBundle>
         </ItemGroup>
@@ -61,7 +61,10 @@
             Targets="Restore;Build"
             Properties="OutputDirectory=$(DotNetOverlayDirectory)\nuget-support\msbuild-bin"/>
         
-        <Exec Command="$(MSBuildThisFileDirectory)/../extract_and_copy_hostfxr.sh $(DotNetSdkVersionForLibHostFxr) $(MSBuildSdkResolverOutDir)" />
+        <!-- Ignoring the .so for linux, because it works on a smaller set of distributions -->
+        <Exec
+            Condition="'$([MSBuild]::IsOSPlatform(OSX))'"
+            Command="$(MSBuildThisFileDirectory)/../extract_and_copy_hostfxr.sh $(DotNetSdkVersionForLibHostFxr) $(MSBuildSdkResolverOutDir)" />
         <Exec Command="$(MSBuildThisFileDirectory)/../get_sdk_files.sh $(DotNetOverlayDirectory)\msbuild-bin" />
     </Target>
 </Project>

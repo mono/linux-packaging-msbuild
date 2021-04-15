@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if FEATURE_FILE_TRACKER
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +19,6 @@ using Xunit;
 using BackEndNativeMethods = Microsoft.Build.BackEnd.NativeMethods;
 
 // PLEASE NOTE: This is a UNICODE file as it contains UNICODE characters!
-#if FEATURE_FILE_TRACKER
 
 namespace Microsoft.Build.UnitTests.FileTracking
 {
@@ -900,8 +901,7 @@ class X
                                       ? tempPath
                                       : FileUtilities.EnsureTrailingSlash(
                                           NativeMethodsShared.GetLongFilePath(tempPath).ToUpperInvariant());
-            string testFile;
-
+            
             // We don't want to be including these as dependencies or outputs:
             // 1. Files under %USERPROFILE%\Application Data in XP and %USERPROFILE%\AppData\Roaming in Vista and later.
             // 2. Files under %USERPROFILE%\Local Settings\Application Data in XP and %USERPROFILE%\AppData\Local in Vista and later.
@@ -910,7 +910,7 @@ class X
             //    located under AppData, they would not be compacted out correctly otherwise).
 
             // This file's NOT excluded from dependencies
-            testFile = @"c:\foo\bar\baz";
+            string testFile = @"c:\foo\bar\baz";
             Assert.False(FileTracker.FileIsExcludedFromDependencies(testFile));
 
             // This file IS excluded from dependencies
@@ -1408,7 +1408,7 @@ class X
                 startInfo.hStdInput = BackEndNativeMethods.InvalidHandle;
                 startInfo.hStdOutput = BackEndNativeMethods.InvalidHandle;
                 startInfo.dwFlags = BackEndNativeMethods.STARTFUSESTDHANDLES;
-                dwCreationFlags = dwCreationFlags | BackEndNativeMethods.CREATENOWINDOW;
+                dwCreationFlags |= BackEndNativeMethods.CREATENOWINDOW;
 
                 BackEndNativeMethods.SECURITY_ATTRIBUTES pSec = new BackEndNativeMethods.SECURITY_ATTRIBUTES();
                 BackEndNativeMethods.SECURITY_ATTRIBUTES tSec = new BackEndNativeMethods.SECURITY_ATTRIBUTES();
@@ -2226,7 +2226,6 @@ class X
             {
                 FileUtilities.DeleteDirectoryNoThrow(testDir, true);
             }
-
         }
 
         [Fact(Skip = "Needs investigation")]
@@ -2393,7 +2392,7 @@ namespace ConsoleApplication4
                 startInfo.hStdInput = BackEndNativeMethods.InvalidHandle;
                 startInfo.hStdOutput = BackEndNativeMethods.InvalidHandle;
                 startInfo.dwFlags = BackEndNativeMethods.STARTFUSESTDHANDLES;
-                dwCreationFlags = dwCreationFlags | BackEndNativeMethods.CREATENOWINDOW;
+                dwCreationFlags |= BackEndNativeMethods.CREATENOWINDOW;
 
                 BackEndNativeMethods.SECURITY_ATTRIBUTES pSec = new BackEndNativeMethods.SECURITY_ATTRIBUTES();
                 BackEndNativeMethods.SECURITY_ATTRIBUTES tSec = new BackEndNativeMethods.SECURITY_ATTRIBUTES();

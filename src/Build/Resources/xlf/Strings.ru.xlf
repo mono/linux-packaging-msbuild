@@ -62,6 +62,22 @@
     %(RootDir) to an item-spec that's not a valid path would result in this error.
     LOCALIZATION: "{1}" is a localized message explaining the problem.</note>
       </trans-unit>
+      <trans-unit id="ChangeWave_InvalidFormat">
+        <source>MSB4271: Environment variable MSBuildDisableFeaturesFromVersion is set to an invalid format. Enabling all change wave versions. Entered value: {0}. Current Change Waves: {1}.</source>
+        <target state="translated">MSB4271: для переменной среды MSBuildDisableFeaturesFromVersion задан недопустимый формат. Идет включение всех версий волн изменений. Введенное значение: {0}. Текущие волны изменений: {1}.</target>
+        <note>{StrBegin="MSB4271: "}UE: Value should be of the format: xx.yy</note>
+      </trans-unit>
+      <trans-unit id="ChangeWave_OutOfRotation">
+        <source>MSB4272: Environment variable MSBuildDisableFeaturesFromVersion is set to a version that is out of rotation. Defaulting to Change Wave version: {0}. Entered value: {1}. Current Change Waves: {2}.</source>
+        <target state="translated">MSB4272: для переменной среды MSBuildDisableFeaturesFromVersion задана версия, которая больше не используется. Идет возвращение к версии волны изменений по умолчанию: {0}. Введенное значение: {1}. Текущие волны изменений: {2}.</target>
+        <note>{StrBegin="MSB4272: "}</note>
+      </trans-unit>
+      <trans-unit id="CircularDependency">
+        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}".</source>
+        <target state="translated">MSB4006: круговая зависимость между целями в графике зависимостей для цели "{0}".</target>
+        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
+    request a target to build itself (perhaps via a chain of other targets).</note>
+      </trans-unit>
       <trans-unit id="CircularDependencyInProjectGraph">
         <source>MSB4251: There is a circular dependency involving the following projects: {0}</source>
         <target state="translated">MSB4251: существует циклическая зависимость, включающая следующие проекты: {0}</target>
@@ -69,6 +85,12 @@
       {StrBegin="MSB4251:"} This message is shown when a graph build detects a target referenced in a circular manner -- a project cannot
       request a target to build itself (perhaps via a chain of other targets)
     </note>
+      </trans-unit>
+      <trans-unit id="CircularDependencyInTargetGraph">
+        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}". Since "{1}" has "{2}" dependence on "{3}", the circular is "{4}".</source>
+        <target state="translated">MSB4006: циклическая зависимость в целевой схеме зависимостей, включающей цель "{0}". Так как "{1}" имеет зависимость "{2}" в "{3}", циклическим является "{4}".</target>
+        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
+    request a target to build itself (perhaps via a chain of other targets).</note>
       </trans-unit>
       <trans-unit id="EmptyOutputCacheFile">
         <source>MSB4257: The specified output result cache file is empty.</source>
@@ -90,6 +112,11 @@
         <target state="translated">MSB4258: произошла ошибка при записи выходного файла кэша результатов в пути "{0}": {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="IllFormedPropertySpaceInCondition">
+        <source>MSB4259: Unexpected space at position "{1}" of condition "{0}". Did you forget to remove a space?</source>
+        <target state="translated">MSB4259: неожиданный пробел в позиции "{1}" условия "{0}". Вы забыли удалить пробел?</target>
+        <note>{StrBegin="MSB4259: "}</note>
+      </trans-unit>
       <trans-unit id="InputCacheFilesDoNotExist">
         <source>MSB4255: The following input result cache files do not exist: "{0}"</source>
         <target state="translated">MSB4255: следующие входные файлы кэша результатов не существуют: "{0}"</target>
@@ -98,6 +125,18 @@
       <trans-unit id="InvalidVersionFormat">
         <source>Version string was not in a correct format.</source>
         <target state="translated">Строка версии имела неверный формат.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsolatedContextDoesNotSupportFileSystem">
+        <source>"EvaluationContext objects created with SharingPolicy.Isolated do not support being passed an MSBuildFileSystemBase file system."</source>
+        <target state="translated">"Объекты EvaluationContext, созданные с помощью SharingPolicy.Isolated, не поддерживают передачу в файловую систему MSBuildFileSystemBase."</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LoadingProjectCachePlugin">
+        <source>"Loading the following project cache plugin:
+    {0}"</source>
+        <target state="translated">"Идет загрузка следующего подключаемого модуля кэша проектов:
+    {0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="LogLoggerVerbosity">
@@ -122,6 +161,21 @@
         <target state="translated">Не удается завершить операцию, так как ещё не был вызван BeginBuild.</target>
         <note />
       </trans-unit>
+      <trans-unit id="NoProjectCachePluginFoundInAssembly">
+        <source>MSB4270: No project cache plugins found in assembly "{0}". Expected one.</source>
+        <target state="translated">MSB4270: не найдены подключаемые модули кэша проектов в сборке "{0}". Должен быть указан один модуль.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotAllNodesDefineACacheItem">
+        <source>MSB4269: When any static graph node defines a project cache, all nodes must define the same project cache. The following project(s) do not contain a "{0}" item declaration: {1}</source>
+        <target state="translated">MSB4269: если для какого-либо узла статического графа определен кэш проектов, этот кэш должен быть указан для всех узлов. Следующие проекты не содержат объявление элемента "{0}": {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetAssemblyNotFound">
+        <source>A required NuGet assembly was not found. Expected Path: {0}</source>
+        <target state="translated">Не найдена обязательная сборка NuGet. Ожидаемый путь: {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NullReferenceFromProjectInstanceFactory">
         <source>MSB4253: A null reference was returned from a user-provided ProjectInstanceFactoryFunc callback. This is not allowed.</source>
         <target state="translated">MSB4253: ссылка со значением NULL была возвращена из предоставленного пользователем вызова ProjectInstanceFactoryFunc. Это недопустимо.</target>
@@ -130,9 +184,49 @@
       LOCALIZATION:  Do not localize the following words: ProjectInstanceFactoryFunc.
     </note>
       </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem">
+        <source>Only one item type may be referenced when removing with MatchOnMetadata.</source>
+        <target state="translated">При удалении с помощью MatchOnMetadata можно ссылаться только на один тип элемента.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataOnlyApplicableToRemoveItems">
+        <source>MatchOnMetadata only applies to Remove operations on items.</source>
+        <target state="translated">MatchOnMetadata применяется только к операциям удаления элементов.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataOptionsOnlyApplicableToItemsWithMatchOnMetadata">
+        <source>MatchOnMetadataOptions is valid only when removing items using MatchOnMetadata.</source>
+        <target state="translated">MatchOnMetadataOptions может использоваться только при удалении элементов с помощью MatchOnMetadata.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_NoMatchOnMetadataOutsideTargets">
+        <source>MatchOnMetadata cannot be used outside of a &lt;Target&gt;.</source>
+        <target state="translated">MatchOnMetadata не может использоваться вне &lt;Target&gt;.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OM_TargetNameNullOrEmpty">
         <source>Method {0} cannot be called with a collection containing null or empty target names.</source>
         <target state="translated">Метод {0} не может быть вызван с коллекцией, содержащей целевые имена, которые пусты или равны NULL.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OnlyOneCachePluginMustBeSpecified">
+        <source>MSB4265: A single project cache plugin must be specified but multiple where found: {0}</source>
+        <target state="translated">MSB4265: должен быть указан один подключаемый модуль кэша проектов, но найдено несколько: {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheInitializationFailed">
+        <source>MSB4266: Failed to initialize the project cache.</source>
+        <target state="translated">MSB4266: не удалось инициализировать кэш проектов.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheQueryFailed">
+        <source>MSB4267: The project cache failed while being queried for the following project: {0}. The cache is queried in parallel for multiple projects so this specific project might not be the cause.</source>
+        <target state="translated">MSB4267: произошел сбой кэша при выполнении запроса к следующему проекту: {0}. К кэшу выполнены параллельные запросы к нескольким проектам, поэтому, возможно, причина не в указанном проекте.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheShutdownFailed">
+        <source>MSB4268: The project cache failed to shut down properly.</source>
+        <target state="translated">MSB4268: не удалось правильно завершить работу кэша проектов.</target>
         <note />
       </trans-unit>
       <trans-unit id="ProjectGraphDoesNotSupportProjectReferenceWithToolset">
@@ -155,12 +249,22 @@
       LOCALIZATION: {0} and {1} are file paths
     </note>
       </trans-unit>
+      <trans-unit id="SolutionPathPropertyMustBeSetOnVSSubmissions">
+        <source>"MSB4264: Invalid $(SolutionPath) property: {0}"</source>
+        <target state="translated">"MSB4264: недопустимое свойство $(SolutionPath) — {0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StaticGraphAcceptsSingleSolutionEntryPoint">
-        <source>MSB4261: Static graph only accepts a solution as the only entry point. Multiple entry points detected: {0}</source>
-        <target state="translated">MSB4261: статический граф принимает решение только в качестве единственной точки входа. Обнаружено несколько точек входа: {0}</target>
+        <source>MSB4261: Multiple entry points with solutions detected: {0}. If static graph is loaded from a solution, that that solution must be the only entry point.</source>
+        <target state="translated">MSB4261: обнаружено несколько точек входа с решениями: {0}. Если статический граф загружен из решения, то это решение должно быть единственной точкой входа.</target>
         <note>
       LOCALIZATION: {0} is a semicolon delimited list of files
     </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphConstructionMetrics">
+        <source>"Static graph loaded in {0} seconds: {1} nodes, {2} edges"</source>
+        <target state="translated">"Статический граф загружен за {0} с: узлов — {1}, ребер — {2}."</target>
+        <note />
       </trans-unit>
       <trans-unit id="StaticGraphDoesNotSupportSlnReferences">
         <source>MSB4263: Project "{0}" has a reference to solution file "{1}". Referencing solutions is not supported in static graph.
@@ -183,6 +287,11 @@
         <note>
       LOCALIZATION: {0} is a file, {1} and {2} are semicolon delimited lists of messages
     </note>
+      </trans-unit>
+      <trans-unit id="TaskReturnedFalseButDidNotLogError">
+        <source>MSB4181: The "{0}" task returned false but did not log an error.</source>
+        <target state="translated">MSB4181: задача "{0}" возвратила значение false, но не зарегистрировала ошибку.</target>
+        <note>{StrBegin="MSB4181: "}</note>
       </trans-unit>
       <trans-unit id="UndeclaredMSBuildTasksNotAllowedInIsolatedGraphBuilds">
         <source>MSB4254: The MSBuild task is building project(s) "{0}" which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
@@ -360,12 +469,6 @@
         <target state="translated">MSB4114: уровень вложения элемента &lt;Choose&gt; не может превышать {0}.</target>
         <note>{StrBegin="MSB4114: "}UE: This message appears if the project file contains unreasonably nested Choose elements.
     LOCALIZATION: Do not localize "Choose" as it is an XML element name.</note>
-      </trans-unit>
-      <trans-unit id="CircularDependency">
-        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}".</source>
-        <target state="translated">MSB4006: круговая зависимость между целями в графике зависимостей для цели "{0}".</target>
-        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
-    request a target to build itself (perhaps via a chain of other targets).</note>
       </trans-unit>
       <trans-unit id="ComparisonOnNonNumericExpression">
         <source>MSB4086: A numeric comparison was attempted on "{1}" that evaluates to "{2}" instead of a number, in condition "{0}".</source>
@@ -575,7 +678,7 @@
       </trans-unit>
       <trans-unit id="FatalTaskError">
         <source>MSB4018: The "{0}" task failed unexpectedly.</source>
-        <target state="translated">MSB4018: непредвиденная ошибка при выполнении задачи {0}".</target>
+        <target state="translated">MSB4018: непредвиденная ошибка при выполнении задачи "{0}".</target>
         <note>{StrBegin="MSB4018: "}UE: This message is shown when a task terminates because of an unhandled exception. The cause is most likely a
     programming error in the task; however, it is also possible that the unhandled exception originated in the engine, and was
     surfaced through the task when the task called into the engine.</note>

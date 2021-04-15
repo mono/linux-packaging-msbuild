@@ -2,13 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Xml;
-using System.Collections;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Text;
-using System.Globalization;
 
 using Microsoft.Build.BuildEngine.Shared;
 
@@ -186,12 +182,11 @@ namespace Microsoft.Build.BuildEngine
             out Match itemVectorMatch
         )
         {
-            itemVectorMatch = null;
             BuildItemGroup items = null;
 
             itemVectorMatch = GetItemVectorMatches(itemVectorExpression);
 
-            if (itemVectorMatch != null && itemVectorMatch.Success)
+            if (itemVectorMatch?.Success == true)
             {
                 // The method above reports a match if there are any
                 // valid @(itemlist) references in the given expression.
@@ -236,7 +231,7 @@ namespace Microsoft.Build.BuildEngine
         {
             Match itemVectorMatch = GetItemVectorMatches(expression);
 
-            if (itemVectorMatch != null && itemVectorMatch.Success)
+            if (itemVectorMatch?.Success == true)
             {
                 return true;
             }
@@ -288,7 +283,7 @@ namespace Microsoft.Build.BuildEngine
             }
             else
             {
-                items = items.Clone((transform != null) /* deep clone on transforms because we're actually creating new items */);
+                items = items.Clone(transform != null /* deep clone on transforms because we're actually creating new items */);
             }
 
             if (transform != null)

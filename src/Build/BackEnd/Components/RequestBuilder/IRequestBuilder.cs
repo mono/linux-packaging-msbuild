@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Build.Execution;
 using NodeLoggingContext = Microsoft.Build.BackEnd.Logging.NodeLoggingContext;
 
@@ -28,6 +25,7 @@ namespace Microsoft.Build.BackEnd
     /// <param name="issuingEntry">The build request entry which is being blocked.</param>
     /// <param name="blockingGlobalRequestId">The request on which we are blocked.</param>
     /// <param name="blockingTarget">The target on which we are blocked.</param>
+    /// <param name="partialBuildResult">The partial build result on which we are blocked.</param>
     internal delegate void BuildRequestBlockedDelegate(BuildRequestEntry issuingEntry, int blockingGlobalRequestId, string blockingTarget, BuildResult partialBuildResult);
 
     /// <summary>

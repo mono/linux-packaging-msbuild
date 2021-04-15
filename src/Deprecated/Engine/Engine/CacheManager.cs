@@ -4,10 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-
-using Microsoft.Build.Framework;
-using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
 {
@@ -75,7 +71,7 @@ namespace Microsoft.Build.BuildEngine
                     {
                         for (int i = 0; i < scopesByName.Count; i++)
                         {
-                            if (scopesByName[i].ScopeProperties.IsEquivalent(scopeProperties) && (String.Compare(scopeToolsVersion, scopesByName[i].ScopeToolsVersion, StringComparison.OrdinalIgnoreCase) == 0))
+                            if (scopesByName[i].ScopeProperties.IsEquivalent(scopeProperties) && (String.Equals(scopeToolsVersion, scopesByName[i].ScopeToolsVersion, StringComparison.OrdinalIgnoreCase)))
                             {
                                 cacheScope = scopesByName[i];
                                 break;
@@ -216,7 +212,7 @@ namespace Microsoft.Build.BuildEngine
                     {
                         for (int i = 0; i < scopesByName.Count; i++)
                         {
-                            if (scopesByName[i].ScopeProperties.IsEquivalent(buildPropertyGroup) && (String.Compare(toolsVersion, scopesByName[i].ScopeToolsVersion, StringComparison.OrdinalIgnoreCase) == 0))
+                            if (scopesByName[i].ScopeProperties.IsEquivalent(buildPropertyGroup) && (String.Equals(toolsVersion, scopesByName[i].ScopeToolsVersion, StringComparison.OrdinalIgnoreCase)))
                             {
                                 scopesByName.RemoveAt(i);
                                 break;

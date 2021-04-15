@@ -2,16 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Microsoft.Build.Construction;
-    using Microsoft.Build.ObjectModelRemoting;
     using Microsoft.Build.Evaluation;
     using Xunit;
-    using System.Runtime.ExceptionServices;
-    using System.Xml.Schema;
-    using System.Collections;
     using Microsoft.Build.Framework;
 
     internal class ProjectPair : LinkPair<Project>
@@ -241,11 +235,10 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
             if (view == null && real == null) return;
             Assert.NotNull(view);
             Assert.NotNull(real);
-            
+
             Assert.Equal(real.Name, view.Name);
             Assert.Equal(real.Version, view.Version);
             Assert.Equal(real.MinimumVersion, view.MinimumVersion);
-
         }
 
         private static void Verify(SdkResult view, SdkResult real, ValidationContext context = null)
@@ -291,7 +284,7 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
             if (pair == null) return;
             var real = pair.Real;
             var view = pair.View;
-            context = context ?? new ValidationContext();
+            context ??= new ValidationContext();
             context.Pair = pair;
 
 
@@ -321,7 +314,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
                 Verify(view.ImportsIncludingDuplicates, real.ImportsIncludingDuplicates, Verify, context);
             }
 
-            
             Verify(view.AllEvaluatedProperties, real.AllEvaluatedProperties, Verify, context);
             Verify(view.AllEvaluatedItemDefinitionMetadata, real.AllEvaluatedItemDefinitionMetadata, Verify, context);
             Verify(view.AllEvaluatedItems, real.AllEvaluatedItems, Verify, context);

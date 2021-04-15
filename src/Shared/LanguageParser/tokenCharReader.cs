@@ -3,11 +3,6 @@
 
 using System;
 using System.IO;
-using System.Text;
-using System.Resources;
-using System.Reflection;
-using System.Collections;
-using System.Globalization;
 
 namespace Microsoft.Build.Shared.LanguageParser
 {
@@ -122,7 +117,6 @@ namespace Microsoft.Build.Shared.LanguageParser
             get { return _sources.IsPastEnd(_position); }
         }
 
-
         /*
          * Method:  GetCurrentMatchedString
          * 
@@ -158,17 +152,16 @@ namespace Microsoft.Build.Shared.LanguageParser
                 return false;
             }
 
-
             string compare = _sources.Substring(_position, match.Length);
 
             if
             (
-                String.Compare
+                String.Equals
                 (
                     match,
                     compare,
                     (ignoreCase /* ignore case */) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
-                ) == 0
+                )
             )
             {
                 Skip(match.Length);

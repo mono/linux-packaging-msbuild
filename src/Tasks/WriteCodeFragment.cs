@@ -10,7 +10,6 @@ using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Security;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -102,7 +101,7 @@ namespace Microsoft.Build.Tasks
                     OutputFile = new TaskItem(Path.Combine(OutputDirectory.ItemSpec, OutputFile.ItemSpec));
                 }
 
-                OutputFile = OutputFile ?? new TaskItem(FileUtilities.GetTemporaryFile(OutputDirectory.ItemSpec, extension));
+                OutputFile ??= new TaskItem(FileUtilities.GetTemporaryFile(OutputDirectory.ItemSpec, extension));
 
                 File.WriteAllText(OutputFile.ItemSpec, code); // Overwrites file if it already exists (and can be overwritten)
             }

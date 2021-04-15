@@ -8,6 +8,7 @@ using System.IO;
 using System.Text;
 using System.Globalization;
 using System.Security;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 using ErrorUtilities = Microsoft.Build.Shared.ErrorUtilities;
@@ -17,6 +18,8 @@ using BuildEventFileInfo = Microsoft.Build.Shared.BuildEventFileInfo;
 using ResourceUtilities = Microsoft.Build.Shared.ResourceUtilities;
 using ExceptionUtilities = Microsoft.Build.Shared.ExceptionHandling;
 using System.Collections.ObjectModel;
+using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.Construction
 {
@@ -78,13 +81,17 @@ namespace Microsoft.Build.Construction
         private const string fsProjectGuid = "{F2A71F9B-5D33-465A-A702-920D77279786}";
         private const string dbProjectGuid = "{C8D11400-126E-41CD-887F-60BD40844F9E}";
         private const string wdProjectGuid = "{2CFEAB61-6A3B-4EB8-B523-560B4BEEF521}";
+        private const string synProjectGuid = "{BBD0F5D1-1CC4-42FD-BA4C-A96779C64378}";
         private const string webProjectGuid = "{E24C65DC-7377-472B-9ABA-BC803B73C61A}";
         private const string solutionFolderGuid = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
         private const string sharedProjectGuid = "{D954291E-2A0B-460D-934E-DC6B0785DB48}";
 
+        private const char CommentStartChar = '#';
         #endregion
         #region Member data
         private string _solutionFile;                 // Could be absolute or relative path to the .SLN file.
+        private string _solutionFilterFile;          // Could be absolute or relative path to the .SLNF file.
+        private HashSet<string> _solutionFilter;     // The project files to include in loading the solution.
         private bool _parsingForConversionOnly;      // Are we parsing this solution to get project reference data during
                                                      // conversion, or in preparation for actually building the solution?
 
@@ -195,13 +202,26 @@ namespace Microsoft.Build.Construction
             {
                 // Should already be canonicalized to a full path
                 ErrorUtilities.VerifyThrowInternalRooted(value);
-                _solutionFile = value;
+                if (FileUtilities.IsSolutionFilterFilename(value))
+                {
+                    ParseSolutionFilter(value);
+                }
+                else
+                {
+                    _solutionFile = value;
+                    _solutionFilter = null;
+
+                    SolutionFileDirectory = Path.GetDirectoryName(_solutionFile);
+                }
             }
         }
 
-        internal string SolutionFileDirectory { get;
+        internal string SolutionFileDirectory
+        {
+            get;
             // This setter is only used by the unit tests
-            set; }
+            set;
+        }
 
         /// <summary>
         /// For unit-testing only.
@@ -217,6 +237,11 @@ namespace Microsoft.Build.Construction
         #endregion
 
         #region Methods
+
+        internal bool ProjectShouldBuild(string projectFile)
+        {
+            return _solutionFilter?.Contains(FileUtilities.FixFilePath(projectFile)) != false;
+        }
 
         /// <summary>
         /// This method takes a path to a solution file, parses the projects and project dependencies
@@ -238,7 +263,7 @@ namespace Microsoft.Build.Construction
         /// <returns>Whether the project is expected to be buildable</returns>
         internal static bool IsBuildableProject(ProjectInSolution project)
         {
-            return (project.ProjectType != SolutionProjectType.SolutionFolder && project.ProjectConfigurations.Count > 0);
+            return project.ProjectType != SolutionProjectType.SolutionFolder && project.ProjectConfigurations.Count > 0;
         }
 
         /// <summary>
@@ -286,9 +311,8 @@ namespace Microsoft.Build.Construction
 
                         if (!System.Version.TryParse(fileVersionFromHeader, out Version version))
                         {
-                            ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile
+                            ProjectFileErrorUtilities.ThrowInvalidProjectFile
                                 (
-                                    false /* just throw the exception */,
                                     "SubCategoryForSolutionParsingErrors",
                                     new BuildEventFileInfo(solutionFile),
                                     "SolutionParseVersionMismatchError",
@@ -334,13 +358,76 @@ namespace Microsoft.Build.Construction
             }
 
             // Didn't find the header in lines 1-4, so the solution file is invalid.
-            ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile
+            ProjectFileErrorUtilities.ThrowInvalidProjectFile
                 (
-                    false /* just throw the exception */,
                     "SubCategoryForSolutionParsingErrors",
                     new BuildEventFileInfo(solutionFile),
                     "SolutionParseNoHeaderError"
                  );
+        }
+
+        private void ParseSolutionFilter(string solutionFilterFile)
+        {
+            _solutionFilterFile = solutionFilterFile;
+            try
+            {
+                _solutionFile = ParseSolutionFromSolutionFilter(solutionFilterFile, out JsonElement solution);
+                if (!FileSystems.Default.FileExists(_solutionFile))
+                {
+                    ProjectFileErrorUtilities.ThrowInvalidProjectFile
+                    (
+                        "SubCategoryForSolutionParsingErrors",
+                        new BuildEventFileInfo(_solutionFile),
+                        "SolutionFilterMissingSolutionError",
+                        solutionFilterFile,
+                        _solutionFile
+                    );
+                }
+
+                SolutionFileDirectory = Path.GetDirectoryName(_solutionFile);
+
+                _solutionFilter = new HashSet<string>(NativeMethodsShared.OSUsesCaseSensitivePaths ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+                foreach (JsonElement project in solution.GetProperty("projects").EnumerateArray())
+                {
+                    _solutionFilter.Add(FileUtilities.FixFilePath(project.GetString()));
+                }
+            }
+            catch (Exception e) when (e is JsonException || e is KeyNotFoundException || e is InvalidOperationException)
+            {
+                ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile
+                (
+                    false, /* Just throw the exception */
+                    "SubCategoryForSolutionParsingErrors",
+                    new BuildEventFileInfo(solutionFilterFile),
+                    e,
+                    "SolutionFilterJsonParsingError",
+                    solutionFilterFile
+                );
+            }
+        }
+
+        internal static string ParseSolutionFromSolutionFilter(string solutionFilterFile, out JsonElement solution)
+        {
+            try
+            {
+                JsonDocument text = JsonDocument.Parse(File.ReadAllText(solutionFilterFile));
+                solution = text.RootElement.GetProperty("solution");
+                return FileUtilities.GetFullPath(solution.GetProperty("path").GetString(), Path.GetDirectoryName(solutionFilterFile));
+            }
+            catch (Exception e) when (e is JsonException || e is KeyNotFoundException || e is InvalidOperationException)
+            {
+                ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile
+                (
+                    false, /* Just throw the exception */
+                    "SubCategoryForSolutionParsingErrors",
+                    new BuildEventFileInfo(solutionFilterFile),
+                    e,
+                    "SolutionFilterJsonParsingError",
+                    solutionFilterFile
+                );
+            }
+            solution = new JsonElement();
+            return string.Empty;
         }
 
         /// <summary>
@@ -362,8 +449,7 @@ namespace Microsoft.Build.Construction
             string line = SolutionReader.ReadLine();
             _currentLineNumber++;
 
-            line = line?.Trim();
-            return line;
+            return line?.Trim();
         }
 
         /// <summary>
@@ -394,8 +480,6 @@ namespace Microsoft.Build.Construction
             {
                 // Open the file
                 fileStream = File.OpenRead(_solutionFile);
-                // Store the directory of the file as the current directory may change while we are processes the file
-                SolutionFileDirectory = Path.GetDirectoryName(_solutionFile);
                 SolutionReader = new StreamReader(fileStream, Encoding.GetEncoding(0)); // HIGHCHAR: If solution files have no byte-order marks, then assume ANSI rather than ASCII.
                 ParseSolution();
             }
@@ -461,13 +545,38 @@ namespace Microsoft.Build.Construction
                 }
             }
 
+            if (_solutionFilter != null)
+            {
+                HashSet<string> projectPaths = new HashSet<string>(_projectsInOrder.Count, NativeMethodsShared.OSUsesCaseSensitivePaths ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+                foreach (ProjectInSolution project in _projectsInOrder)
+                {
+                    projectPaths.Add(FileUtilities.FixFilePath(project.RelativePath));
+                }
+                foreach (string project in _solutionFilter)
+                {
+                    if (!projectPaths.Contains(project))
+                    {
+                        ProjectFileErrorUtilities.ThrowInvalidProjectFile
+                        (
+                            "SubCategoryForSolutionParsingErrors",
+                            new BuildEventFileInfo(FileUtilities.GetFullPath(project, Path.GetDirectoryName(_solutionFile))),
+                            "SolutionFilterFilterContainsProjectNotInSolution",
+                            _solutionFilterFile,
+                            project,
+                            _solutionFile
+                        );
+                    }
+                }
+            }
+
             if (rawProjectConfigurationsEntries != null)
             {
                 ProcessProjectConfigurationSection(rawProjectConfigurationsEntries);
             }
 
             // Cache the unique name of each project, and check that we don't have any duplicates.
-            var projectsByUniqueName = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var projectsByUniqueName = new Dictionary<string, ProjectInSolution>(StringComparer.OrdinalIgnoreCase);
+            var projectsByOriginalName = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (ProjectInSolution proj in _projectsInOrder)
             {
@@ -502,15 +611,47 @@ namespace Microsoft.Build.Construction
                     }
                 }
 
-                // Update the hash table with this unique name
-                bool didntAlreadyExist = projectsByUniqueName.Add(uniqueName);
+                // Detect collision caused by unique name's normalization
+                if (projectsByUniqueName.ContainsKey(uniqueName))
+                {
+                    // Did normalization occur in the current project?
+                    if (uniqueName != proj.ProjectName)
+                    {
+                        // Generates a new unique name
+                        string tempUniqueName = $"{uniqueName}_{proj.GetProjectGuidWithoutCurlyBrackets()}";
+                        proj.UpdateUniqueProjectName(tempUniqueName);
+                        uniqueName = tempUniqueName;
+                    }
+                    // Did normalization occur in a previous project?
+                    else if (uniqueName != projectsByUniqueName[uniqueName].ProjectName)
+                    {
+                        var projTemp = projectsByUniqueName[uniqueName];
+
+                        // Generates a new unique name
+                        string tempUniqueName = $"{uniqueName}_{projTemp.GetProjectGuidWithoutCurlyBrackets()}";
+                        projTemp.UpdateUniqueProjectName(tempUniqueName);
+
+                        projectsByUniqueName.Remove(uniqueName);
+                        projectsByUniqueName.Add(tempUniqueName, projTemp);
+                    }
+                }
+
+                bool uniqueNameExists = projectsByUniqueName.ContainsKey(uniqueName);
+
+                // Add the unique name (if it does not exist) to the hash table 
+                if (!uniqueNameExists)
+                {
+                    projectsByUniqueName.Add(uniqueName, proj);
+                }
+
+                bool didntAlreadyExist = !uniqueNameExists && projectsByOriginalName.Add(proj.GetOriginalProjectName());
+
                 ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(
                     didntAlreadyExist,
                     "SubCategoryForSolutionParsingErrors",
                     new BuildEventFileInfo(FullPath),
                     "SolutionParseDuplicateProject",
-                    uniqueName);
-
+                    uniqueNameExists ? uniqueName : proj.ProjectName);
             }
         } // ParseSolutionFile()
 
@@ -658,7 +799,7 @@ namespace Microsoft.Build.Construction
                     // We have a ProjectDependencies section.  Each subsequent line should identify
                     // a dependency.
                     line = ReadLine();
-                    while ((line != null) && (!line.StartsWith("EndProjectSection", StringComparison.Ordinal)))
+                    while ((line?.StartsWith("EndProjectSection", StringComparison.Ordinal) == false))
                     {
                         // This should be a dependency.  The GUID identifying the parent project should
                         // be both the property name and the property value.
@@ -678,7 +819,7 @@ namespace Microsoft.Build.Construction
                     // projects, and contains properties that we'll need in order to call the 
                     // AspNetCompiler task.
                     line = ReadLine();
-                    while ((line != null) && (!line.StartsWith("EndProjectSection", StringComparison.Ordinal)))
+                    while ((line?.StartsWith("EndProjectSection", StringComparison.Ordinal) == false))
                     {
                         Match match = s_crackPropertyLine.Value.Match(line);
                         ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(match.Success, "SubCategoryForSolutionParsingErrors",
@@ -691,6 +832,19 @@ namespace Microsoft.Build.Construction
 
                         line = ReadLine();
                     }
+                }
+                else if (line.StartsWith("Project(", StringComparison.Ordinal))
+                {
+                    // Another Project spotted instead of EndProject for the current one - solution file is malformed
+                    string warning = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out _, out _, "Shared.InvalidProjectFile",
+                        _solutionFile, proj.ProjectName);
+                    SolutionParserWarnings.Add(warning);
+
+                    // The line with new project is already read and we can't go one line back - we have no choice but to recursively parse spotted project
+                    ParseProject(line);
+
+                    // We're not waiting for the EndProject for malformed project, so we carry on
+                    break;
                 }
             }
 
@@ -1032,7 +1186,7 @@ namespace Microsoft.Build.Construction
             else
             {
                 // ProjectReferences = "{FD705688-88D1-4C22-9BFF-86235D89C2FC}|CSClassLibrary1.dll;{F0726D09-042B-4A7A-8A01-6BED2422BD5D}|VCClassLibrary1.dll;" 
-                if (string.Compare(propertyName, "ProjectReferences", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Equals(propertyName, "ProjectReferences", StringComparison.OrdinalIgnoreCase))
                 {
                     string[] projectReferenceEntries = propertyValue.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -1060,7 +1214,7 @@ namespace Microsoft.Build.Construction
                         }
                     }
                 }
-                else if (String.Compare(propertyName, "TargetFrameworkMoniker", StringComparison.OrdinalIgnoreCase) == 0)
+                else if (String.Equals(propertyName, "TargetFrameworkMoniker", StringComparison.OrdinalIgnoreCase))
                 {
                     //Website project need to back support 3.5 msbuild parser for the Blend (it is not move to .Net4.0 yet.)
                     //However, 3.5 version of Solution parser can't handle a equal sign in the value.  
@@ -1124,29 +1278,30 @@ namespace Microsoft.Build.Construction
             ValidateProjectRelativePath(proj);
 
             // Figure out what type of project this is.
-            if ((String.Compare(projectTypeGuid, vbProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, csProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, cpsProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, cpsCsProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, cpsVbProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, cpsFsProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, fsProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, dbProjectGuid, StringComparison.OrdinalIgnoreCase) == 0) ||
-                (String.Compare(projectTypeGuid, vjProjectGuid, StringComparison.OrdinalIgnoreCase) == 0))
+            if ((String.Equals(projectTypeGuid, vbProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, csProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, cpsProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, cpsCsProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, cpsVbProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, cpsFsProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, fsProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, dbProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, vjProjectGuid, StringComparison.OrdinalIgnoreCase)) ||
+                (String.Equals(projectTypeGuid, synProjectGuid, StringComparison.OrdinalIgnoreCase)))
             {
                 proj.ProjectType = SolutionProjectType.KnownToBeMSBuildFormat;
             }
-            else if (String.Compare(projectTypeGuid, sharedProjectGuid, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(projectTypeGuid, sharedProjectGuid, StringComparison.OrdinalIgnoreCase))
             {
                 proj.ProjectType = SolutionProjectType.SharedProject;
             }
-            else if (String.Compare(projectTypeGuid, solutionFolderGuid, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(projectTypeGuid, solutionFolderGuid, StringComparison.OrdinalIgnoreCase))
             {
                 proj.ProjectType = SolutionProjectType.SolutionFolder;
             }
             // MSBuild format VC projects have the same project type guid as old style VC projects.
             // If it's not an old-style VC project, we'll assume it's MSBuild format
-            else if (String.Compare(projectTypeGuid, vcProjectGuid, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(projectTypeGuid, vcProjectGuid, StringComparison.OrdinalIgnoreCase))
             {
                 if (String.Equals(proj.Extension, ".vcproj", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1162,12 +1317,12 @@ namespace Microsoft.Build.Construction
                     proj.ProjectType = SolutionProjectType.KnownToBeMSBuildFormat;
                 }
             }
-            else if (String.Compare(projectTypeGuid, webProjectGuid, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(projectTypeGuid, webProjectGuid, StringComparison.OrdinalIgnoreCase))
             {
                 proj.ProjectType = SolutionProjectType.WebProject;
                 ContainsWebProjects = true;
             }
-            else if (String.Compare(projectTypeGuid, wdProjectGuid, StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(projectTypeGuid, wdProjectGuid, StringComparison.OrdinalIgnoreCase))
             {
                 proj.ProjectType = SolutionProjectType.WebDeploymentProject;
                 ContainsWebDeploymentProjects = true;
@@ -1192,7 +1347,8 @@ namespace Microsoft.Build.Construction
                     break;
                 }
 
-                if (String.IsNullOrWhiteSpace(str))
+                // Ignore empty line or comment
+                if (String.IsNullOrWhiteSpace(str) || str[0] == CommentStartChar)
                 {
                     continue;
                 }
@@ -1239,7 +1395,8 @@ namespace Microsoft.Build.Construction
                     break;
                 }
 
-                if (String.IsNullOrWhiteSpace(str))
+                // Ignore empty line or comment
+                if (String.IsNullOrWhiteSpace(str) || str[0] == CommentStartChar)
                 {
                     continue;
                 }
@@ -1253,7 +1410,7 @@ namespace Microsoft.Build.Construction
                 string fullConfigurationName = configurationNames[0].Trim();
 
                 //Fixing bug 555577: Solution file can have description information, in which case we ignore.
-                if (0 == String.Compare(fullConfigurationName, "DESCRIPTION", StringComparison.OrdinalIgnoreCase))
+                if (String.Equals(fullConfigurationName, "DESCRIPTION", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -1304,7 +1461,8 @@ namespace Microsoft.Build.Construction
                     break;
                 }
 
-                if (String.IsNullOrWhiteSpace(str))
+                // Ignore empty line or comment
+                if (String.IsNullOrWhiteSpace(str) || str[0] == CommentStartChar)
                 {
                     continue;
                 }
@@ -1394,7 +1552,7 @@ namespace Microsoft.Build.Construction
             // Pick the Debug configuration as default if present
             foreach (SolutionConfigurationInSolution solutionConfiguration in SolutionConfigurations)
             {
-                if (string.Compare(solutionConfiguration.ConfigurationName, "Debug", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Equals(solutionConfiguration.ConfigurationName, "Debug", StringComparison.OrdinalIgnoreCase))
                 {
                     _defaultConfigurationName = solutionConfiguration.ConfigurationName;
                     break;
@@ -1427,13 +1585,13 @@ namespace Microsoft.Build.Construction
             // Pick the Mixed Platforms platform as default if present
             foreach (SolutionConfigurationInSolution solutionConfiguration in SolutionConfigurations)
             {
-                if (string.Compare(solutionConfiguration.PlatformName, "Mixed Platforms", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Equals(solutionConfiguration.PlatformName, "Mixed Platforms", StringComparison.OrdinalIgnoreCase))
                 {
                     _defaultPlatformName = solutionConfiguration.PlatformName;
                     break;
                 }
                 // We would like this to be chosen if Mixed platforms does not exist.
-                else if (string.Compare(solutionConfiguration.PlatformName, "Any CPU", StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Equals(solutionConfiguration.PlatformName, "Any CPU", StringComparison.OrdinalIgnoreCase))
                 {
                     _defaultPlatformName = solutionConfiguration.PlatformName;
                 }

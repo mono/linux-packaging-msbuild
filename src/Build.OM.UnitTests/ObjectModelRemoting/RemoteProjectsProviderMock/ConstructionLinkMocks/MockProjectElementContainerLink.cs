@@ -3,17 +3,9 @@
 
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-    using System;
     using System.Collections.Generic;
-    using System.IO;
     using Microsoft.Build.Construction;
-    using Microsoft.Build.Evaluation;
-    using Microsoft.Build.Evaluation.Context;
-    using Microsoft.Build.Execution;
     using Microsoft.Build.ObjectModelRemoting;
-    using Microsoft.Build.Framework;
-    using Microsoft.Build.Logging;
-    using System.Diagnostics;
 
     internal abstract class MockProjectElementContainerLinkRemoter : MockProjectElementLinkRemoter
     {
@@ -101,5 +93,4 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         public override void RemoveChild(ProjectElement child) => CImpl.RemoveChild(child);
         #endregion
     }
-
 }

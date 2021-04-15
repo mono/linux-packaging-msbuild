@@ -7,8 +7,6 @@ using System.Diagnostics;
 using Microsoft.Build.ObjectModelRemoting;
 using Microsoft.Build.Shared;
 
-using ProjectXmlUtilities = Microsoft.Build.Internal.ProjectXmlUtilities;
-
 namespace Microsoft.Build.Construction
 {
     /// <summary>
@@ -140,7 +138,7 @@ namespace Microsoft.Build.Construction
         {
             ErrorUtilities.VerifyThrowArgument
                 (
-                (String.IsNullOrEmpty(itemType) ^ String.IsNullOrEmpty(propertyName)),
+                String.IsNullOrEmpty(itemType) ^ String.IsNullOrEmpty(propertyName),
                 "OM_EitherAttributeButNotBoth",
                 XMakeElements.output,
                 XMakeAttributes.propertyName,

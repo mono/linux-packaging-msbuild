@@ -4,7 +4,6 @@
 using System;
 using System.Text;
 using System.Reflection;
-using System.Collections;
 using System.Globalization;
 using System.Diagnostics;
 
@@ -123,7 +122,6 @@ namespace Microsoft.Build.BuildEngine.Shared
             }
         }
 
-
         /// <summary>
         /// The assembly's version number.
         /// </summary>
@@ -226,7 +224,6 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <returns></returns>
         internal int CompareTo(AssemblyNameExtension that)
         {
-
             // Are they identical?
             if (this.Equals(that))
             {
@@ -397,7 +394,7 @@ namespace Microsoft.Build.BuildEngine.Shared
             }
 
             // Do the names match?
-            if (0 != String.Compare(Name, that.Name, StringComparison.OrdinalIgnoreCase))
+            if (!String.Equals(Name, that.Name, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

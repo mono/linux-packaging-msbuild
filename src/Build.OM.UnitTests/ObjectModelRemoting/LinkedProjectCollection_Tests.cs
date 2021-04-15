@@ -2,15 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-
     using System;
-    using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Linq;
-    using System.Text.RegularExpressions;
-    using Microsoft.Build.Evaluation;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class LinkedProjectCollection_Tests : IClassFixture<LinkedProjectCollection_Tests.MyTestCollectionGroup>
     {
@@ -22,7 +16,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         public TestCollectionGroup StdGroup { get; }
         public LinkedProjectCollection_Tests(MyTestCollectionGroup group)
         {
-
             this.StdGroup = group;
             group.Clear();
         }
@@ -34,7 +27,7 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
             var pcRemote = this.StdGroup.Remote[0];
 
             var proj1Path = this.StdGroup.StdProjectFiles[0];
-            var proj2Path = this.StdGroup.StdProjectFiles[1]; ;
+            var proj2Path = this.StdGroup.StdProjectFiles[1]; 
 
             var proj1 = pcLocal.LoadProject(proj1Path);
             var proj2 = pcRemote.LoadProject(proj2Path);

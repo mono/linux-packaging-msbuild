@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Shared;
-using Microsoft.Build.Framework;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
 using System;
@@ -209,7 +208,7 @@ namespace Microsoft.Build.Construction
         /// </summary>
         private static string GetLocationString(string file, int line, int column)
         {
-            string locationString = String.Empty;
+            string locationString;
             if (line != 0 && column != 0)
             {
                 locationString = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword("FileLocation", file, line, column);
@@ -253,7 +252,7 @@ namespace Microsoft.Build.Construction
             /// </summary>
             internal RegularElementLocation(string file, int line, int column)
             {
-                ErrorUtilities.VerifyThrowArgumentLengthIfNotNull(file, "file");
+                ErrorUtilities.VerifyThrowArgumentLengthIfNotNull(file, nameof(file));
                 ErrorUtilities.VerifyThrow(line > -1 && column > -1, "Use zero for unknown");
 
                 this.file = file ?? String.Empty;

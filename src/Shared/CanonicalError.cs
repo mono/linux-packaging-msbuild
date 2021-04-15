@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
-using System.Collections;
-using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -316,11 +313,11 @@ namespace Microsoft.Build.Shared
                 }
 
                 category = match.Groups["CATEGORY"].Value.Trim();
-                if (0 == String.Compare(category, "error", StringComparison.OrdinalIgnoreCase))
+                if (String.Equals(category, "error", StringComparison.OrdinalIgnoreCase))
                 {
                     parsedMessage.category = Parts.Category.Error;
                 }
-                else if (0 == String.Compare(category, "warning", StringComparison.OrdinalIgnoreCase))
+                else if (String.Equals(category, "warning", StringComparison.OrdinalIgnoreCase))
                 {
                     parsedMessage.category = Parts.Category.Warning;
                 }
@@ -354,11 +351,11 @@ namespace Microsoft.Build.Shared
             parsedMessage.subcategory = match.Groups["SUBCATEGORY"].Value.Trim();
 
             // Next, see if category is something that is recognized.
-            if (0 == String.Compare(category, "error", StringComparison.OrdinalIgnoreCase))
+            if (String.Equals(category, "error", StringComparison.OrdinalIgnoreCase))
             {
                 parsedMessage.category = Parts.Category.Error;
             }
-            else if (0 == String.Compare(category, "warning", StringComparison.OrdinalIgnoreCase))
+            else if (String.Equals(category, "warning", StringComparison.OrdinalIgnoreCase))
             {
                 parsedMessage.category = Parts.Category.Warning;
             }

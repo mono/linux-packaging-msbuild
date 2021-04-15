@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
- using System;
 using System.Xml;
 using System.Collections;
-using System.Globalization;
 
 using Microsoft.Build.BuildEngine.Shared;
 
@@ -237,10 +235,7 @@ namespace Microsoft.Build.BuildEngine
             else
             {
                 ErrorUtilities.VerifyThrow(pass == ProcessingPass.Pass2, "ProcessingPass must be Pass1 or Pass2.");
-                if (whenLastTaken != null)
-                {
-                    whenLastTaken.Evaluate(parentPropertyBag, ignoreCondition, honorCondition, conditionedPropertiesTable, pass);
-                }
+                whenLastTaken?.Evaluate(parentPropertyBag, ignoreCondition, honorCondition, conditionedPropertiesTable, pass);
             }
         }
 

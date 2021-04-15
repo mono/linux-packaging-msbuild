@@ -3,11 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Collections;
-using Microsoft.Build.Execution;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -500,7 +497,7 @@ namespace Microsoft.Build.BackEnd
                 return false;
             }
 
-            return (request != null);
+            return request != null;
         }
 
         /// <summary>

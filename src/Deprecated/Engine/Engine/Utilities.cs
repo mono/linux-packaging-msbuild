@@ -3,18 +3,10 @@
 
 using System;
 using System.Xml;
-using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Xml.Serialization;
-using System.Security;
-using System.Security.Policy;
-using System.Security.Permissions;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
@@ -476,7 +468,7 @@ namespace Microsoft.Build.BuildEngine
                     {
                         // Found the start of a comment
                         insideComment = true;
-                        i = i + 3;
+                        i += 3;
                         continue;
                     }
                 }
@@ -500,7 +492,7 @@ namespace Microsoft.Build.BuildEngine
                     {
                         // Found the end of a comment
                         insideComment = false;
-                        i = i + 2;
+                        i += 2;
                         continue;
                     }
                 }

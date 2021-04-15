@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Collections;
 using Microsoft.Build.BackEnd;
@@ -27,7 +25,6 @@ namespace Microsoft.Build.Evaluation
         where M : class, IMetadatum
         where D : class, IItemDefinition<M>
     {
-
         /// <summary>
         /// The ID of this evaluation
         /// </summary>

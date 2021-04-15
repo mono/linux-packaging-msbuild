@@ -5,13 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
-using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.BackEnd.Logging;
-using Microsoft.Build.Internal;
 using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.BackEnd
@@ -660,7 +657,7 @@ namespace Microsoft.Build.BackEnd
             {
                 // Count our time, plus the amount of time all of our children take.  Multiply this by the total number
                 // of referrers to weight us higher the more configurations depend on us.
-                get { return (AccumulatedTime + AccumulatedTimeOfReferences); }
+                get { return AccumulatedTime + AccumulatedTimeOfReferences; }
             }
 
             /// <summary>

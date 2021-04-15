@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,7 +53,7 @@ namespace Microsoft.Build.Shared
         /// <returns>The awaiter.</returns>
         internal static TaskAwaiter GetAwaiter(this WaitHandle handle)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(handle, "handle");
+            ErrorUtilities.VerifyThrowArgumentNull(handle, nameof(handle));
             return handle.ToTask().GetAwaiter();
         }
 

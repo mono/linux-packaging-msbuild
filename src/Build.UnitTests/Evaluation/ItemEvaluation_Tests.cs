@@ -3,13 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Evaluation;
 using Xunit;
 using System.Text;
-using Microsoft.Build.Engine.UnitTests;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 
@@ -118,6 +116,43 @@ namespace Microsoft.Build.UnitTests.Evaluation
 
             var itemsForI2 = items.Where(i => i.ItemType == "i2").ToList();
             ObjectModelHelpers.AssertItems(new string[0], itemsForI2);
+        }
+
+        [Fact]
+        public void RemoveRespectsItemTransform()
+        {
+            var content = @"
+                            <i Include='a;b;c' />
+
+                            <i Remove='@(i->WithMetadataValue(`Identity`, `b`))' />
+                            <i Remove='@(i->`%(Extension)`)' /> <!-- should do nothing -->";
+
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content, allItems: true);
+
+            ObjectModelHelpers.AssertItems(new[] { "a", "c" }, items);
+        }
+
+        [Fact]
+        public void UpdateRespectsItemTransform()
+        {
+            var content = @"
+                            <i Include='a;b;c' />
+
+                            <i Update='@(i->WithMetadataValue(`Identity`, `b`))'>
+                                <m1>m1_updated</m1>
+                            </i>
+                            <i Update=`@(i->'%(Extension)')`> <!-- should do nothing -->
+                                <m2>m2_updated</m2>
+                            </i>";
+
+            IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content, allItems: true);
+
+            ObjectModelHelpers.AssertItems(new[] { "a", "b", "c" }, items,
+                new[] {
+                    new Dictionary<string, string>(),
+                    new Dictionary<string, string> { ["m1"] = "m1_updated" },
+                    new Dictionary<string, string>(),
+                });
         }
 
         [Fact]
@@ -500,7 +535,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
             StringBuilder content = new StringBuilder();
             for (int i = 0; i < INCLUDE_COUNT; i++)
             {
-                content.AppendLine($"<i Include='ItemValue{i}' />");
+                content.Append("<i Include='ItemValue").Append(i).AppendLine("' />");
             }
 
             IList<ProjectItem> items = ObjectModelHelpers.GetItemsFromFragment(content.ToString());

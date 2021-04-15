@@ -3,13 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Build.Framework;
-using System.Xml;
 using System.IO;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using System.Linq;
 using Microsoft.CSharp;
 using System.Reflection;
 using Microsoft.Build.Shared;
@@ -605,7 +602,7 @@ namespace Microsoft.Build.UnitTests.XamlTaskFactory_Tests
             object[] attributes = pi.GetCustomAttributes(true);
             foreach (object attribute in attributes)
             {
-                Assert.Equal("/Br", (attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString()));
+                Assert.Equal("/Br", attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString());
             }
         }
 
@@ -623,7 +620,7 @@ namespace Microsoft.Build.UnitTests.XamlTaskFactory_Tests
             object[] attributes = pi.GetCustomAttributes(true);
             foreach (object attribute in attributes)
             {
-                Assert.Equal("/Bn", (attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString()));
+                Assert.Equal("/Bn", attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString());
             }
         }
 
@@ -641,7 +638,7 @@ namespace Microsoft.Build.UnitTests.XamlTaskFactory_Tests
             object[] attributes = pi.GetCustomAttributes(true);
             foreach (object attribute in attributes)
             {
-                Assert.Equal("/Bs", (attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString()));
+                Assert.Equal("/Bs", attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString());
             }
         }
 
@@ -659,7 +656,7 @@ namespace Microsoft.Build.UnitTests.XamlTaskFactory_Tests
             object[] attributes = pi.GetCustomAttributes(true);
             foreach (object attribute in attributes)
             {
-                Assert.Equal("/Bi", (attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString()));
+                Assert.Equal("/Bi", attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString());
             }
         }
 
@@ -680,7 +677,7 @@ namespace Microsoft.Build.UnitTests.XamlTaskFactory_Tests
                 PropertyInfo documentationAttribute = attribute.GetType().GetProperty("SwitchName");
                 if (documentationAttribute != null)
                 {
-                    Assert.Equal("/Bsa", (attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString()));
+                    Assert.Equal("/Bsa", attribute.GetType().GetProperty("SwitchName").GetValue(attribute, null).ToString());
                 }
                 else
                 {

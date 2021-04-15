@@ -3,15 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
 using System.Xml;
-using System.Reflection;
-using System.Globalization;
 using System.Collections;
-using System.Diagnostics;
 
 namespace Microsoft.Build.BuildEngine
 {
@@ -366,8 +362,8 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         internal static bool IsIntrinsicTaskName(string name)
         {
-            return (String.Equals(name, XMakeElements.propertyGroup, StringComparison.Ordinal)
-                ||  String.Equals(name, XMakeElements.itemGroup, StringComparison.Ordinal));
+            return String.Equals(name, XMakeElements.propertyGroup, StringComparison.Ordinal)
+                || String.Equals(name, XMakeElements.itemGroup, StringComparison.Ordinal);
         }
 
         #endregion  

@@ -62,6 +62,22 @@
     %(RootDir) to an item-spec that's not a valid path would result in this error.
     LOCALIZATION: "{1}" is a localized message explaining the problem.</note>
       </trans-unit>
+      <trans-unit id="ChangeWave_InvalidFormat">
+        <source>MSB4271: Environment variable MSBuildDisableFeaturesFromVersion is set to an invalid format. Enabling all change wave versions. Entered value: {0}. Current Change Waves: {1}.</source>
+        <target state="translated">MSB4271: 環境変数 MSBuildDisableFeaturesFromVersion が無効な形式に設定されています。すべての変更ウェーブ バージョンを有効にしています。入力された値: {0}。現在の変更ウェーブ: {1}。</target>
+        <note>{StrBegin="MSB4271: "}UE: Value should be of the format: xx.yy</note>
+      </trans-unit>
+      <trans-unit id="ChangeWave_OutOfRotation">
+        <source>MSB4272: Environment variable MSBuildDisableFeaturesFromVersion is set to a version that is out of rotation. Defaulting to Change Wave version: {0}. Entered value: {1}. Current Change Waves: {2}.</source>
+        <target state="translated">MSB4272: 環境変数 MSBuildDisableFeaturesFromVersion が、ローテーションから外れているバージョンに設定されています。変更ウェーブ バージョンを既定値にしています: {0}。入力された値: {1}。現在の変更ウェーブ: {2}。</target>
+        <note>{StrBegin="MSB4272: "}</note>
+      </trans-unit>
+      <trans-unit id="CircularDependency">
+        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}".</source>
+        <target state="translated">MSB4006: ターゲット "{0}" で、ターゲット依存グラフに循環する依存関係が存在します。</target>
+        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
+    request a target to build itself (perhaps via a chain of other targets).</note>
+      </trans-unit>
       <trans-unit id="CircularDependencyInProjectGraph">
         <source>MSB4251: There is a circular dependency involving the following projects: {0}</source>
         <target state="translated">MSB4251: 以下のプロジェクトを含む、循環依存の関係があります: {0}</target>
@@ -69,6 +85,12 @@
       {StrBegin="MSB4251:"} This message is shown when a graph build detects a target referenced in a circular manner -- a project cannot
       request a target to build itself (perhaps via a chain of other targets)
     </note>
+      </trans-unit>
+      <trans-unit id="CircularDependencyInTargetGraph">
+        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}". Since "{1}" has "{2}" dependence on "{3}", the circular is "{4}".</source>
+        <target state="translated">MSB4006: ターゲット "{0}" を含むターゲット依存関係グラフに循環依存の関係があります。"{1}" には "{3}" に対する "{2}" の依存関係があるため、循環は "{4}" です。</target>
+        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
+    request a target to build itself (perhaps via a chain of other targets).</note>
       </trans-unit>
       <trans-unit id="EmptyOutputCacheFile">
         <source>MSB4257: The specified output result cache file is empty.</source>
@@ -90,6 +112,11 @@
         <target state="translated">MSB4258: パス "{0}" の出力結果キャッシュ ファイルに書き込む処理でエラーが発生しました: {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="IllFormedPropertySpaceInCondition">
+        <source>MSB4259: Unexpected space at position "{1}" of condition "{0}". Did you forget to remove a space?</source>
+        <target state="translated">MSB4259: 条件 "{0}" の位置 "{1}" に予期しないスペースがあります。スペースを削除したか確認してください。</target>
+        <note>{StrBegin="MSB4259: "}</note>
+      </trans-unit>
       <trans-unit id="InputCacheFilesDoNotExist">
         <source>MSB4255: The following input result cache files do not exist: "{0}"</source>
         <target state="translated">MSB4255: 以下の入力結果キャッシュ ファイルが存在しません: "{0}"</target>
@@ -98,6 +125,18 @@
       <trans-unit id="InvalidVersionFormat">
         <source>Version string was not in a correct format.</source>
         <target state="translated">バージョン文字列の形式が正しくありません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsolatedContextDoesNotSupportFileSystem">
+        <source>"EvaluationContext objects created with SharingPolicy.Isolated do not support being passed an MSBuildFileSystemBase file system."</source>
+        <target state="translated">"SharingPolicy.Isolated を指定して作成された EvaluationContext オブジェクトに MSBuildFileSystemBase ファイル システムを渡すことはサポートされていません。"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LoadingProjectCachePlugin">
+        <source>"Loading the following project cache plugin:
+    {0}"</source>
+        <target state="translated">"次のプロジェクト キャッシュ プラグインを読み込んでいます。
+    {0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="LogLoggerVerbosity">
@@ -122,6 +161,21 @@
         <target state="translated">BeginBuild がまだ呼び出されていないため、操作を完了できません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="NoProjectCachePluginFoundInAssembly">
+        <source>MSB4270: No project cache plugins found in assembly "{0}". Expected one.</source>
+        <target state="translated">MSB4270: プロジェクト キャッシュのプラグインがアセンブリ "{0}" に見つかりませんでした。プラグインが 1 つ必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotAllNodesDefineACacheItem">
+        <source>MSB4269: When any static graph node defines a project cache, all nodes must define the same project cache. The following project(s) do not contain a "{0}" item declaration: {1}</source>
+        <target state="translated">MSB4269: 静的グラフ ノードでプロジェクト キャッシュが定義されている場合、すべてのノードで同じプロジェクト キャッシュを定義する必要があります。プロジェクト {1} には、"{0}" 項目宣言が含まれていません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NuGetAssemblyNotFound">
+        <source>A required NuGet assembly was not found. Expected Path: {0}</source>
+        <target state="translated">必要な NuGet アセンブリが見つかりませんでした。想定されるパス: {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="NullReferenceFromProjectInstanceFactory">
         <source>MSB4253: A null reference was returned from a user-provided ProjectInstanceFactoryFunc callback. This is not allowed.</source>
         <target state="translated">MSB4253: ユーザー提供の ProjectInstanceFactoryFunc コールバックから null 参照が返されました。これは許可されていません。</target>
@@ -130,9 +184,49 @@
       LOCALIZATION:  Do not localize the following words: ProjectInstanceFactoryFunc.
     </note>
       </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem">
+        <source>Only one item type may be referenced when removing with MatchOnMetadata.</source>
+        <target state="translated">MatchOnMetadata で削除する場合、参照できる項目の種類は 1 つだけです。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataOnlyApplicableToRemoveItems">
+        <source>MatchOnMetadata only applies to Remove operations on items.</source>
+        <target state="translated">MatchOnMetadata は、項目での削除操作にのみ適用されます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_MatchOnMetadataOptionsOnlyApplicableToItemsWithMatchOnMetadata">
+        <source>MatchOnMetadataOptions is valid only when removing items using MatchOnMetadata.</source>
+        <target state="translated">MatchOnMetadataOptions は、MatchOnMetadata を使用して項目を削除する場合にのみ有効です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OM_NoMatchOnMetadataOutsideTargets">
+        <source>MatchOnMetadata cannot be used outside of a &lt;Target&gt;.</source>
+        <target state="translated">MatchOnMetadata を &lt;Target&gt; の外で使用することはできません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OM_TargetNameNullOrEmpty">
         <source>Method {0} cannot be called with a collection containing null or empty target names.</source>
         <target state="translated">Null または空のターゲット名を含むコレクションを指定してメソッド {0} を呼び出すことはできません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OnlyOneCachePluginMustBeSpecified">
+        <source>MSB4265: A single project cache plugin must be specified but multiple where found: {0}</source>
+        <target state="translated">MSB4265: 単一のプロジェクト キャッシュ プラグインを指定する必要がありますが、複数指定されています。{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheInitializationFailed">
+        <source>MSB4266: Failed to initialize the project cache.</source>
+        <target state="translated">MSB4266: プロジェクト キャッシュを初期化できませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheQueryFailed">
+        <source>MSB4267: The project cache failed while being queried for the following project: {0}. The cache is queried in parallel for multiple projects so this specific project might not be the cause.</source>
+        <target state="translated">MSB4267: プロジェクト キャッシュは、プロジェクト {0} に対してクエリを実行しているときに失敗しました。このキャッシュでは複数のプロジェクトについて並列でクエリが実行されるため、この特定のプロジェクトが原因ではない可能性があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProjectCacheShutdownFailed">
+        <source>MSB4268: The project cache failed to shut down properly.</source>
+        <target state="translated">MSB4268: プロジェクト キャッシュは正常にシャットダウンできませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="ProjectGraphDoesNotSupportProjectReferenceWithToolset">
@@ -155,12 +249,22 @@
       LOCALIZATION: {0} and {1} are file paths
     </note>
       </trans-unit>
+      <trans-unit id="SolutionPathPropertyMustBeSetOnVSSubmissions">
+        <source>"MSB4264: Invalid $(SolutionPath) property: {0}"</source>
+        <target state="translated">"MSB4264: 無効な $(SolutionPath) プロパティ: {0}"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StaticGraphAcceptsSingleSolutionEntryPoint">
-        <source>MSB4261: Static graph only accepts a solution as the only entry point. Multiple entry points detected: {0}</source>
-        <target state="translated">MSB4261: 静的グラフでは、ソリューションを唯一のエントリ ポイントとして受け入れるのみです。複数のエントリ ポイントが検出されました: {0}</target>
+        <source>MSB4261: Multiple entry points with solutions detected: {0}. If static graph is loaded from a solution, that that solution must be the only entry point.</source>
+        <target state="translated">MSB4261: ソリューションが検出されたエントリ ポイントが複数あります: {0}。静的グラフがソリューションから読み込まれる場合、そのソリューションが唯一のエントリ ポイントである必要があります。</target>
         <note>
       LOCALIZATION: {0} is a semicolon delimited list of files
     </note>
+      </trans-unit>
+      <trans-unit id="StaticGraphConstructionMetrics">
+        <source>"Static graph loaded in {0} seconds: {1} nodes, {2} edges"</source>
+        <target state="translated">"{0} 秒で読み込まれた静的グラフ: {1} ノード、{2} エッジ"</target>
+        <note />
       </trans-unit>
       <trans-unit id="StaticGraphDoesNotSupportSlnReferences">
         <source>MSB4263: Project "{0}" has a reference to solution file "{1}". Referencing solutions is not supported in static graph.
@@ -183,6 +287,11 @@
         <note>
       LOCALIZATION: {0} is a file, {1} and {2} are semicolon delimited lists of messages
     </note>
+      </trans-unit>
+      <trans-unit id="TaskReturnedFalseButDidNotLogError">
+        <source>MSB4181: The "{0}" task returned false but did not log an error.</source>
+        <target state="translated">MSB4181: "{0}" タスクから false が返されましたが、エラーがログに記録されませんでした。</target>
+        <note>{StrBegin="MSB4181: "}</note>
       </trans-unit>
       <trans-unit id="UndeclaredMSBuildTasksNotAllowedInIsolatedGraphBuilds">
         <source>MSB4254: The MSBuild task is building project(s) "{0}" which are not specified in the ProjectReference item. In isolated builds this probably means that the references are not explicitly specified as a ProjectReference item in "{1}"</source>
@@ -360,12 +469,6 @@
         <target state="translated">MSB4114: &lt;Choose&gt; 要素は {0} レベル以上では入れ子にできません。</target>
         <note>{StrBegin="MSB4114: "}UE: This message appears if the project file contains unreasonably nested Choose elements.
     LOCALIZATION: Do not localize "Choose" as it is an XML element name.</note>
-      </trans-unit>
-      <trans-unit id="CircularDependency">
-        <source>MSB4006: There is a circular dependency in the target dependency graph involving target "{0}".</source>
-        <target state="translated">MSB4006: ターゲット "{0}" で、ターゲット依存グラフに循環する依存関係が存在します。</target>
-        <note>{StrBegin="MSB4006: "}UE: This message is shown when the build engine detects a target referenced in a circular manner -- a project cannot
-    request a target to build itself (perhaps via a chain of other targets).</note>
       </trans-unit>
       <trans-unit id="ComparisonOnNonNumericExpression">
         <source>MSB4086: A numeric comparison was attempted on "{1}" that evaluates to "{2}" instead of a number, in condition "{0}".</source>

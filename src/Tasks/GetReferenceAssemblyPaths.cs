@@ -194,7 +194,7 @@ namespace Microsoft.Build.Tasks
             {
                 _tfmPaths = GetPaths(RootPath, TargetFrameworkFallbackSearchPaths, moniker);
 
-                if (_tfmPaths != null && _tfmPaths.Count > 0)
+                if (_tfmPaths?.Count > 0)
                 {
                     TargetFrameworkMonikerDisplayName = ToolLocationHelper.GetDisplayNameForTargetFrameworkDirectory(_tfmPaths[0], moniker);
                 }
@@ -253,7 +253,16 @@ namespace Microsoft.Build.Tasks
                 // 1/26/16: Note this was changed from a warning to an error (see GitHub #173).
                 if (pathsToReturn.Count == 0)
                 {
-                    Log.LogErrorWithCodeFromResources("GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound", frameworkmoniker.ToString());
+                    // Fixes bad error message when an old SDK assumes "net50" means ".NETFramework 5.0" instead of "netcoreapp 5.0"
+                    // https://github.com/dotnet/msbuild/issues/5820
+                    if (frameworkmoniker.Identifier == ".NETFramework" && frameworkmoniker.Version.Major >= 5)
+                    {
+                        Log.LogErrorWithCodeFromResources("GetReferenceAssemblyPaths.OutOfDateSDK", frameworkmoniker.ToString());
+                    }
+                    else
+                    {
+                        Log.LogErrorWithCodeFromResources("GetReferenceAssemblyPaths.NoReferenceAssemblyDirectoryFound", frameworkmoniker.ToString());
+                    }
                 }
             }
 

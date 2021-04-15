@@ -8,7 +8,7 @@
 		<ItemGroup>
 			<FilesToCopy
                 Include="$(DependencyNuPkgPath)/lib/net472/**"
-                OutputDirectory="$(DotnetSdkResolverDir)" />
+                OutputDirectory="$(DotNetSdkResolverDir)" />
 
 		</ItemGroup>
     </Target>

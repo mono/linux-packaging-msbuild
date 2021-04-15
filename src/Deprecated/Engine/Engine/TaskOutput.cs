@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Xml;
 
 using Microsoft.Build.BuildEngine.Shared;
@@ -94,7 +93,7 @@ namespace Microsoft.Build.BuildEngine
         {
             get
             {
-                return (this.itemNameAttribute != null);
+                return this.itemNameAttribute != null;
             }
         }
 
@@ -106,7 +105,7 @@ namespace Microsoft.Build.BuildEngine
         {
             get
             {
-                return (this.propertyNameAttribute != null);
+                return this.propertyNameAttribute != null;
             }
         }
 

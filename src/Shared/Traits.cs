@@ -31,6 +31,8 @@ namespace Microsoft.Build.Utilities
 
         public EscapeHatches EscapeHatches { get; }
 
+        internal readonly string MSBuildDisableFeaturesFromVersion = Environment.GetEnvironmentVariable("MSBUILDDISABLEFEATURESFROMVERSION"); 
+
         /// <summary>
         /// Do not expand wildcards that match a certain pattern
         /// </summary>
@@ -43,9 +45,14 @@ namespace Microsoft.Build.Utilities
         public readonly bool CacheFileExistence = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildCacheFileExistence"));
 
         /// <summary>
-        /// Eliminate locking in OpportunisticIntern at the expense of memory
+        /// Use the legacy string interning implementation based on MRU lists.
         /// </summary>
-        public readonly bool UseSimpleInternConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleInternConcurrency"));
+        public readonly bool UseLegacyStringInterner = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBuildUseLegacyStringInterner"));
+
+        /// <summary>
+        /// Eliminate locking in OpportunisticIntern at the expense of memory (in effect only if UseLegacyStringInterner is set).
+        /// </summary>
+        public readonly bool UseSimpleInternConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBuildUseSimpleInternConcurrency"));
 
         public readonly bool UseSimpleProjectRootElementCacheConcurrency = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MsBuildUseSimpleProjectRootElementCacheConcurrency"));
 
@@ -60,6 +67,11 @@ namespace Microsoft.Build.Utilities
         /// Enable restore first functionality in MSBuild.exe
         /// </summary>
         public readonly bool EnableRestoreFirst = Environment.GetEnvironmentVariable("MSBUILDENABLERESTOREFIRST") == "1";
+
+        /// <summary>
+        /// Allow the user to specify that two processes should not be communicating via an environment variable.
+        /// </summary>
+        public static readonly string MSBuildNodeHandshakeSalt = Environment.GetEnvironmentVariable("MSBUILDNODEHANDSHAKESALT");
 
         /// <summary>
         /// Setting the associated environment variable to 1 restores the pre-15.8 single
@@ -120,6 +132,16 @@ namespace Microsoft.Build.Utilities
         /// at the expense of log usefulness.
         /// </summary>
         public readonly bool TruncateTaskInputs = Environment.GetEnvironmentVariable("MSBUILDTRUNCATETASKINPUTS") == "1";
+
+        /// <summary>
+        /// Disables truncation of Condition messages in Tasks/Targets via ExpanderOptions.Truncate.
+        /// </summary>
+        public readonly bool DoNotTruncateConditions = Environment.GetEnvironmentVariable("MSBuildDoNotTruncateConditions") == "1";
+
+        /// <summary>
+        /// Disables skipping full drive/filesystem globs that are behind a false condition.
+        /// </summary>
+        public readonly bool AlwaysEvaluateDangerousGlobs = Environment.GetEnvironmentVariable("MSBuildAlwaysEvaluateDangerousGlobs") == "1";
 
         /// <summary>
         /// Emit events for project imports.
@@ -186,7 +208,7 @@ namespace Microsoft.Build.Utilities
         public readonly bool IgnoreEmptyImports = Environment.GetEnvironmentVariable("MSBUILDIGNOREEMPTYIMPORTS") == "1";
 
         /// <summary>
-        /// Whether to to respect the TreatAsLocalProperty parameter on the Project tag. 
+        /// Whether to respect the TreatAsLocalProperty parameter on the Project tag.
         /// </summary>
         public readonly bool IgnoreTreatAsLocalProperty = Environment.GetEnvironmentVariable("MSBUILDIGNORETREATASLOCALPROPERTY") != null;
 
@@ -256,6 +278,29 @@ namespace Microsoft.Build.Utilities
         /// </remarks>
         public readonly bool UseMinimalResxParsingInCoreScenarios = Environment.GetEnvironmentVariable("MSBUILDUSEMINIMALRESX") == "1";
 
+        private bool _sdkReferencePropertyExpansionInitialized;
+        private SdkReferencePropertyExpansionMode? _sdkReferencePropertyExpansionValue;
+
+        /// <summary>
+        /// Overrides the default behavior of property expansion on evaluation of a <see cref="Framework.SdkReference"/>.
+        /// </summary>
+        /// <remarks>
+        /// Escape hatch for problems arising from https://github.com/dotnet/msbuild/pull/5552.
+        /// </remarks>
+        public SdkReferencePropertyExpansionMode? SdkReferencePropertyExpansion
+        {
+            get
+            {
+                if (!_sdkReferencePropertyExpansionInitialized)
+                {
+                    _sdkReferencePropertyExpansionValue = ComputeSdkReferencePropertyExpansion();
+                    _sdkReferencePropertyExpansionInitialized = true;
+                }
+
+                return _sdkReferencePropertyExpansionValue;
+            }
+        }
+
         private static bool? ParseNullableBoolFromEnvironmentVariable(string environmentVariable)
         {
             var value = Environment.GetEnvironmentVariable(environmentVariable);
@@ -299,10 +344,58 @@ namespace Microsoft.Build.Utilities
             return null;
         }
 
+        private static SdkReferencePropertyExpansionMode? ComputeSdkReferencePropertyExpansion()
+        {
+            var mode = Environment.GetEnvironmentVariable("MSBUILD_SDKREFERENCE_PROPERTY_EXPANSION_MODE");
+
+            if (mode == null)
+            {
+                return null;
+            }
+
+            // The following uses StartsWith instead of Equals to enable possible tricks like
+            // the dpiAware "True/PM" trick (see https://devblogs.microsoft.com/oldnewthing/20160617-00/?p=93695)
+            // in the future.
+
+            const StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+
+            if (mode.StartsWith("no", comparison))
+            {
+                return SdkReferencePropertyExpansionMode.NoExpansion;
+            }
+
+            if (mode.StartsWith("default", comparison))
+            {
+                return SdkReferencePropertyExpansionMode.DefaultExpand;
+            }
+
+            if (mode.StartsWith(nameof(SdkReferencePropertyExpansionMode.ExpandUnescape), comparison))
+            {
+                return SdkReferencePropertyExpansionMode.ExpandUnescape;
+            }
+
+            if (mode.StartsWith(nameof(SdkReferencePropertyExpansionMode.ExpandLeaveEscaped), comparison))
+            {
+                return SdkReferencePropertyExpansionMode.ExpandLeaveEscaped;
+            }
+
+            ErrorUtilities.ThrowInternalError($"Invalid escape hatch for SdkReference property expansion: {mode}");
+
+            return null;
+        }
+
         public enum ProjectInstanceTranslationMode
         {
             Full,
             Partial
+        }
+
+        public enum SdkReferencePropertyExpansionMode
+        {
+            NoExpansion,
+            DefaultExpand,
+            ExpandUnescape,
+            ExpandLeaveEscaped
         }
     }
 }

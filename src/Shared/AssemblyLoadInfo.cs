@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using Microsoft.Build.Framework;
 using Microsoft.Build.BackEnd;
 using System.Diagnostics;
 
@@ -23,7 +22,7 @@ namespace Microsoft.Build.Shared
         /// </summary>
         internal static AssemblyLoadInfo Create(string assemblyName, string assemblyFile)
         {
-            ErrorUtilities.VerifyThrow(((assemblyName != null) && (assemblyName.Length > 0)) || ((assemblyFile != null) && (assemblyFile.Length > 0)),
+            ErrorUtilities.VerifyThrow((!string.IsNullOrEmpty(assemblyName)) || (!string.IsNullOrEmpty(assemblyFile)),
                 "We must have either the assembly name or the assembly file/path.");
             ErrorUtilities.VerifyThrow((assemblyName == null) || (assemblyFile == null),
                 "We must not have both the assembly name and the assembly file/path.");
@@ -93,7 +92,7 @@ namespace Microsoft.Build.Shared
                 return false;
             }
 
-            return ((this.AssemblyName == otherAssemblyInfo.AssemblyName) && (this.AssemblyFile == otherAssemblyInfo.AssemblyFile));
+            return (this.AssemblyName == otherAssemblyInfo.AssemblyName) && (this.AssemblyFile == otherAssemblyInfo.AssemblyFile);
         }
 
         public void Translate(ITranslator translator)

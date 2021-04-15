@@ -2,7 +2,9 @@ Directory.Build.props
 Directory.Build.rsp
 Directory.Build.targets
 MSBuild.Bootstrap.dll
-MSBuild.Bootstrap.pdb
+MSBuild.Bootstrap.dll.config
+MSBuild/Microsoft.Build.CommonTypes.xsd
+MSBuild/Microsoft.Build.Core.xsd
 Roslyn/cs/Microsoft.Build.Tasks.CodeAnalysis.resources.dll
 Roslyn/cs/Microsoft.CodeAnalysis.CSharp.Scripting.resources.dll
 Roslyn/cs/Microsoft.CodeAnalysis.CSharp.resources.dll
@@ -82,4 +84,5 @@ Roslyn/zh-Hant/Microsoft.CodeAnalysis.Scripting.resources.dll
 Roslyn/zh-Hant/Microsoft.CodeAnalysis.VisualBasic.resources.dll
 Roslyn/zh-Hant/Microsoft.CodeAnalysis.resources.dll
 System.Reflection.Metadata.dll
+Update-MSBuildXsds.ps1
 ref/MSBuild.Bootstrap.dll
