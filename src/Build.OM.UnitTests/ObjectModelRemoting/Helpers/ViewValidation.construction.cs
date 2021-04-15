@@ -9,8 +9,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
     using Microsoft.Build.ObjectModelRemoting;
     using Microsoft.Build.Evaluation;
     using Xunit;
-    using System.Runtime.ExceptionServices;
-    using System.Xml.Schema;
     using System.Collections;
 
     internal class ElementLinkPair<T> : LinkPair<T>
@@ -57,7 +55,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         public ElementLinkPair<CT> AddNewChaildWithVerify<CT>(ObjectType where, string id, Func<T, string, CT> adder, Func<CT, string, bool> matcher)
             where CT : ProjectElement
         {
-
             var c1Where = adder(this.Get(where), id);
             Assert.NotNull(c1Where);
 

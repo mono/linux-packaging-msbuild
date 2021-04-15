@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Microsoft.Build.BackEnd.Components.Logging;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 
@@ -202,14 +201,14 @@ namespace Microsoft.Build.BackEnd.Logging
         /// <summary>
         /// Adds a set of warning codes to treat as low importance messages for the specified project instance ID.
         /// </summary>
-        /// <param name="projectInstanceId">A <see cref="BuildEventContext.ProjectInstanceId"/> to associate with the list of warning codes.</param>
+        /// <param name="buildEventContext">A <see cref="BuildEventContext"/> to associate with the list of warning codes.</param>
         /// <param name="codes">The list of warning codes to treat as low importance messsages.</param>
         void AddWarningsAsMessages(BuildEventContext buildEventContext, ISet<string> codes);
 
         /// <summary>
         /// Adds a set of warning codes to treat as errors for the specified project instance ID.
         /// </summary>
-        /// <param name="projectInstanceId">A <see cref="BuildEventContext.ProjectInstanceId"/> to associate with the list of warning codes.</param>
+        /// <param name="buildEventContext">A <see cref="BuildEventContext"/> to associate with the list of warning codes.</param>
         /// <param name="codes">The list of warning codes to treat as errors.</param>
         void AddWarningsAsErrors(BuildEventContext buildEventContext, ISet<string> codes);
 
@@ -428,8 +427,9 @@ namespace Microsoft.Build.BackEnd.Logging
         /// <param name="targetNames">The entrypoint target names for this project</param>
         /// <param name="properties">The initial properties of the project</param>
         /// <param name="items">The initial items of the project</param>
+        /// <param name="evaluationId">EvaluationId of the project instance</param>
         /// <returns>The BuildEventContext to use for this project.</returns>
-        BuildEventContext LogProjectStarted(BuildEventContext nodeBuildEventContext, int submissionId, int projectId, BuildEventContext parentBuildEventContext, string projectFile, string targetNames, IEnumerable<DictionaryEntry> properties, IEnumerable<DictionaryEntry> items);
+        BuildEventContext LogProjectStarted(BuildEventContext nodeBuildEventContext, int submissionId, int projectId, BuildEventContext parentBuildEventContext, string projectFile, string targetNames, IEnumerable<DictionaryEntry> properties, IEnumerable<DictionaryEntry> items, int evaluationId = BuildEventContext.InvalidEvaluationId);
 
         /// <summary>
         /// Log that the project has finished

@@ -5,13 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using Microsoft.Build.BackEnd;
-using Microsoft.Build.BackEnd.Components.Logging;
-using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 
@@ -447,7 +440,7 @@ namespace Microsoft.Build.BackEnd.Logging
 
                 IDictionary<string, string> environmentProperties = null;
 
-                if (_componentHost != null && _componentHost.BuildParameters != null)
+                if (_componentHost?.BuildParameters != null)
                 {
                     environmentProperties = _componentHost.BuildParameters.BuildProcessEnvironment;
                 }
@@ -548,15 +541,16 @@ namespace Microsoft.Build.BackEnd.Logging
         /// <param name="targetNames">Target names to build</param>
         /// <param name="properties">Initial property list</param>
         /// <param name="items">Initial items list</param>
+        /// <param name="evaluationId">EvaluationId of the project instance</param>
         /// <returns>The build event context for the project.</returns>
         /// <exception cref="InternalErrorException">parentBuildEventContext is null</exception>
         /// <exception cref="InternalErrorException">projectBuildEventContext is null</exception>
-        public BuildEventContext LogProjectStarted(BuildEventContext nodeBuildEventContext, int submissionId, int projectInstanceId, BuildEventContext parentBuildEventContext, string projectFile, string targetNames, IEnumerable<DictionaryEntry> properties, IEnumerable<DictionaryEntry> items)
+        public BuildEventContext LogProjectStarted(BuildEventContext nodeBuildEventContext, int submissionId, int projectInstanceId, BuildEventContext parentBuildEventContext, string projectFile, string targetNames, IEnumerable<DictionaryEntry> properties, IEnumerable<DictionaryEntry> items, int evaluationId = BuildEventContext.InvalidEvaluationId)
         {
             lock (_lockObject)
             {
                 ErrorUtilities.VerifyThrow(nodeBuildEventContext != null, "Need a nodeBuildEventContext");
-                BuildEventContext projectBuildEventContext = new BuildEventContext(submissionId, nodeBuildEventContext.NodeId, projectInstanceId, NextProjectId, BuildEventContext.InvalidTargetId, BuildEventContext.InvalidTaskId);
+                BuildEventContext projectBuildEventContext = new BuildEventContext(submissionId, nodeBuildEventContext.NodeId, evaluationId, projectInstanceId, NextProjectId, BuildEventContext.InvalidTargetId, BuildEventContext.InvalidTaskId);
 
                 // PERF: Not using VerifyThrow to avoid boxing of projectBuildEventContext.ProjectContextId in the non-error case.
                 if (_projectFileMap.ContainsKey(projectBuildEventContext.ProjectContextId))
@@ -619,7 +613,7 @@ namespace Microsoft.Build.BackEnd.Logging
             {
                 ErrorUtilities.VerifyThrow(projectBuildEventContext != null, "projectBuildEventContext");
 
-                string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword((success ? "ProjectFinishedSuccess" : "ProjectFinishedFailure"), Path.GetFileName(projectFile));
+                string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword(success ? "ProjectFinishedSuccess" : "ProjectFinishedFailure", Path.GetFileName(projectFile));
 
                 ProjectFinishedEventArgs buildEvent = new ProjectFinishedEventArgs
                     (
@@ -730,7 +724,7 @@ namespace Microsoft.Build.BackEnd.Logging
                 {
                     ErrorUtilities.VerifyThrow(targetBuildEventContext != null, "targetBuildEventContext is null");
 
-                    string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword((success ? "TargetFinishedSuccess" : "TargetFinishedFailure"), targetName, Path.GetFileName(projectFile));
+                    string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword(success ? "TargetFinishedSuccess" : "TargetFinishedFailure", targetName, Path.GetFileName(projectFile));
 
                     TargetFinishedEventArgs buildEvent = new TargetFinishedEventArgs
                         (
@@ -836,7 +830,7 @@ namespace Microsoft.Build.BackEnd.Logging
                 if (!OnlyLogCriticalEvents)
                 {
                     ErrorUtilities.VerifyThrow(taskBuildEventContext != null, "taskBuildEventContext is null");
-                    string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword((success ? "TaskFinishedSuccess" : "TaskFinishedFailure"), taskName);
+                    string message = ResourceUtilities.FormatResourceStringIgnoreCodeAndKeyword(success ? "TaskFinishedSuccess" : "TaskFinishedFailure", taskName);
 
                     TaskFinishedEventArgs buildEvent = new TaskFinishedEventArgs
                         (

@@ -11,20 +11,24 @@
     
     <!-- Define a constant so we can skip tests that require MSBuildTaskHost -->
     <DefineConstants Condition="'$(MSBuildRuntimeType)' == 'Core' or '$(MonoBuild)' == 'true'">$(DefineConstants);NO_MSBUILDTASKHOST</DefineConstants>
+
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Concurrent" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Microsoft.CodeAnalysis.Build.Tasks" />
+    <PackageReference Include="NuGet.Frameworks" >
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
 
     <ProjectReference Include="..\Build\Microsoft.Build.csproj" />
     <ProjectReference Include="..\Framework\Microsoft.Build.Framework.csproj" />
     <ProjectReference Include="..\MSBuild\MSBuild.csproj" />
     <ProjectReference Include="..\MSBuildTaskHost\MSBuildTaskHost.csproj"
                       Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(MonoBuild)' != 'true'"
-                      ReferenceOutputAssembly="false"
-                      OutputItemType="Content" />
+                      Aliases="MSBuildTaskHost" />
     <ProjectReference Include="..\Tasks\Microsoft.Build.Tasks.csproj" />
     <ProjectReference Include="..\Utilities\Microsoft.Build.Utilities.csproj" />
     <ProjectReference Include="..\Xunit.NetCore.Extensions\Xunit.NetCore.Extensions.csproj" />
@@ -35,6 +39,12 @@
       <SetTargetFramework Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="..\Samples\PortableTask\PortableTask.csproj" Private="false" ReferenceOutputAssembly="false" OutputItemType="PortableTaskResolvedProjectReferencePath" SetTargetFramework="TargetFramework=netstandard1.3" />
+
+    <ProjectReference Include="..\Samples\ProjectCachePlugin\ProjectCachePlugin.csproj" Private="false" ReferenceOutputAssembly="false">
+      <SetTargetFramework Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">TargetFramework=$(FullFrameworkTFM)</SetTargetFramework>
+      <SetTargetFramework Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(MonoBuild)' == 'true'">TargetFramework=$(FullFrameworkTFM)</SetTargetFramework>
+      <SetTargetFramework Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'">TargetFramework=netcoreapp2.1</SetTargetFramework>
+    </ProjectReference>
 
     <Reference Include="System.Configuration" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
   </ItemGroup>
@@ -111,6 +121,9 @@
     <Compile Include="..\Shared\UnitTests\CopyOnWriteDictionary_Tests.cs" />
     <Compile Include="..\Shared\UnitTests\TestData\GlobbingTestData.cs">
       <Link>TestData\GlobbingTestData.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\UnitTests\ImmutableDictionary_Tests.cs" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(MSBuildRuntimeType)' == 'Full' and '$(MonoBuild)' != 'true'">
+      <Link>ImmutableDictionary_Tests.cs</Link>
     </Compile>
 
     <None Include="..\Shared\UnitTests\App.config">

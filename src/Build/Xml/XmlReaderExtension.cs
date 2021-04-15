@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using Microsoft.Build.Shared;
 
@@ -19,6 +15,7 @@ namespace Microsoft.Build.Internal
         ///     Creates an XmlReaderExtension with handle to an XmlReader.
         /// </summary>
         /// <param name="filePath">Path to the file on disk.</param>
+        /// <param name="loadAsReadOnly">Whther to load the file in real only mode.</param>
         /// <returns>Disposable XmlReaderExtension object.</returns>
         internal static XmlReaderExtension Create(string filePath, bool loadAsReadOnly)
         {
@@ -78,12 +75,11 @@ namespace Microsoft.Build.Internal
         {
             string uri = new UriBuilder(Uri.UriSchemeFile, string.Empty) { Path = file }.ToString();
 
-            XmlReader reader;
-
+            
             // Ignore loadAsReadOnly for now; using XmlReader.Create results in whitespace changes
             // of attribute text, specifically newline removal.
             // https://github.com/Microsoft/msbuild/issues/4210
-            reader = new XmlTextReader(uri, input) { DtdProcessing = DtdProcessing.Ignore };
+            XmlReader reader = new XmlTextReader(uri, input) { DtdProcessing = DtdProcessing.Ignore };
 
             reader.Read();
             encoding = input.CurrentEncoding;

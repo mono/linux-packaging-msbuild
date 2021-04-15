@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Threading;
-using System.Collections;
 using System.Collections.Generic;
-
-using Microsoft.Build.Framework;
-using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
 {
@@ -79,7 +74,6 @@ namespace Microsoft.Build.BuildEngine
         /// <returns></returns>
         internal int Count
         {
-
             get
             {
                 // Sum both as the number of items is the sum of items in both queues
@@ -131,10 +125,7 @@ namespace Microsoft.Build.BuildEngine
                     queueReadyEvent.Set();
 
                     // reset queue empty
-                    if (queueEmptyEvent != null)
-                    {
-                        queueEmptyEvent.Reset();
-                    }
+                    queueEmptyEvent?.Reset();
                 }
             }
         }
@@ -162,10 +153,7 @@ namespace Microsoft.Build.BuildEngine
                     queueReadyEvent.Set();
 
                     // reset queue empty
-                    if (queueEmptyEvent != null)
-                    {
-                        queueEmptyEvent.Reset();
-                    }
+                    queueEmptyEvent?.Reset();
                 }
             }
         }
@@ -183,10 +171,7 @@ namespace Microsoft.Build.BuildEngine
                 // reset queue ready event because the queue is now empty
                 queueReadyEvent.Reset();
                 // raise queue empty event because the queue is now empty
-                if (queueEmptyEvent != null)
-                {
-                    queueEmptyEvent.Set();
-                }
+                queueEmptyEvent?.Set();
             }
         }
 
@@ -235,10 +220,7 @@ namespace Microsoft.Build.BuildEngine
                         // signal there are no more items to read
                         queueReadyEvent.Reset();
 
-                        if (queueEmptyEvent != null)
-                        {
-                            queueEmptyEvent.Set();
-                        }
+                        queueEmptyEvent?.Set();
                     }
                 }
             }

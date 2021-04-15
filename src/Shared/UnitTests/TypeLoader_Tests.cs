@@ -3,13 +3,10 @@
 
 
 using System;
-using System.Collections;
 using System.IO;
 using Microsoft.Build.Shared;
 using System.Reflection;
 using Xunit;
-using Microsoft.Build.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.Build.UnitTests.Shared;
 
 namespace Microsoft.Build.UnitTests
@@ -288,16 +285,16 @@ namespace Microsoft.Build.UnitTests
 
         private static bool IsLoggerClass(Type type, object unused)
         {
-            return (type.IsClass &&
+            return type.IsClass &&
                 !type.IsAbstract &&
-                (type.GetInterface("ILogger") != null));
+                (type.GetInterface("ILogger") != null);
         }
 
         private static bool IsForwardingLoggerClass(Type type, object unused)
         {
-            return (type.IsClass &&
+            return type.IsClass &&
                 !type.IsAbstract &&
-                (type.GetInterface("IForwardingLogger") != null));
+                (type.GetInterface("IForwardingLogger") != null);
         }
 #endif
     }

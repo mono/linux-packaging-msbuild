@@ -3,13 +3,7 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Security.Permissions;
-using System.Text;
 using System.Threading;
-using System.Xml;
-
-using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
@@ -122,7 +116,7 @@ namespace Microsoft.Build.BuildEngine
             lock (repliesFromParent)
             {
                 ReplyData replyData = (ReplyData) repliesFromParent[requestingCallNumber];
-                ErrorUtilities.VerifyThrow(replyData != null && replyData.waitEvent != null, 
+                ErrorUtilities.VerifyThrow(replyData?.waitEvent != null, 
                     "We must have an event for this call at this point");
 
                 replyData.reply = reply;

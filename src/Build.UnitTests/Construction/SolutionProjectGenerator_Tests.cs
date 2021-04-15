@@ -2,20 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text;
 using System.IO;
-using System.Xml;
 using System.Linq;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Shared;
-using Microsoft.Build.Unittest;
 
 using LoggingService = Microsoft.Build.BackEnd.Logging.LoggingService;
 using ILoggingService = Microsoft.Build.BackEnd.Logging.ILoggingService;
@@ -61,6 +55,124 @@ namespace Microsoft.Build.UnitTests.Construction
         }
 
         /// <summary>
+        /// Test that if a before.{sln}>.targets or after.{sln}.targets file has one of the default targets (Build, Clean, etc.) that it includes only the user-defined target.
+        /// </summary>
+        [Theory]
+        [InlineData("before.MySln.sln.targets")]
+        [InlineData("after.MySln.sln.targets")]
+        [InlineData("name.that.does.Not.Affect.The.Build.targets")]
+        public void SolutionProjectIgnoresDuplicateDefaultTargets(string name)
+        {
+            using (TestEnvironment testEnvironment = TestEnvironment.Create())
+            {
+                TransientTestFolder folder = testEnvironment.CreateFolder(createFolder: true);
+                TransientTestFile sln = testEnvironment.CreateFile(folder, "MySln.sln", @"Microsoft Visual Studio Solution File, Format Version 16.00");
+                TransientTestFile targetsFile = testEnvironment.CreateFile(folder, name,
+                    @"<Project>
+                        <Target Name=""Build"" AfterTargets=""NonsenseTarget"">
+                        </Target>
+                      </Project>");
+                ProjectInstance[] instances = SolutionProjectGenerator.Generate(SolutionFile.Parse(sln.Path), null, null, _buildEventContext, CreateMockLoggingService());
+                instances.ShouldHaveSingleItem();
+                instances[0].Targets["Build"].AfterTargets.ShouldBe(string.Empty);
+                MockLogger logger = new MockLogger(output);
+                instances[0].Build(targets: null, new List<ILogger> { logger }).ShouldBeTrue();
+            }
+        }
+
+        /// <summary>
+        /// Test that a solution filter file excludes projects not covered by its list of projects or their dependencies.
+        /// </summary>
+        [Fact]
+        public void SolutionFilterFiltersProjects()
+        {
+            using (TestEnvironment testEnvironment = TestEnvironment.Create())
+            {
+                TransientTestFolder folder = testEnvironment.CreateFolder(createFolder: true);              
+                TransientTestFolder classLibFolder = testEnvironment.CreateFolder(Path.Combine(folder.Path, "ClassLibrary"), createFolder: true);
+                TransientTestFolder classLibSubFolder = testEnvironment.CreateFolder(Path.Combine(classLibFolder.Path, "ClassLibrary"), createFolder: true);
+                TransientTestFile classLibrary = testEnvironment.CreateFile(classLibSubFolder, "ClassLibrary.csproj",
+                    @"<Project>
+                  <Target Name=""ClassLibraryTarget"">
+                      <Message Text=""ClassLibraryBuilt""/>
+                  </Target>
+                  </Project>
+                    ");
+
+                TransientTestFolder simpleProjectFolder = testEnvironment.CreateFolder(Path.Combine(folder.Path, "SimpleProject"), createFolder: true);
+                TransientTestFolder simpleProjectSubFolder = testEnvironment.CreateFolder(Path.Combine(simpleProjectFolder.Path, "SimpleProject"), createFolder: true);
+                TransientTestFile simpleProject = testEnvironment.CreateFile(simpleProjectSubFolder, "SimpleProject.csproj",
+                    @"<Project DefaultTargets=""SimpleProjectTarget"">
+                  <Target Name=""SimpleProjectTarget"">
+                      <Message Text=""SimpleProjectBuilt""/>
+                  </Target>
+                  </Project>
+                    ");
+
+                // Slashes here (and in the .slnf) are hardcoded as backslashes intentionally to support the common case.
+                TransientTestFile solutionFile = testEnvironment.CreateFile(simpleProjectFolder, "SimpleProject.sln",
+                    @"
+                    Microsoft Visual Studio Solution File, Format Version 12.00
+                    # Visual Studio Version 16
+                    VisualStudioVersion = 16.0.29326.124
+                    MinimumVisualStudioVersion = 10.0.40219.1
+                    Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""SimpleProject"", ""SimpleProject\SimpleProject.csproj"", ""{79B5EBA6-5D27-4976-BC31-14422245A59A}""
+                    EndProject
+                    Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""ClassLibrary"", ""..\ClassLibrary\ClassLibrary\ClassLibrary.csproj"", ""{8EFCCA22-9D51-4268-90F7-A595E11FCB2D}""
+                    EndProject
+                    Global
+                        GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                            Debug|Any CPU = Debug|Any CPU
+                            Release|Any CPU = Release|Any CPU
+                            EndGlobalSection
+                        GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                            {79B5EBA6-5D27-4976-BC31-14422245A59A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                            {79B5EBA6-5D27-4976-BC31-14422245A59A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                            {79B5EBA6-5D27-4976-BC31-14422245A59A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                            {79B5EBA6-5D27-4976-BC31-14422245A59A}.Release|Any CPU.Build.0 = Release|Any CPU
+                            {8EFCCA22-9D51-4268-90F7-A595E11FCB2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                            {8EFCCA22-9D51-4268-90F7-A595E11FCB2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                            {8EFCCA22-9D51-4268-90F7-A595E11FCB2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                            {8EFCCA22-9D51-4268-90F7-A595E11FCB2D}.Release|Any CPU.Build.0 = Release|Any CPU
+                            {06A4DD1B-5027-41EF-B72F-F586A5A83EA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                            {06A4DD1B-5027-41EF-B72F-F586A5A83EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                            {06A4DD1B-5027-41EF-B72F-F586A5A83EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                            {06A4DD1B-5027-41EF-B72F-F586A5A83EA5}.Release|Any CPU.Build.0 = Release|Any CPU
+                        EndGlobalSection
+                        GlobalSection(SolutionProperties) = preSolution
+                            HideSolutionNode = FALSE
+                        EndGlobalSection
+                        GlobalSection(ExtensibilityGlobals) = postSolution
+                            SolutionGuid = {DE7234EC-0C4D-4070-B66A-DCF1B4F0CFEF}
+                        EndGlobalSection
+                    EndGlobal
+                ");
+                TransientTestFile filterFile = testEnvironment.CreateFile(folder, "solutionFilter.slnf",
+                    @"
+                {
+                  ""solution"": {
+                    ""path"": "".\\SimpleProject\\SimpleProject.sln"",
+                    ""projects"": [
+                      ""SimpleProject\\SimpleProject.csproj""
+                    ]
+                    }
+                }
+                ");
+                Directory.GetCurrentDirectory().ShouldNotBe(Path.GetDirectoryName(filterFile.Path));
+                SolutionFile solution = SolutionFile.Parse(filterFile.Path);
+                ILoggingService mockLogger = CreateMockLoggingService();
+                ProjectInstance[] instances = SolutionProjectGenerator.Generate(solution, null, null, _buildEventContext, mockLogger);
+                instances.ShouldHaveSingleItem();
+
+                // Check that dependencies are built, and non-dependencies in the .sln are not.
+                MockLogger logger = new MockLogger(output);
+                instances[0].Build(targets: null, new List<ILogger> { logger }).ShouldBeTrue();
+                logger.AssertLogContains(new string[] { "SimpleProjectBuilt" });
+                logger.AssertLogDoesntContain("ClassLibraryBuilt");
+            }
+        }
+
+        /// <summary>
         /// Verify the AddNewErrorWarningMessageElement method
         /// </summary>
         [Fact]
@@ -87,9 +199,8 @@ namespace Microsoft.Build.UnitTests.Construction
             Project project = new Project(projectXml);
 
             project.Build(logger);
-
-            string code = null;
-            string keyword = null;
+            string code;
+            string keyword;
             string text = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out code, out keyword, "SolutionParseUnknownProjectType", "proj1.csproj");
 
             // check the error event
@@ -99,9 +210,6 @@ namespace Microsoft.Build.UnitTests.Construction
             Assert.Equal(text, warning.Message);
             Assert.Equal(code, warning.Code);
             Assert.Equal(keyword, warning.HelpKeyword);
-
-            code = null;
-            keyword = null;
             text = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out code, out keyword, "SolutionInvalidSolutionConfiguration");
 
             // check the warning event
@@ -111,9 +219,6 @@ namespace Microsoft.Build.UnitTests.Construction
             Assert.Equal(text, error.Message);
             Assert.Equal(code, error.Code);
             Assert.Equal(keyword, error.HelpKeyword);
-
-            code = null;
-            keyword = null;
             text = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out code, out keyword, "SolutionVenusProjectNoClean");
 
             // check the message event
@@ -301,7 +406,6 @@ namespace Microsoft.Build.UnitTests.Construction
             Assert.Equal("ABC", instances[0].GetPropertyValue("VisualStudioVersion"));
         }
 
-
         /// <summary>
         /// Test to make sure that even if the solution version corresponds to an existing sub-toolset version
         /// </summary>
@@ -384,7 +488,6 @@ namespace Microsoft.Build.UnitTests.Construction
                         EndGlobalSection
                     EndGlobal
                 ";
-
 
             string solutionFileContentsDev11 = solutionFilePreambleV11 + solutionBodySingleProjectContents;
             string solutionFileContentsDev12 = solutionFilePreambleV12 + solutionBodySingleProjectContents;
@@ -504,7 +607,6 @@ namespace Microsoft.Build.UnitTests.Construction
                 List<ILogger> loggers = new List<ILogger>(1);
                 loggers.Add(logger);
 
-
                 instances[0].Build(loggers);
                 logger.AssertLogContains(String.Format(".[{0}].", ObjectModelHelpers.MSBuildDefaultToolsVersion));
             }
@@ -513,7 +615,6 @@ namespace Microsoft.Build.UnitTests.Construction
                 ObjectModelHelpers.DeleteTempProjectDirectory();
             }
         }
-
 
         /// <summary>
         /// Verify that we throw the appropriate error if the solution declares a dependency 
@@ -639,10 +740,10 @@ EndGlobal
             string solutionConfigurationContents = msbuildProject.GetPropertyValue("CurrentSolutionConfigurationContents");
 
             // Only the specified solution configuration is represented in THE BLOB: nothing for x64 in this case
-            string expected = @"<SolutionConfiguration>
-  <ProjectConfiguration Project=`{786E302A-96CE-43DC-B640-D6B6CC9BF6C0}` AbsolutePath=`##temp##Project1\A.csproj` BuildProjectInSolution=`True`>Debug|AnyCPU</ProjectConfiguration>
-  <ProjectConfiguration Project=`{881C1674-4ECA-451D-85B6-D7C59B7F16FA}` AbsolutePath=`##temp##Project2\B.csproj` BuildProjectInSolution=`True`>Debug|AnyCPU<ProjectDependency Project=`{4A727FF8-65F2-401E-95AD-7C8BBFBE3167}` /></ProjectConfiguration>
-  <ProjectConfiguration Project=`{4A727FF8-65F2-401E-95AD-7C8BBFBE3167}` AbsolutePath=`##temp##Project3\C.csproj` BuildProjectInSolution=`True`>Debug|AnyCPU</ProjectConfiguration>
+            string expected = $@"<SolutionConfiguration>
+  <ProjectConfiguration Project=`{{786E302A-96CE-43DC-B640-D6B6CC9BF6C0}}` AbsolutePath=`##temp##{Path.Combine("Project1", "A.csproj")}` BuildProjectInSolution=`True`>Debug|AnyCPU</ProjectConfiguration>
+  <ProjectConfiguration Project=`{{881C1674-4ECA-451D-85B6-D7C59B7F16FA}}` AbsolutePath=`##temp##{Path.Combine("Project2", "B.csproj")}` BuildProjectInSolution=`True`>Debug|AnyCPU<ProjectDependency Project=`{{4A727FF8-65F2-401E-95AD-7C8BBFBE3167}}` /></ProjectConfiguration>
+  <ProjectConfiguration Project=`{{4A727FF8-65F2-401E-95AD-7C8BBFBE3167}}` AbsolutePath=`##temp##{Path.Combine("Project3", "C.csproj")}` BuildProjectInSolution=`True`>Debug|AnyCPU</ProjectConfiguration>
 </SolutionConfiguration>".Replace("`", "\"").Replace("##temp##", Path.GetTempPath());
 
             Helpers.VerifyAssertLineByLine(expected, solutionConfigurationContents);
@@ -852,14 +953,14 @@ EndGlobal
             msbuildProject.ReevaluateIfNecessary();
 
             string solutionConfigurationContents = msbuildProject.GetPropertyValue("CurrentSolutionConfigurationContents");
-            string tempProjectPath = Path.Combine(Path.GetTempPath(), "ClassLibrary1\\ClassLibrary1.csproj");
+            string tempProjectPath = Path.Combine(Path.GetTempPath(), "ClassLibrary1", "ClassLibrary1.csproj");
 
             Assert.Contains("{6185CC21-BE89-448A-B3C0-D1C27112E595}", solutionConfigurationContents);
             tempProjectPath = Path.GetFullPath(tempProjectPath);
             Assert.True(solutionConfigurationContents.IndexOf(tempProjectPath, StringComparison.OrdinalIgnoreCase) > 0);
             Assert.Contains("CSConfig1|AnyCPU", solutionConfigurationContents);
 
-            tempProjectPath = Path.Combine(Path.GetTempPath(), "MainApp\\MainApp.vcxproj");
+            tempProjectPath = Path.Combine(Path.GetTempPath(), "MainApp", "MainApp.vcxproj");
             tempProjectPath = Path.GetFullPath(tempProjectPath);
             Assert.Contains("{A6F99D27-47B9-4EA4-BFC9-25157CBDC281}", solutionConfigurationContents);
             Assert.True(solutionConfigurationContents.IndexOf(tempProjectPath, StringComparison.OrdinalIgnoreCase) > 0);
@@ -1040,8 +1141,6 @@ EndGlobal
             }
         }
 
-
-
         /// <summary>
         /// Test that the in memory project created from a solution file exposes an MSBuild property which,
         /// if set when building a solution, will be specified as the ToolsVersion on the MSBuild task when
@@ -1090,7 +1189,7 @@ EndGlobal
                 {
                     foreach (ProjectTaskInstance childNode in target.Tasks)
                     {
-                        if (0 == String.Compare(childNode.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
+                        if (String.Equals(childNode.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                         {
                             string projectsParameter = childNode.GetParameter("Projects");
                             if (projectsParameter != "@(ProjectReference)")
@@ -1207,8 +1306,6 @@ EndGlobal
                     EndGlobalSection
                 EndGlobal
                 ";
-
-            ProjectInstance[] instances = null;
             SolutionFile solution = SolutionFile_Tests.ParseSolutionHelper(solutionFileContents);
             bool caughtException = false;
 
@@ -1216,7 +1313,7 @@ EndGlobal
             {
                 // SolutionProjectGenerator.Generate() is used at build-time, and creates evaluation- and 
                 // execution-model projects; as such it will throw if fed an explicitly invalid toolsversion
-                instances = SolutionProjectGenerator.Generate(solution, null, "invalid", _buildEventContext, CreateMockLoggingService());
+                ProjectInstance[] instances = SolutionProjectGenerator.Generate(solution, null, "invalid", _buildEventContext, CreateMockLoggingService());
             }
             catch (InvalidProjectFileException)
             {
@@ -1259,56 +1356,56 @@ EndGlobal
 
             ProjectInstance[] instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService());
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Clean", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Publish", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Clean", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Publish", StringComparison.OrdinalIgnoreCase)));
 
-            ProjectTargetInstance buildTarget = instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase) == 0).First().Value;
-            ProjectTargetInstance cleanTarget = instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Clean", StringComparison.OrdinalIgnoreCase) == 0).First().Value;
-            ProjectTargetInstance rebuildTarget = instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase) == 0).First().Value;
-            ProjectTargetInstance publishTarget = instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Publish", StringComparison.OrdinalIgnoreCase) == 0).First().Value;
+            ProjectTargetInstance buildTarget = instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase)).First().Value;
+            ProjectTargetInstance cleanTarget = instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Clean", StringComparison.OrdinalIgnoreCase)).First().Value;
+            ProjectTargetInstance rebuildTarget = instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase)).First().Value;
+            ProjectTargetInstance publishTarget = instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Publish", StringComparison.OrdinalIgnoreCase)).First().Value;
 
             // Check that the appropriate target is being passed to the child projects
             Assert.Null(buildTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Targets"));
 
             Assert.Equal("Clean", cleanTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Targets"));
 
             Assert.Equal("Rebuild", rebuildTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Targets"));
 
             Assert.Equal("Publish", publishTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Targets"));
 
             // Check that the child projects in question are the members of the "ProjectReference" item group
             Assert.Equal("@(ProjectReference)", buildTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Projects"));
 
             Assert.Equal("@(ProjectReference->Reverse())", cleanTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Projects"));
 
             Assert.Equal("@(ProjectReference)", rebuildTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Projects"));
 
             Assert.Equal("@(ProjectReference)", publishTarget.Tasks.Where
                 (
-                task => String.Compare(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) == 0
+                task => String.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase)
                 ).First().GetParameter("Projects"));
 
             // We should have only the four standard targets plus the two validation targets (ValidateSolutionConfiguration and ValidateToolsVersions).
@@ -1591,7 +1688,6 @@ EndGlobal
             Assert.Null(SolutionProjectGenerator.PredictActiveSolutionConfigurationName(solution, globalProperties));
         }
 
-
         /// <summary>
         /// Verifies that the SolutionProjectGenerator will correctly escape project file paths
         /// </summary>
@@ -1621,9 +1717,7 @@ EndGlobal
                 EndGlobal
                 ";
 
-            SolutionFile solution = null;
-
-            solution = SolutionFile_Tests.ParseSolutionHelper(solutionFileContents);
+            SolutionFile solution = SolutionFile_Tests.ParseSolutionHelper(solutionFileContents);
 
             // Creating a ProjectRootElement shouldn't affect the ProjectCollection at all
             Assert.Empty(ProjectCollection.GlobalProjectCollection.LoadedProjects);
@@ -1842,10 +1936,7 @@ EndGlobal
                 // Since we're creating our own BuildManager, we need to make sure that the default 
                 // one has properly relinquished the inproc node
                 NodeProviderInProc nodeProviderInProc = ((IBuildComponentHost)BuildManager.DefaultBuildManager).GetComponent(BuildComponentType.InProcNodeProvider) as NodeProviderInProc;
-                if (nodeProviderInProc != null)
-                {
-                    nodeProviderInProc.Dispose();
-                }
+                nodeProviderInProc?.Dispose();
 
                 File.WriteAllText(projectFilePath, solutionFileContents.Replace('\'', '"'));
                 MockLogger logger = new MockLogger(output);
@@ -1855,7 +1946,6 @@ EndGlobal
                 parameters.EnableNodeReuse = false;
                 parameters.ShutdownInProcNodeOnBuildFinish = true;
                 buildManager = new BuildManager();
-
 
                 Dictionary<string, string> globalProperties = new Dictionary<string, string>();
                 globalProperties["Configuration"] = "Release";
@@ -1934,10 +2024,7 @@ EndGlobal
                 // Since we're creating our own BuildManager, we need to make sure that the default 
                 // one has properly relinquished the inproc node
                 NodeProviderInProc nodeProviderInProc = ((IBuildComponentHost)BuildManager.DefaultBuildManager).GetComponent(BuildComponentType.InProcNodeProvider) as NodeProviderInProc;
-                if (nodeProviderInProc != null)
-                {
-                    nodeProviderInProc.Dispose();
-                }
+                nodeProviderInProc?.Dispose();
 
                 File.WriteAllText(projectFilePath, solutionFileContents.Replace('\'', '"'));
                 MockLogger logger = new MockLogger(output);
@@ -1947,7 +2034,6 @@ EndGlobal
                 parameters.EnableNodeReuse = false;
                 parameters.ShutdownInProcNodeOnBuildFinish = true;
                 buildManager = new BuildManager();
-
 
                 Dictionary<string, string> globalProperties = new Dictionary<string, string>();
                 globalProperties["Configuration"] = "Release";
@@ -2078,26 +2164,26 @@ EndGlobal
 
             ProjectInstance[] instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService(), new List<string> { "One" });
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "One", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "One", StringComparison.OrdinalIgnoreCase)));
 
             instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService(), new List<string> { "Two", "Three", "Four" });
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Two", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Three", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Four", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Two", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Three", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Four", StringComparison.OrdinalIgnoreCase)));
 
             instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService(), new List<string> { "Build" });
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Build", StringComparison.OrdinalIgnoreCase)));
 
             instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService(), new List<string> { "Five", "Rebuild" });
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Five", StringComparison.OrdinalIgnoreCase) == 0));
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Five", StringComparison.OrdinalIgnoreCase)));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Rebuild", StringComparison.OrdinalIgnoreCase)));
 
             instances = SolutionProjectGenerator.Generate(solution, null, null, BuildEventContext.Invalid, CreateMockLoggingService(), new List<string> { "My_Project:Six" });
 
-            Assert.Single(instances[0].Targets.Where(target => String.Compare(target.Value.Name, "Six", StringComparison.OrdinalIgnoreCase) == 0));
+            Assert.Single(instances[0].Targets.Where(target => String.Equals(target.Value.Name, "Six", StringComparison.OrdinalIgnoreCase)));
         }
 
         /// <summary>
@@ -2165,7 +2251,6 @@ EndGlobal
 
                 Assert.Equal(12, instances[0].Targets.Select(kvp => kvp.Value).Where(t => t.FullPath.Contains(".sln.metaproj")).Count());
             }
-
 
             instances = SolutionProjectGenerator.Generate(solution, globalProperties, null, BuildEventContext.Invalid, CreateMockLoggingService(), new[] { "Foo" });
 
@@ -2390,6 +2475,30 @@ EndGlobal
             {
                 ObjectModelHelpers.DeleteTempProjectDirectory();
             }
+        }
+
+        /// <summary>
+        /// Regression test for https://github.com/dotnet/msbuild/issues/6236
+        /// </summary>
+        [Theory]
+        [InlineData("http://localhost:8080")]
+        [InlineData("a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-a-really-long-string-")]
+        public void AbsolutePathWorksForUnsupportedPaths(string relativePath)
+        {
+            string solutionFileContents =
+                $@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project(""{{E24C65DC-7377-472B-9ABA-BC803B73C61A}}"") = ""WebSite1"", ""{relativePath}"", ""{{{{96E0707C-2E9C-4704-946F-FA583147737F}}}}""
+EndProject";
+
+            SolutionFile solution = SolutionFile_Tests.ParseSolutionHelper(solutionFileContents);
+
+            ProjectInSolution projectInSolution = solution.ProjectsInOrder.ShouldHaveSingleItem();
+
+            projectInSolution.AbsolutePath.ShouldBe(Path.Combine(solution.SolutionFileDirectory, projectInSolution.RelativePath));
         }
 
         #region Helper Functions

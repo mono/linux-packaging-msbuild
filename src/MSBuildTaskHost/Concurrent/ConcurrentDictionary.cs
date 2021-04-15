@@ -93,8 +93,7 @@ namespace Microsoft.Build.Shared.Concurrent
         /// </summary>
         public ConcurrentDictionary(IEqualityComparer<TKey> comparer = null)
         {
-
-            int concurrencyLevel = Environment.ProcessorCount;
+            int concurrencyLevel = NativeMethodsShared.GetLogicalCoreCount();
             int capacity = DefaultCapacity;
 
             // The capacity should be at least as large as the concurrency level. Otherwise, we would have locks that don't guard
@@ -347,7 +346,7 @@ namespace Microsoft.Build.Shared.Concurrent
                     checked
                     {
                         // Double the size of the buckets table and add one, so that we have an odd integer.
-                        newLength = tables._buckets.Length * 2 + 1;
+                        newLength = (tables._buckets.Length * 2) + 1;
 
                         // Now, we only need to check odd integers, and find the first that is not divisible
                         // by 3, 5 or 7.

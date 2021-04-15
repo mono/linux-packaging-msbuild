@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
 using System.Collections;
 using System.Xml;
 using System;
@@ -125,7 +124,6 @@ namespace Microsoft.Build.BuildEngine
                 node = ExprPrime(expression, node);
             }
 
-
             #region REMOVE_COMPAT_WARNING
             // Check for potential change in behavior
             if (LoggingServices != null && !warnedForExpression &&
@@ -177,7 +175,7 @@ namespace Microsoft.Build.BuildEngine
         private GenericExpressionNode BooleanTerm(string expression)
         {
             GenericExpressionNode node = RelationalExpr(expression);
-            if (null == node)
+            if (node == null)
             {
                 errorPosition = lexer.GetErrorPosition();
                 ProjectErrorUtilities.VerifyThrowInvalidProject(false, this.conditionAttribute, "UnexpectedTokenInCondition", expression, lexer.IsNextString(), errorPosition);
@@ -199,7 +197,7 @@ namespace Microsoft.Build.BuildEngine
             else if (Same(expression, Token.TokenType.And))
             {
                 GenericExpressionNode rhs = RelationalExpr(expression);
-                if (null == rhs)
+                if (rhs == null)
                 {
                     errorPosition = lexer.GetErrorPosition();
                     ProjectErrorUtilities.VerifyThrowInvalidProject(false, this.conditionAttribute, "UnexpectedTokenInCondition", expression, lexer.IsNextString(), errorPosition);
@@ -221,7 +219,7 @@ namespace Microsoft.Build.BuildEngine
         {
          {
                 GenericExpressionNode lhs = Factor(expression);
-                if (null == lhs)
+                if (lhs == null)
                 {
                     errorPosition = lexer.GetErrorPosition();
                     ProjectErrorUtilities.VerifyThrowInvalidProject(false, this.conditionAttribute, "UnexpectedTokenInCondition", expression, lexer.IsNextString(), errorPosition);
@@ -238,7 +236,6 @@ namespace Microsoft.Build.BuildEngine
                 return node;
             }
         }
-
 
         private OperatorExpressionNode RelationalOperation(string expression)
         {
@@ -384,7 +381,7 @@ namespace Microsoft.Build.BuildEngine
                 if (!lexer.Advance())
                 {
                     errorPosition = lexer.GetErrorPosition();
-                    if (null != lexer.UnexpectedlyFound)
+                    if (lexer.UnexpectedlyFound != null)
                     {
                         ProjectErrorUtilities.VerifyThrowInvalidProject(false, this.conditionAttribute, lexer.GetErrorResource(), expression, errorPosition, lexer.UnexpectedlyFound);
                     }
@@ -398,6 +395,5 @@ namespace Microsoft.Build.BuildEngine
             else
                 return false;
         }
-
     }
 }

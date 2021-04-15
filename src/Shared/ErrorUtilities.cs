@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 #if BUILDINGAPPXTASKS
@@ -79,6 +79,19 @@ namespace Microsoft.Build.Shared
         internal static void ThrowInternalErrorUnreachable()
         {
             if (s_throwExceptions)
+            {
+                throw new InternalErrorException("Unreachable?");
+            }
+        }
+
+        /// <summary>
+        /// Throws InternalErrorException. 
+        /// Indicates the code path followed should not have been possible.
+        /// This is only for situations that would mean that there is a bug in MSBuild itself.
+        /// </summary>
+        internal static void VerifyThrowInternalErrorUnreachable(bool condition)
+        {
+            if (s_throwExceptions && !condition)
             {
                 throw new InternalErrorException("Unreachable?");
             }
@@ -731,6 +744,37 @@ namespace Microsoft.Build.Shared
                 throw new ArgumentException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("Shared.ParameterCannotHaveZeroLength", parameterName));
             }
         }
+
+#if !CLR2COMPATIBILITY
+        /// <summary>
+        /// Throws an ArgumentNullException if the given collection is null
+        /// and ArgumentException if it has zero length.
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="parameterName"></param>
+        internal static void VerifyThrowArgumentLength<T>(IReadOnlyCollection<T> parameter, string parameterName)
+        {
+            VerifyThrowArgumentNull(parameter, parameterName);
+
+            if (parameter.Count == 0 && s_throwExceptions)
+            {
+                throw new ArgumentException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("Shared.ParameterCannotHaveZeroLength", parameterName));
+            }
+        }
+
+        /// <summary>
+        /// Throws an ArgumentException if the given collection is not null but of zero length.
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="parameterName"></param>
+        internal static void VerifyThrowArgumentLengthIfNotNull<T>(IReadOnlyCollection<T> parameter, string parameterName)
+        {
+            if (parameter?.Count == 0 && s_throwExceptions)
+            {
+                throw new ArgumentException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("Shared.ParameterCannotHaveZeroLength", parameterName));
+            }
+        }
+#endif
         
         /// <summary>
         /// Throws an ArgumentNullException if the given string parameter is null
@@ -754,7 +798,7 @@ namespace Microsoft.Build.Shared
         /// </summary>
         internal static void VerifyThrowArgumentLengthIfNotNull(string parameter, string parameterName)
         {
-            if (parameter != null && parameter.Length == 0 && s_throwExceptions)
+            if (parameter?.Length == 0 && s_throwExceptions)
             {
                 throw new ArgumentException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("Shared.ParameterCannotHaveZeroLength", parameterName));
             }

@@ -2,15 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
-using System.Xml;
 using System.Runtime.Serialization;
 #if FEATURE_SECURITY_PERMISSIONS
 using System.Security.Permissions;
 #endif
 
 using Microsoft.Build.Shared;
-using Microsoft.Build.Evaluation;
 
 namespace Microsoft.Build.Exceptions
 {
@@ -18,11 +15,9 @@ namespace Microsoft.Build.Exceptions
     /// This exception is thrown whenever there is a problem with the user's XML project file. The problem might be semantic or
     /// syntactical. The latter would be of a type typically caught by XSD validation (if it was performed by the project writer).
     /// </summary>
-    /// <remarks>
-    /// WARNING: marking a type [Serializable] without implementing ISerializable imposes a serialization contract -- it is a
-    /// promise to never change the type's fields i.e. the type is immutable; adding new fields in the next version of the type
-    /// without following certain special FX guidelines, can break both forward and backward compatibility
-    /// </remarks>
+    // WARNING: marking a type [Serializable] without implementing ISerializable imposes a serialization contract -- it is a
+    // promise to never change the type's fields i.e. the type is immutable; adding new fields in the next version of the type
+    // without following certain special FX guidelines, can break both forward and backward compatibility
     [Serializable]
     public sealed class InvalidProjectFileException : Exception
     {
@@ -186,8 +181,8 @@ namespace Microsoft.Build.Exceptions
             Exception innerException
         ) : base(message, innerException)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
-            ErrorUtilities.VerifyThrowArgumentLength(message, "message");
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, nameof(projectFile));
+            ErrorUtilities.VerifyThrowArgumentLength(message, nameof(message));
 
             // Try to helpfully provide a full path if possible, but do so robustly.
             // This exception might be because the path was invalid!
@@ -196,7 +191,7 @@ namespace Microsoft.Build.Exceptions
             {
                 string fullPath = FileUtilities.GetFullPathNoThrow(projectFile);
 
-                projectFile = (fullPath == null) ? projectFile : fullPath;
+                projectFile = fullPath ?? projectFile;
             }
 
             file = projectFile;

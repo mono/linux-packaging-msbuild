@@ -10,7 +10,6 @@ using System.Runtime.Remoting.Lifetime;
 using System.Runtime.Remoting;
 #endif
 using System.Threading;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Execution;
@@ -34,10 +33,10 @@ namespace Microsoft.Build.BackEnd
 #if FEATURE_APPDOMAIN
         MarshalByRefObject,
 #endif
-        IBuildEngine6
+        IBuildEngine7
     {
         /// <summary>
-        /// True if the "secret" environment variable MSBUILDNOINPROCNODE is set. 
+        /// True if the "secret" environment variable MSBUILDNOINPROCNODE is set.
         /// </summary>
         private static bool s_onlyUseOutOfProcNodes = Environment.GetEnvironmentVariable("MSBUILDNOINPROCNODE") == "1";
 
@@ -114,9 +113,9 @@ namespace Microsoft.Build.BackEnd
         /// <param name="targetBuilderCallback">An <see cref="ITargetBuilderCallback"/> to use to invoke targets and build projects.</param>
         public TaskHost(IBuildComponentHost host, BuildRequestEntry requestEntry, ElementLocation taskLocation, ITargetBuilderCallback targetBuilderCallback)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(host, "host");
-            ErrorUtilities.VerifyThrowArgumentNull(requestEntry, "requestEntry");
-            ErrorUtilities.VerifyThrowInternalNull(taskLocation, "taskLocation");
+            ErrorUtilities.VerifyThrowArgumentNull(host, nameof(host));
+            ErrorUtilities.VerifyThrowArgumentNull(requestEntry, nameof(requestEntry));
+            ErrorUtilities.VerifyThrowInternalNull(taskLocation, nameof(taskLocation));
 
             _host = host;
             _requestEntry = requestEntry;
@@ -131,7 +130,7 @@ namespace Microsoft.Build.BackEnd
         /// Returns true in the multiproc case
         /// </summary>
         /// <comment>
-        /// If MSBUILDNOINPROCNODE is set, then even if there's only one node in the buildparameters, it will be an out-of-proc node.  
+        /// If MSBUILDNOINPROCNODE is set, then even if there's only one node in the buildparameters, it will be an out-of-proc node.
         /// </comment>
         public bool IsRunningMultipleNodes
         {
@@ -320,7 +319,7 @@ namespace Microsoft.Build.BackEnd
         #region IBuildEngine3 Members
 
         /// <summary>
-        /// Builds multiple project files in parallel. 
+        /// Builds multiple project files in parallel.
         /// Thread safe.
         /// </summary>
         /// <param name="projectFileNames">The list of projects to build</param>
@@ -328,7 +327,7 @@ namespace Microsoft.Build.BackEnd
         /// <param name="globalProperties">The global properties to use for each project</param>
         /// <param name="undefineProperties">The list of global properties to undefine</param>
         /// <param name="toolsVersion">The tools versions to use</param>
-        /// <param name="returnTargetOutputs">Should the target outputs be returned in teh BuildEngineResult</param>
+        /// <param name="returnTargetOutputs">Should the target outputs be returned in the BuildEngineResult</param>
         /// <returns>A structure containing the result of the build, success or failure and the list of target outputs per project</returns>
         public BuildEngineResult BuildProjectFilesInParallel(string[] projectFileNames, string[] targetNames, System.Collections.IDictionary[] globalProperties, IList<String>[] undefineProperties, string[] toolsVersion, bool returnTargetOutputs)
         {
@@ -388,7 +387,7 @@ namespace Microsoft.Build.BackEnd
         {
             lock (_callbackMonitor)
             {
-                ErrorUtilities.VerifyThrowArgumentNull(e, "e");
+                ErrorUtilities.VerifyThrowArgumentNull(e, nameof(e));
 
                 if (!_activeProxy)
                 {
@@ -445,6 +444,7 @@ namespace Microsoft.Build.BackEnd
                 {
                     e.BuildEventContext = _taskLoggingContext.BuildEventContext;
                     _taskLoggingContext.LoggingService.LogBuildEvent(e);
+                    _taskLoggingContext.HasLoggedErrors = true;
                 }
             }
         }
@@ -458,7 +458,7 @@ namespace Microsoft.Build.BackEnd
         {
             lock (_callbackMonitor)
             {
-                ErrorUtilities.VerifyThrowArgumentNull(e, "e");
+                ErrorUtilities.VerifyThrowArgumentNull(e, nameof(e));
 
                 if (!_activeProxy)
                 {
@@ -499,7 +499,7 @@ namespace Microsoft.Build.BackEnd
         {
             lock (_callbackMonitor)
             {
-                ErrorUtilities.VerifyThrowArgumentNull(e, "e");
+                ErrorUtilities.VerifyThrowArgumentNull(e, nameof(e));
 
                 if (!_activeProxy)
                 {
@@ -540,7 +540,7 @@ namespace Microsoft.Build.BackEnd
         {
             lock (_callbackMonitor)
             {
-                ErrorUtilities.VerifyThrowArgumentNull(e, "e");
+                ErrorUtilities.VerifyThrowArgumentNull(e, nameof(e));
 
                 if (!_activeProxy)
                 {
@@ -631,7 +631,7 @@ namespace Microsoft.Build.BackEnd
         {
             lock (_callbackMonitor)
             {
-                ErrorUtilities.VerifyThrowArgumentNull(eventName, "eventName");
+                ErrorUtilities.VerifyThrowArgumentNull(eventName, nameof(eventName));
 
                 if (!_activeProxy)
                 {
@@ -669,14 +669,21 @@ namespace Microsoft.Build.BackEnd
 
         #endregion
 
+        #region IBuildEngine7 Members
+        /// <summary>
+        /// Enables or disables emitting a default error when a task fails without logging errors
+        /// </summary>
+        public bool AllowFailureWithoutError { get; set; } = false;
+        #endregion
+
         /// <summary>
         /// Called by the internal MSBuild task.
         /// Does not take the lock because it is called by another request builder thread.
         /// </summary>
         public async Task<BuildEngineResult> InternalBuildProjects(string[] projectFileNames, string[] targetNames, IDictionary[] globalProperties, IList<String>[] undefineProperties, string[] toolsVersion, bool returnTargetOutputs, bool skipNonexistentTargets = false)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(projectFileNames, "projectFileNames");
-            ErrorUtilities.VerifyThrowArgumentNull(globalProperties, "globalProperties");
+            ErrorUtilities.VerifyThrowArgumentNull(projectFileNames, nameof(projectFileNames));
+            ErrorUtilities.VerifyThrowArgumentNull(globalProperties, nameof(globalProperties));
             VerifyActiveProxy();
 
             BuildEngineResult result;
@@ -718,7 +725,7 @@ namespace Microsoft.Build.BackEnd
 #if FEATURE_APPDOMAIN
         /// <inheritdoc />
         /// <summary>
-        /// InitializeLifetimeService is called when the remote object is activated. 
+        /// InitializeLifetimeService is called when the remote object is activated.
         /// This method will determine how long the lifetime for the object will be.
         /// </summary>
         /// <returns>The lease object to control this object's lifetime.</returns>
@@ -803,10 +810,7 @@ namespace Microsoft.Build.BackEnd
                 {
                     ILease lease = (ILease)RemotingServices.GetLifetimeService(this);
 
-                    if (lease != null)
-                    {
-                        lease.Unregister(_sponsor);
-                    }
+                    lease?.Unregister(_sponsor);
 
                     _sponsor.Close();
                     _sponsor = null;
@@ -838,13 +842,13 @@ namespace Microsoft.Build.BackEnd
         /// <param name="globalProperties">The global properties to use for each project</param>
         /// <param name="undefineProperties">The list of global properties to undefine</param>
         /// <param name="toolsVersion">The tools versions to use</param>
-        /// <param name="returnTargetOutputs">Should the target outputs be returned in teh BuildEngineResult</param>
+        /// <param name="returnTargetOutputs">Should the target outputs be returned in the BuildEngineResult</param>
         /// <param name="skipNonexistentTargets">If set, skip targets that are not defined in the projects to be built.</param>
         /// <returns>A Task returning a structure containing the result of the build, success or failure and the list of target outputs per project</returns>
         private async Task<BuildEngineResult> BuildProjectFilesInParallelAsync(string[] projectFileNames, string[] targetNames, IDictionary[] globalProperties, IList<String>[] undefineProperties, string[] toolsVersion, bool returnTargetOutputs, bool skipNonexistentTargets = false)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(projectFileNames, "projectFileNames");
-            ErrorUtilities.VerifyThrowArgumentNull(globalProperties, "globalProperties");
+            ErrorUtilities.VerifyThrowArgumentNull(projectFileNames, nameof(projectFileNames));
+            ErrorUtilities.VerifyThrowArgumentNull(globalProperties, nameof(globalProperties));
             VerifyActiveProxy();
 
             List<IDictionary<string, ITaskItem[]>> targetOutputsPerProject = null;
@@ -926,10 +930,7 @@ namespace Microsoft.Build.BackEnd
                     // Now walk through the results, and report that subset which was asked for.
                     for (int i = 0; i < results.Length; i++)
                     {
-                        if (targetOutputsPerProject != null)
-                        {
-                            targetOutputsPerProject.Add(new Dictionary<string, ITaskItem[]>(StringComparer.OrdinalIgnoreCase));
-                        }
+                        targetOutputsPerProject?.Add(new Dictionary<string, ITaskItem[]>(StringComparer.OrdinalIgnoreCase));
 
                         foreach (KeyValuePair<string, TargetResult> resultEntry in results[i].ResultsByTarget)
                         {
@@ -964,7 +965,7 @@ namespace Microsoft.Build.BackEnd
                         }
                     }
 
-                    ErrorUtilities.VerifyThrow(results.Length == projectFileNames.Length || overallSuccess == false, "The number of results returned {0} cannot be less than the number of project files {1} unless one of the results indicated failure.", results.Length, projectFileNames.Length);
+                    ErrorUtilities.VerifyThrow(results.Length == projectFileNames.Length || !overallSuccess, "The number of results returned {0} cannot be less than the number of project files {1} unless one of the results indicated failure.", results.Length, projectFileNames.Length);
                 }
 
                 BuildRequestsSucceeded = overallSuccess;
@@ -979,7 +980,7 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private void VerifyActiveProxy()
         {
-            ErrorUtilities.VerifyThrow(_activeProxy == true, "Attempted to use an inactive task host.");
+            ErrorUtilities.VerifyThrow(_activeProxy, "Attempted to use an inactive task host.");
         }
     }
 }

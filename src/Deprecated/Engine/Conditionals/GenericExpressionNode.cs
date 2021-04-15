@@ -1,12 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
-using System.IO;
-using System.Xml;
-using System;
-
 using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
@@ -76,7 +70,7 @@ namespace Microsoft.Build.BuildEngine
             // first one returns false
             bool detectOr = DetectOr();
             bool detectAnd = DetectAnd();
-            return (detectOr && detectAnd);
+            return detectOr && detectAnd;
         }
 
         internal abstract bool DetectOr();

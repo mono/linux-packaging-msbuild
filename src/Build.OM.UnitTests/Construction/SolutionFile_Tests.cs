@@ -7,7 +7,9 @@ using System.IO;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Exceptions;
+using Shouldly;
 using Xunit;
+using System.Text;
 
 namespace Microsoft.Build.UnitTests.Construction
 {
@@ -16,6 +18,72 @@ namespace Microsoft.Build.UnitTests.Construction
     /// </summary>
     public class SolutionFile_Tests
     {
+        [Theory]
+        [InlineData(@"
+                {
+                  ""solution"": {
+                    ""path"": ""C:\\notAPath\\MSBuild.Dev.sln"",
+                    ""projects2"": [
+                      ""src\\Build\\Microsoft.Build.csproj"",
+                      ""src\\Framework\\Microsoft.Build.Framework.csproj"",
+                      ""src\\MSBuild\\MSBuild.csproj"",
+                      ""src\\Tasks.UnitTests\\Microsoft.Build.Tasks.UnitTests.csproj""
+                    ]
+                    }
+                }
+                ", "MSBuild.SolutionFilterJsonParsingError")]
+        [InlineData(@"
+                [{
+                  ""solution"": {
+                    ""path"": ""C:\\notAPath\\MSBuild.Dev.sln"",
+                    ""projects"": [
+                      ""src\\Build\\Microsoft.Build.csproj"",
+                      ""src\\Framework\\Microsoft.Build.Framework.csproj"",
+                      ""src\\MSBuild\\MSBuild.csproj"",
+                      ""src\\Tasks.UnitTests\\Microsoft.Build.Tasks.UnitTests.csproj""
+                    ]
+                    }
+                }]
+                ", "MSBuild.SolutionFilterJsonParsingError")]
+        [InlineData(@"
+                {
+                  ""solution"": {
+                    ""path"": ""C:\\notAPath\\MSBuild.Dev.sln"",
+                    ""projects"": [
+                      {""path"": ""src\\Build\\Microsoft.Build.csproj""},
+                      {""path"": ""src\\Framework\\Microsoft.Build.Framework.csproj""},
+                      {""path"": ""src\\MSBuild\\MSBuild.csproj""},
+                      {""path"": ""src\\Tasks.UnitTests\\Microsoft.Build.Tasks.UnitTests.csproj""}
+                    ]
+                    }
+                }
+                ", "MSBuild.SolutionFilterJsonParsingError")]
+        [InlineData(@"
+                {
+                  ""solution"": {
+                    ""path"": ""C:\\notAPath2\\MSBuild.Dev.sln"",
+                    ""projects"": [
+                      {""path"": ""src\\Build\\Microsoft.Build.csproj""},
+                      {""path"": ""src\\Framework\\Microsoft.Build.Framework.csproj""},
+                      {""path"": ""src\\MSBuild\\MSBuild.csproj""},
+                      {""path"": ""src\\Tasks.UnitTests\\Microsoft.Build.Tasks.UnitTests.csproj""}
+                    ]
+                    }
+                }
+                ", "MSBuild.SolutionFilterMissingSolutionError")]
+        public void InvalidSolutionFilters(string slnfValue, string exceptionReason)
+        {
+            Assert.False(File.Exists("C:\\notAPath2\\MSBuild.Dev.sln"));
+            using (TestEnvironment testEnvironment = TestEnvironment.Create())
+            {
+                TransientTestFolder folder = testEnvironment.CreateFolder(createFolder: true);
+                TransientTestFile sln = testEnvironment.CreateFile(folder, "Dev.sln");
+                TransientTestFile slnf = testEnvironment.CreateFile(folder, "Dev.slnf", slnfValue.Replace(@"C:\\notAPath\\MSBuild.Dev.sln", sln.Path.Replace("\\", "\\\\")));
+                InvalidProjectFileException e = Should.Throw<InvalidProjectFileException>(() => SolutionFile.Parse(slnf.Path));
+                e.HelpKeyword.ShouldBe(exceptionReason);
+            }
+        }
+
         /// <summary>
         /// Test that a project with the C++ project guid and an extension of vcproj is seen as invalid.
         /// </summary>
@@ -998,6 +1066,59 @@ namespace Microsoft.Build.UnitTests.Construction
 
             Assert.Equal("Debug", solution.GetDefaultConfigurationName()); // "Default solution configuration"
             Assert.Equal(".NET", solution.GetDefaultPlatformName()); // "Default solution platform"
+        }
+
+        /// <summary>
+        /// Parse solution file with comments
+        /// </summary>
+        [Fact]
+        public void ParseSolutionWithComments()
+        {
+            const string solutionFileContent = @"
+                    Microsoft Visual Studio Solution File, Format Version 12.00
+                    # Visual Studio Version 16
+                    VisualStudioVersion = 16.0.29123.89
+                    MinimumVisualStudioVersion = 10.0.40219.1
+                    Project('{9A19103F-16F7-4668-BE54-9A1E7A4F7556}') = 'SlnCommentTest', 'SlnCommentTest.csproj', '{00000000-0000-0000-FFFF-FFFFFFFFFFFF}'
+                    EndProject
+                    Project('{2150E333-8FDC-42A3-9474-1A3956D46DE8}') = 'Solution Items', 'Solution Items', '{054DED3B-B890-4652-B449-839F581E5D86}'
+	                    ProjectSection(SolutionItems) = preProject
+		                    SlnFile.txt = SlnFile.txt
+	                    EndProjectSection
+                    EndProject
+                    Global
+	                    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		                    Debug|Any CPU = Debug|Any CPU
+		                    Release|Any CPU = Release|Any CPU
+	                    EndGlobalSection
+	                    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		                    {00000000-0000-0000-FFFF-FFFFFFFFFFFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		                    {00000000-0000-0000-FFFF-FFFFFFFFFFFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		                    {00000000-0000-0000-FFFF-FFFFFFFFFFFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		                    {00000000-0000-0000-FFFF-FFFFFFFFFFFF}.Release|Any CPU.Build.0 = Release|Any CPU
+	                    EndGlobalSection
+	                    GlobalSection(SolutionProperties) = preSolution
+		                    HideSolutionNode = FALSE
+	                    EndGlobalSection
+	                    GlobalSection(ExtensibilityGlobals) = postSolution
+		                    SolutionGuid = {FFFFFFFF-FFFF-FFFF-0000-000000000000}
+	                    EndGlobalSection
+                    EndGlobal
+                    ";
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            // Put comment between all lines
+            const string comment = "\t# comment";
+            string[] lines = solutionFileContent.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                stringBuilder.AppendLine(comment);
+                stringBuilder.AppendLine(lines[i]);
+            }
+            stringBuilder.AppendLine(comment);
+
+            Should.NotThrow(() => ParseSolutionHelper(stringBuilder.ToString()));
         }
 
         /// <summary>

@@ -3,17 +3,9 @@
 
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
-    using System.Xml.Schema;
     using Microsoft.Build.Construction;
-    using Microsoft.Build.Evaluation;
     using Xunit;
-    using Xunit.Abstractions;
-    using Xunit.Sdk;
 
     /// <summary>
     /// Most importantly we want to touch implementation to all public method to catch any
@@ -109,7 +101,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
             Assert.Equal(realXml["b"], viewXml["b"]);
             Assert.Equal("x", viewXml["a"]);
             Assert.Equal("y", viewXml["b"]);
-
         }
 
         [Fact]
@@ -285,7 +276,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         [Fact]
         public void ProjectUsingTaskElementReadOnly()
         {
-
             var preReal = this.StdGroup.RealXml;
             var preView = this.StdGroup.ViewXml;
 

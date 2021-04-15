@@ -2,15 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-
-using InvalidProjectFileException = Microsoft.Build.Exceptions.InvalidProjectFileException;
 
 namespace Microsoft.Build.BackEnd.Logging
 {
@@ -65,6 +59,7 @@ namespace Microsoft.Build.BackEnd.Logging
         {
             ErrorUtilities.VerifyThrow(IsValid, "must be valid");
             LoggingService.LogFatalTaskError(BuildEventContext, exception, file, taskName);
+            _hasLoggedErrors = true;
         }
     }
 }

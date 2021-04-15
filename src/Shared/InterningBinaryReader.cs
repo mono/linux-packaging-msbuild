@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using System.Globalization;
 
 using ErrorUtilities = Microsoft.Build.Shared.ErrorUtilities;
 
@@ -128,10 +126,7 @@ namespace Microsoft.Build
 
                     charsRead = _decoder.GetChars(rawBuffer, rawPosition, n, charBuffer, 0);
 
-                    if (memoryStream != null)
-                    {
-                        memoryStream.Seek(readLength, SeekOrigin.Current);
-                    }
+                    memoryStream?.Seek(readLength, SeekOrigin.Current);
 
                     if (currPos == 0 && n == stringLength)
                     {

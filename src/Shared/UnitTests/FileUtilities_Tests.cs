@@ -2,13 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Text;
 using System.Threading;
-using Microsoft.Build.Evaluation;
+using System.Linq;
 using Microsoft.Build.Shared;
 using Shouldly;
 using Xunit;
@@ -243,7 +240,10 @@ namespace Microsoft.Build.UnitTests
         {
             var result = FileUtilities.HasExtension(fileName, allowedExtensions);
 
-            Assert.True(result);
+            if (!FileUtilities.GetIsFileSystemCaseSensitive() || allowedExtensions.Any(extension => fileName.Contains(extension)))
+            {
+                result.ShouldBeTrue();
+            }
         }
 
         [Theory]
@@ -269,7 +269,6 @@ namespace Microsoft.Build.UnitTests
             Assert.Throws<ArgumentException>(() =>
             {
                 FileUtilities.HasExtension("|/", new[] { ".exe" });
-
             });
         }
 
@@ -283,7 +282,7 @@ namespace Microsoft.Build.UnitTests
 
                 var result = FileUtilities.HasExtension("foo.ini", new string[] { ".INI" });
 
-                Assert.True(result);
+                result.ShouldBe(!FileUtilities.GetIsFileSystemCaseSensitive());
             }
             finally
             {

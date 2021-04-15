@@ -1,12 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections;
 using System.Globalization;
-using System.Text;
-
-using Microsoft.Build.BuildEngine;
 
 namespace Microsoft.Build.BuildEngine.Shared
 {
@@ -31,7 +26,7 @@ namespace Microsoft.Build.BuildEngine.Shared
             this.platformName = platformName;
 
             // Some configurations don't have the platform part
-            if ((platformName != null) && (platformName.Length > 0))
+            if (!string.IsNullOrEmpty(platformName))
             {
                 this.fullName = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}", configurationName, configurationPlatformSeparator, platformName);
             }

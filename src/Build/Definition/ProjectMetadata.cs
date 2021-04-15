@@ -4,7 +4,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
 using Microsoft.Build.Collections;
 using Microsoft.Build.ObjectModelRemoting;
 using Microsoft.Build.Shared;
@@ -19,7 +18,7 @@ namespace Microsoft.Build.Evaluation
     /// Never used to represent built-in metadata, like %(Filename). There is always a backing XML object.
     /// </remarks>
     [DebuggerDisplay("{Name}={EvaluatedValue} [{_xml.Value}]")]
-    public class ProjectMetadata : IKeyed, IValued, IEquatable<ProjectMetadata>, IMetadatum
+    public class ProjectMetadata : IEquatable<ProjectMetadata>, IMetadatum
     {
         /// <summary>
         /// Parent item or item definition that this metadatum lives in.
@@ -56,8 +55,8 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         internal ProjectMetadata(object parent, ProjectMetadataElement xml)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(parent, "parent");
-            ErrorUtilities.VerifyThrowArgumentNull(xml, "xml");
+            ErrorUtilities.VerifyThrowArgumentNull(parent, nameof(parent));
+            ErrorUtilities.VerifyThrowArgumentNull(xml, nameof(xml));
 
             _parent = (IProjectMetadataParent)parent;
             _xml = xml;
@@ -69,9 +68,9 @@ namespace Microsoft.Build.Evaluation
         /// </summary>
         internal ProjectMetadata(IProjectMetadataParent parent, ProjectMetadataElement xml, string evaluatedValueEscaped, ProjectMetadata predecessor)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(parent, "parent");
-            ErrorUtilities.VerifyThrowArgumentNull(xml, "xml");
-            ErrorUtilities.VerifyThrowArgumentNull(evaluatedValueEscaped, "evaluatedValueEscaped");
+            ErrorUtilities.VerifyThrowArgumentNull(parent, nameof(parent));
+            ErrorUtilities.VerifyThrowArgumentNull(xml, nameof(xml));
+            ErrorUtilities.VerifyThrowArgumentNull(evaluatedValueEscaped, nameof(evaluatedValueEscaped));
 
             _parent = parent;
             _xml = xml;
@@ -132,7 +131,7 @@ namespace Microsoft.Build.Evaluation
             {
                 ErrorUtilities.VerifyThrowArgumentNull(value, "value");
                 Project.VerifyThrowInvalidOperationNotImported(_xml.ContainingProject);
-                ErrorUtilities.VerifyThrowInvalidOperation(_xml.Parent != null && _xml.Parent.Parent != null && _xml.Parent.Parent.Parent != null, "OM_ObjectIsNoLongerActive");
+                ErrorUtilities.VerifyThrowInvalidOperation(_xml.Parent?.Parent?.Parent != null, "OM_ObjectIsNoLongerActive");
 
                 if (String.Equals(_xml.Value, value, StringComparison.Ordinal))
                 {
@@ -143,7 +142,6 @@ namespace Microsoft.Build.Evaluation
 
                 if (_evaluatedValueEscaped != null)
                 {
-
                     // Clear out the current value of this metadata, so the new value can't refer to the old one.
                     // The expansion call below otherwise passes in the parent item's metadata - including this one's
                     // current value.
@@ -287,8 +285,8 @@ namespace Microsoft.Build.Evaluation
                 return false;
             }
 
-            return (_xml == other._xml &&
-                    EvaluatedValueEscaped == other.EvaluatedValueEscaped);
+            return _xml == other._xml &&
+                    EvaluatedValueEscaped == other.EvaluatedValueEscaped;
         }
 
         #endregion

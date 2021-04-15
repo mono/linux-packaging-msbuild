@@ -2,11 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Text;
-using System.Collections;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
@@ -57,7 +52,6 @@ namespace Microsoft.Build.Logging
         private string _parameters;
         private bool _skipProjectStartedText = false;
         private bool? _showSummary;
-
 
         #region Constructors
 
@@ -120,19 +114,19 @@ namespace Microsoft.Build.Logging
                 {
                     if (param.Length <= 0) continue;
 
-                    if (0 == string.Compare(param, "ENABLEMPLOGGING", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(param, "ENABLEMPLOGGING", StringComparison.OrdinalIgnoreCase))
                     {
                         useMPLogger = true;
                     }
-                    if (0 == string.Compare(param, "DISABLEMPLOGGING", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(param, "DISABLEMPLOGGING", StringComparison.OrdinalIgnoreCase))
                     {
                         useMPLogger = false;
                     }
-                    if (0 == string.Compare(param, "DISABLECONSOLECOLOR", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(param, "DISABLECONSOLECOLOR", StringComparison.OrdinalIgnoreCase))
                     {
                         disableConsoleColor = true;
                     }
-                    if (0 == string.Compare(param, "FORCECONSOLECOLOR", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(param, "FORCECONSOLECOLOR", StringComparison.OrdinalIgnoreCase))
                     {
                         forceConsoleColor = true;
                     }

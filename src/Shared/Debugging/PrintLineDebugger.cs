@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using CommonWriterType = System.Action<string, string, System.Collections.Generic.IEnumerable<string>>;
 
 namespace Microsoft.Build.Shared.Debugging
@@ -63,15 +62,12 @@ namespace Microsoft.Build.Shared.Debugging
 
                     Trace.Assert(!string.IsNullOrEmpty(nodeMode));
 
-                    switch (nodeMode)
+                    return nodeMode switch
                     {
-                        case "1":
-                            return NodeMode.OutOfProcNode;
-                        case "2":
-                            return NodeMode.OutOfProcTaskHostNode;
-                        default:
-                            throw new NotImplementedException();
-                    }
+                        "1" => NodeMode.OutOfProcNode,
+                        "2" => NodeMode.OutOfProcTaskHostNode,
+                        _ => throw new NotImplementedException(),
+                    };
                 }
             });
 

@@ -381,9 +381,9 @@ namespace Microsoft.Build.Utilities
             // now that we have our dependencies, we need to check if any of them are newer than the outputs.
             DateTime newestSourceDependencyTime;
             DateTime oldestOutputTime;
-            string newestSourceDependencyFile = string.Empty;
             string oldestOutputFile = string.Empty;
 
+            string newestSourceDependencyFile;
             if (
                 CanonicalTrackedFilesHelper.FilesExistAndRecordNewestWriteTime(sourcesNeedingCompilationList, _log, out newestSourceDependencyTime, out newestSourceDependencyFile) &&
                 CanonicalTrackedFilesHelper.FilesExistAndRecordOldestWriteTime(_outputFileGroup, _log, out oldestOutputTime, out oldestOutputFile)
@@ -424,7 +424,7 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         private void SourceDependenciesForOutputRoot(Dictionary<string, ITaskItem> sourceDependencies, string sourceKey, ITaskItem[] filesToIgnore)
         {
-            bool thereAreFilesToIgnore = filesToIgnore != null && filesToIgnore.Length > 0;
+            bool thereAreFilesToIgnore = filesToIgnore?.Length > 0;
 
             if (DependencyTable.TryGetValue(sourceKey, out Dictionary<string, string> dependencies))
             {
@@ -797,7 +797,6 @@ namespace Microsoft.Build.Utilities
                                                 break;
                                             }
 
-
                                             tlogEntry = tlog.ReadLine();
                                         }
                                     }
@@ -867,7 +866,7 @@ namespace Microsoft.Build.Utilities
         {
             // If there are no tlog files, then this will be a clean build
             // so there is no need to write a new tlog
-            if (_tlogFiles != null && _tlogFiles.Length > 0)
+            if (_tlogFiles?.Length > 0)
             {
                 string tLogRootingMarker = DependencyTableCache.FormatNormalizedTlogRootingMarker(_tlogFiles);
 
@@ -1033,6 +1032,9 @@ namespace Microsoft.Build.Utilities
         /// <param name="correspondingOutputs">Outputs that correspond ot the sources (used for same file processing)</param>
         public void RemoveDependenciesFromEntryIfMissing(ITaskItem[] source, ITaskItem[] correspondingOutputs)
         {
+            // Cache of files that have been checked and exist.
+            Dictionary<string, bool> fileCache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
             if (correspondingOutputs != null)
             {
                 ErrorUtilities.VerifyThrowArgument(source.Length == correspondingOutputs.Length, "Tracking_SourcesAndCorrespondingOutputMismatch");
@@ -1041,7 +1043,7 @@ namespace Microsoft.Build.Utilities
             // construct a combined root marker for the sources and outputs to remove from the graph
             string rootingMarker = FileTracker.FormatRootingMarker(source, correspondingOutputs);
 
-            RemoveDependenciesFromEntryIfMissing(rootingMarker);
+            RemoveDependenciesFromEntryIfMissing(rootingMarker, fileCache);
 
             // Remove entries for each individual source
             for (int sourceIndex = 0; sourceIndex < source.Length; sourceIndex++)
@@ -1049,7 +1051,7 @@ namespace Microsoft.Build.Utilities
                 rootingMarker = correspondingOutputs != null
                     ? FileTracker.FormatRootingMarker(source[sourceIndex], correspondingOutputs[sourceIndex])
                     : FileTracker.FormatRootingMarker(source[sourceIndex]);
-                RemoveDependenciesFromEntryIfMissing(rootingMarker);
+                RemoveDependenciesFromEntryIfMissing(rootingMarker, fileCache);
             }
         }
 
@@ -1057,7 +1059,8 @@ namespace Microsoft.Build.Utilities
         /// Remove the output graph entries for the given rooting marker
         /// </summary>
         /// <param name="rootingMarker"></param>
-        private void RemoveDependenciesFromEntryIfMissing(string rootingMarker)
+        /// <param name="fileCache">The cache used to store whether each file exists or not.</param>
+        private void RemoveDependenciesFromEntryIfMissing(string rootingMarker, Dictionary<string, bool> fileCache)
         {
             // In the event of incomplete tracking information (i.e. this root was not present), just continue quietly
             // as the user could have killed the tool being tracked, or another error occurred during its execution.
@@ -1070,8 +1073,19 @@ namespace Microsoft.Build.Utilities
                 {
                     if (keyIndex++ > 0)
                     {
-                        // If we are ignoring missing files, then only record those that exist
-                        if (FileUtilities.FileExistsNoThrow(file))
+                        // Record whether or not each file exists and cache it.
+                        // We do this to save time (On^2), at the expense of data O(n).
+                        bool inFileCache = fileCache.TryGetValue(file, out bool fileExists);
+
+                        // Have we cached the file yet? If not, cache whether or not it exists.
+                        if (!inFileCache)
+                        {
+                            fileExists = FileUtilities.FileExistsNoThrow(file);
+                            fileCache.Add(file, fileExists);
+                        }
+
+                        // Does the cached file exist?
+                        if (fileExists)
                         {
                             dependenciesWithoutMissingFiles.Add(file, dependencies[file]);
                         }

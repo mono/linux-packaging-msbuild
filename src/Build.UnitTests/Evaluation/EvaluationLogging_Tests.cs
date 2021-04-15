@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Engine.UnitTests;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Shouldly;
@@ -81,7 +79,7 @@ namespace Microsoft.Build.UnitTests.Evaluation
                 var projectFile = env.CreateFile().Path;
                 File.WriteAllText(projectFile, projectContents);
 
-                firstEvaluationLogger = firstEvaluationLogger ?? new MockLogger();
+                firstEvaluationLogger ??= new MockLogger();
                 collection.RegisterLogger(firstEvaluationLogger);
 
                 var project = new Project(projectFile, null, null, collection);

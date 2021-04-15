@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Shared;
 using Microsoft.Build.UnitTests;
 using Microsoft.Build.Utilities;
 using Shouldly;
@@ -17,6 +16,77 @@ namespace Microsoft.Build.Tasks.UnitTests
     public class RoslynCodeTaskFactory_Tests
     {
         private const string TaskName = "MyInlineTask";
+
+        [Fact]
+        public void RoslynCodeTaskFactory_ReuseCompilation()
+        {
+            string text1 = $@"
+<Project>
+
+  <UsingTask
+    TaskName=""Custom1""
+    TaskFactory=""RoslynCodeTaskFactory""
+    AssemblyFile=""$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll"" >
+    <ParameterGroup>
+      <SayHi ParameterType=""System.String"" Required=""true"" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include=""{typeof(Enumerable).Assembly.Location}"" />
+      <Code Type=""Fragment"" Language=""cs"">
+        Log.LogMessage(SayHi);
+      </Code>
+    </Task>
+  </UsingTask>
+
+    <Target Name=""Build"">
+        <MSBuild Projects=""p2.proj"" Targets=""Build"" />
+        <Custom1 SayHi=""hello1"" />
+        <Custom1 SayHi=""hello2"" />
+    </Target>
+
+</Project>";
+
+            var text2 = $@"
+<Project>
+
+  <UsingTask
+    TaskName=""Custom1""
+    TaskFactory=""RoslynCodeTaskFactory""
+    AssemblyFile=""$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll"" >
+    <ParameterGroup>
+      <SayHi ParameterType=""System.String"" Required=""true"" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include=""{typeof(Enumerable).Assembly.Location}"" />
+      <Code Type=""Fragment"" Language=""cs"">
+        Log.LogMessage(SayHi);
+      </Code>
+    </Task>
+  </UsingTask>
+
+    <Target Name=""Build"">
+        <Custom1 SayHi=""hello1"" />
+        <Custom1 SayHi=""hello2"" />
+    </Target>
+
+</Project>";
+
+            using var env = TestEnvironment.Create();
+
+            var p2 = env.CreateTestProjectWithFiles("p2.proj", text2);
+            text1 = text1.Replace("p2.proj", p2.ProjectFile);
+            var p1 = env.CreateTestProjectWithFiles("p1.proj", text1);
+
+            var logger = p1.BuildProjectExpectSuccess();
+            var messages = logger
+                .BuildMessageEvents
+                .Where(m => m.Message == "Compiling task source code")
+                .ToArray();
+
+            // with broken cache we get two Compiling messages
+            // as we fail to reuse the first assembly
+            messages.Count().ShouldBe(1);
+        }
 
         [Fact]
         public void VisualBasicFragment()

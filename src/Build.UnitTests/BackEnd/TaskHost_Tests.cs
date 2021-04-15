@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Collections;
 using System.Collections;
-using Microsoft.Build.Evaluation;
 using Microsoft.Build.Unittest;
 using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
 using System.Threading.Tasks;
@@ -1134,11 +1133,11 @@ namespace Microsoft.Build.UnitTests.BackEnd
             /// </summary>
             public void Initialize(IEventSource eventSource)
             {
-                eventSource.ErrorRaised += new BuildErrorEventHandler(MyCustomErrorHandler);
-                eventSource.WarningRaised += new BuildWarningEventHandler(MyCustomWarningHandler);
-                eventSource.MessageRaised += new BuildMessageEventHandler(MyCustomMessageHandler);
-                eventSource.CustomEventRaised += new CustomBuildEventHandler(MyCustomBuildHandler);
-                eventSource.AnyEventRaised += new AnyEventHandler(EventSource_AnyEventRaised);
+                eventSource.ErrorRaised += MyCustomErrorHandler;
+                eventSource.WarningRaised += MyCustomWarningHandler;
+                eventSource.MessageRaised += MyCustomMessageHandler;
+                eventSource.CustomEventRaised += MyCustomBuildHandler;
+                eventSource.AnyEventRaised += EventSource_AnyEventRaised;
             }
 
             /// <summary>
@@ -1155,7 +1154,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             {
                 if (e.Message != null)
                 {
-                    Console.Out.WriteLine("AnyEvent:" + e.Message.ToString());
+                    Console.Out.WriteLine("AnyEvent:" + e.Message);
                 }
             }
 
@@ -1168,7 +1167,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
                 _lastError = e;
                 if (e.Message != null)
                 {
-                    Console.Out.WriteLine("CustomError:" + e.Message.ToString());
+                    Console.Out.WriteLine("CustomError:" + e.Message);
                 }
             }
 
@@ -1181,7 +1180,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
                 _lastWarning = e;
                 if (e.Message != null)
                 {
-                    Console.Out.WriteLine("CustomWarning:" + e.Message.ToString());
+                    Console.Out.WriteLine("CustomWarning:" + e.Message);
                 }
             }
 
@@ -1194,7 +1193,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
                 _lastMessage = e;
                 if (e.Message != null)
                 {
-                    Console.Out.WriteLine("CustomMessage:" + e.Message.ToString());
+                    Console.Out.WriteLine("CustomMessage:" + e.Message);
                 }
             }
 
@@ -1207,7 +1206,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
                 _lastCustom = e;
                 if (e.Message != null)
                 {
-                    Console.Out.WriteLine("CustomEvent:" + e.Message.ToString());
+                    Console.Out.WriteLine("CustomEvent:" + e.Message);
                 }
             }
         }

@@ -6,9 +6,7 @@ using System.Collections.Generic;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
-using System.Collections;
 using System.Threading;
-using System.Diagnostics;
 
 namespace Microsoft.Build.BuildEngine
 {
@@ -214,7 +212,6 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         private void AddTargetStatesToCycleDetector(NodeStatus[] nodeStatus, TargetCycleDetector cycleDetector)
         {
-
             for (int i = 0; i < nodeStatus.Length; i++)
             {
                cycleDetector.AddTargetsToGraph(nodeStatus[i].StateOfInProgressTargets);
@@ -230,7 +227,6 @@ namespace Microsoft.Build.BuildEngine
         {
             for (int i = 0; i < nodeStatus.Length; i++)
             {
-
                 TimeSpan timeSinceLastNodeTaskActivity = new TimeSpan(nodeStatus[i].TimeSinceLastTaskActivity);
                 TimeSpan timeSinceLastNodeLoopActivity = new TimeSpan(nodeStatus[i].TimeSinceLastLoopActivity);
  
@@ -253,7 +249,6 @@ namespace Microsoft.Build.BuildEngine
             }
 
             parentEngine.Scheduler.DumpState();
-
         }
 
         /// <summary>

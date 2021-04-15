@@ -2,13 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Threading;
-using System.Diagnostics;
-using System.IO;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 
@@ -156,9 +151,9 @@ namespace Microsoft.Build.BackEnd
         public void SendData(int nodeId, INodePacket packet)
         {
             ErrorUtilities.VerifyThrowArgumentOutOfRange(nodeId == _inProcNodeId, "node");
-            ErrorUtilities.VerifyThrowArgumentNull(packet, "packet");
+            ErrorUtilities.VerifyThrowArgumentNull(packet, nameof(packet));
 
-            if (null == _inProcNode)
+            if (_inProcNode == null)
             {
                 return;
             }
@@ -172,7 +167,7 @@ namespace Microsoft.Build.BackEnd
         /// <param name="enableReuse">Flag indicating if the nodes should prepare for reuse.</param>
         public void ShutdownConnectedNodes(bool enableReuse)
         {
-            if (null != _inProcNode)
+            if (_inProcNode != null)
             {
                 _inProcNodeEndpoint.SendData(new NodeBuildComplete(enableReuse));
             }
@@ -338,8 +333,8 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         private bool InstantiateNode(INodePacketFactory factory)
         {
-            ErrorUtilities.VerifyThrow(null == _inProcNode, "In Proc node already instantiated.");
-            ErrorUtilities.VerifyThrow(null == _inProcNodeEndpoint, "In Proc node endpoint already instantiated.");
+            ErrorUtilities.VerifyThrow(_inProcNode == null, "In Proc node already instantiated.");
+            ErrorUtilities.VerifyThrow(_inProcNodeEndpoint == null, "In Proc node endpoint already instantiated.");
 
             NodeEndpointInProc.EndpointPair endpoints = NodeEndpointInProc.CreateInProcEndpoints(NodeEndpointInProc.EndpointMode.Synchronous, _componentHost);
 

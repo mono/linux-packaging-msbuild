@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections;
-using System.Text;
-using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 
@@ -81,7 +77,7 @@ namespace Microsoft.Build.BackEnd.Logging
         public void Initialize(IEventSource eventSource)
         {
             ErrorUtilities.VerifyThrow(eventSource != null, "eventSource is null");
-            eventSource.AnyEventRaised += new AnyEventHandler(EventSource_AnyEventRaised);
+            eventSource.AnyEventRaised += EventSource_AnyEventRaised;
 
             IEventSource2 eventSource2 = eventSource as IEventSource2;
             if (eventSource2 != null)
@@ -114,10 +110,7 @@ namespace Microsoft.Build.BackEnd.Logging
             // If no central logger was registered with the system
             // there will not be a build event redirector as there is 
             // nowhere to forward the events to.
-            if (BuildEventRedirector != null)
-            {
-                BuildEventRedirector.ForwardEvent(buildEvent);
-            }
+            BuildEventRedirector?.ForwardEvent(buildEvent);
         }
 
         #endregion

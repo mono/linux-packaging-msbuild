@@ -3,14 +3,8 @@
 
 using System;
 using System.IO;
-using System.Reflection;
-using System.Collections;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Tasks;
-using Microsoft.Build.Utilities;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using Xunit;
 
 namespace Microsoft.Build.UnitTests
@@ -342,7 +336,7 @@ namespace Microsoft.Build.UnitTests
         public void ExistsButDirectory()
         {
             Assert.Equal(new FileInfo(Path.GetTempPath()).Exists, new FileState(Path.GetTempPath()).FileExists);
-            Assert.True((new FileState(Path.GetTempPath()).IsDirectory));
+            Assert.True(new FileState(Path.GetTempPath()).IsDirectory);
         }
 
         [Fact]

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 #if FEATURE_VISUALSTUDIOSETUP
 using Microsoft.VisualStudio.Setup.Configuration;
@@ -85,7 +83,6 @@ namespace Microsoft.Build.Shared
                 // Try to CoCreate the class object.
                 return new SetupConfiguration();
             }
-
             catch (COMException ex) when (ex.ErrorCode == REGDB_E_CLASSNOTREG)
             {
                 // Try to get the class object using app-local call.

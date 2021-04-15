@@ -16,7 +16,6 @@ namespace Microsoft.Build.UnitTests
 {
     sealed public class CreateCSharpManifestResourceName_Tests
     {
-
         private readonly ITestOutputHelper _testOutput;
 
         public CreateCSharpManifestResourceName_Tests(ITestOutputHelper output)
@@ -32,14 +31,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.resx",
-                    null,
-                    true,
-                    null,    // Root namespace
-                    null,
-                    null,
-                    StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: null,    // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("MyStuff.Namespace.Class", result);
@@ -72,16 +71,15 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"irrelevant",
-                    null,
-                    true,
-                    null,    // Root namespace
-                    null,
-                    null,
-                    sourcesStream,
-                    null
+                    fileName: @"irrelevant",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: null,    // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: sourcesStream,
+                    log: null
                 );
-
 
             MemoryStream m = new MemoryStream();
             m.Write(new byte[] { 0x64, 0xc3, 0x61, 0x2e, 0x43, 0x6c, 0x61, 0x73, 0x73 }, 0, 9); // dÃa.Class in ANSI
@@ -96,8 +94,6 @@ namespace Microsoft.Build.UnitTests
 
             Assert.Equal(className, result);
         }
-
-
 
         /// <summary>
         /// Test for a namespace that has UTF8 characters but there's no BOM at the start.
@@ -123,14 +119,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"irrelevant",
-                    null,
-                    true,
-                    null,    // Root namespace
-                    null,
-                    null,
-                    sourcesStream,
-                    null
+                    fileName: @"irrelevant",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: null,    // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: sourcesStream,
+                    log: null
                 );
 
             Assert.Equal("d\u00C4a.Class", result);
@@ -145,14 +141,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.resx",
-                    null,
-                    true,
-                    null,    // Root namespace
-                    null,
-                    null,
-                    StreamHelpers.StringToStream("namespace Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: null,    // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("Namespace.Class", result);
@@ -167,14 +163,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    null,
-                    null,
-                    StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("MyStuff.Namespace.Class", result);
@@ -189,14 +185,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.en-GB.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    null,
-                    null,
-                    StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.en-GB.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("MyStuff.Namespace.Class.en-GB", result);
@@ -212,14 +208,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    null,
-                    "en-GB",
-                    StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: null,
+                    culture: "en-GB",
+                    binaryStream: StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("MyStuff.Namespace.Class.en-GB", result);
@@ -234,14 +230,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"f:\myproject\SubFolder\MyForm.fr-fr.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    null,
-                    null,
-                    StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
-                    null
+                    fileName: @"f:\myproject\SubFolder\MyForm.fr-fr.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }"),
+                    log: null
                 );
 
             Assert.Equal("MyStuff.Namespace.Class.fr-fr", result);
@@ -257,17 +253,40 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"SubFolder\MyForm.en-GB.ResX",
-                    null,
-                    true,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"SubFolder\MyForm.en-GB.ResX",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal("RootNamespace.SubFolder.MyForm.en-GB", result);
+        }
+
+        /// <summary>
+        /// Explicitly retain culture
+        /// </summary>
+        [Fact]
+        public void RootnamespaceWithCulture_RetainCultureInFileName()
+        {
+            string result =
+            CreateCSharpManifestResourceName.CreateManifestNameImpl
+                (
+                    fileName: @"Subfolder\File.cs.cshtml",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null,
+                    treatAsCultureNeutral: true // retain culture in name
+                );
+
+            result.ShouldBe("RootNamespace.Subfolder.File.cs.cshtml");
         }
 
         /// <summary>
@@ -279,14 +298,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"..\..\XmlEditor\Setup\XmlEditor.rgs",
-                    @"XmlEditor.rgs",
-                    true,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"..\..\XmlEditor\Setup\XmlEditor.rgs",
+                    linkFileName: @"XmlEditor.rgs",
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal("RootNamespace.XmlEditor.rgs", result);
@@ -301,14 +320,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"SubFolder\SplashScreen.bmp",
-                    null,
-                    true,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"SubFolder\SplashScreen.bmp",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal("RootNamespace.SubFolder.SplashScreen.bmp", result);
@@ -323,14 +342,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"SubFolder\SplashScreen.fr.bmp",
-                    null,
-                    true,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"SubFolder\SplashScreen.fr.bmp",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal(FileUtilities.FixFilePath(@"fr\RootNamespace.SubFolder.SplashScreen.bmp"), result);
@@ -345,14 +364,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"SubFolder\SplashScreen.fr.bmp",
-                    null,    // Link file name
-                    false,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"SubFolder\SplashScreen.fr.bmp",
+                    linkFileName: null,    // Link file name
+                    prependCultureAsDirectory: false,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal(@"RootNamespace.SubFolder.SplashScreen.bmp", result);
@@ -455,7 +474,6 @@ namespace Microsoft.Build.UnitTests
                 t.ManifestResourceNames[0].ItemSpec.ShouldBe(ResourceFileName, "Expecting to find the namespace & class name from SR1.cs");
             }
         }
-
 
         /// <summary>
         /// Opt into DependentUpon convention and load the expected file properly when the file is in a subfolder.
@@ -700,14 +718,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    "MyForm.en-GB.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    "MyForm.en-GB.cs",
-                    null,
-                    StreamHelpers.StringToStream("namespace ClassLibrary1 { class MyForm {} }"),
-                    null
+                    fileName: "MyForm.en-GB.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: "MyForm.en-GB.cs",
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream("namespace ClassLibrary1 { class MyForm {} }"),
+                    log: null
                 );
 
             Assert.Equal("ClassLibrary1.MyForm", result);
@@ -729,14 +747,14 @@ namespace Microsoft.Build.UnitTests
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    "MyForm.en-GB.resx",
-                    null,
-                    true,
-                    "RootNamespace",
-                    "MyForm.en-GB.cs",
-                    null,
-                    StreamHelpers.StringToStream(""),
-                    null
+                    fileName: "MyForm.en-GB.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",
+                    dependentUponFileName: "MyForm.en-GB.cs",
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream(""),
+                    log: null
                 );
 
             Assert.Equal("RootNamespace.MyForm.en-GB", result);
@@ -756,13 +774,13 @@ namespace Microsoft.Build.UnitTests
 
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    "MyForm.resx",
-                    null,
-                    true,
-                    "RootNamespace",    // Root namespace (will be ignored because it's dependent)
-                    "MyForm.cs",
-                    null,
-                    StreamHelpers.StringToStream(
+                    fileName: "MyForm.resx",
+                    linkFileName: null,
+                    prependCultureAsDirectory: true,
+                    rootNamespace: "RootNamespace",    // Root namespace (will be ignored because it's dependent)
+                    dependentUponFileName: "MyForm.cs",
+                    culture: null,
+                    binaryStream: StreamHelpers.StringToStream(
 @"using System;
 #if false
 namespace ClassLibrary1
@@ -778,7 +796,7 @@ namespace ClassLibrary3
     }
 }"
                     ),
-                    c.Log
+                    log: c.Log
                 );
 
             Assert.Contains(
@@ -796,7 +814,7 @@ namespace ClassLibrary3
         /// <returns>The Stream</returns>
         private Stream CreateFileStream(string path, FileMode mode, FileAccess access)
         {
-            if (String.Compare(path, "SR1.strings", StringComparison.OrdinalIgnoreCase) == 0)
+            if (String.Equals(path, "SR1.strings", StringComparison.OrdinalIgnoreCase))
             {
                 return StreamHelpers.StringToStream("namespace MyStuff.Namespace { class Class {} }");
             }
@@ -915,14 +933,14 @@ namespace ClassLibrary3
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"SubFolder\MyResource.fr.resources",
-                    null,    // Link file name
-                    false,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"SubFolder\MyResource.fr.resources",
+                    linkFileName: null,    // Link file name
+                    prependCultureAsDirectory: false,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal(@"RootNamespace.SubFolder.MyResource.fr.resources", result);
@@ -937,14 +955,14 @@ namespace ClassLibrary3
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"MyResource.fr.resources",
-                    null,    // Link file name
-                    false,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"MyResource.fr.resources",
+                    linkFileName: null,    // Link file name
+                    prependCultureAsDirectory: false,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal(@"RootNamespace.MyResource.fr.resources", result);
@@ -959,14 +977,14 @@ namespace ClassLibrary3
             string result =
             CreateCSharpManifestResourceName.CreateManifestNameImpl
                 (
-                    @"MyResource.resources",
-                    null,    // Link file name
-                    false,
-                    "RootNamespace",        // Root namespace
-                    null,
-                    null,
-                    null,
-                    null
+                    fileName: @"MyResource.resources",
+                    linkFileName: null,    // Link file name
+                    prependCultureAsDirectory: false,
+                    rootNamespace: "RootNamespace",        // Root namespace
+                    dependentUponFileName: null,
+                    culture: null,
+                    binaryStream: null,
+                    log: null
                 );
 
             Assert.Equal(@"RootNamespace.MyResource.resources", result);

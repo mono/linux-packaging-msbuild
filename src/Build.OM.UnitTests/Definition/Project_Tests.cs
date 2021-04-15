@@ -4,14 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 
 using Microsoft.Build.Construction;
-using Microsoft.Build.Engine.UnitTests;
 using Microsoft.Build.Engine.UnitTests.Globbing;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
@@ -21,8 +19,8 @@ using Microsoft.Build.Shared;
 
 using Task = System.Threading.Tasks.Task;
 // can't use an actual ProvenanceResult because it points to a ProjectItemElement which is hard to mock.
-using ProvenanceResultTupleList = System.Collections.Generic.List<System.Tuple<string, Microsoft.Build.Evaluation.Operation, Microsoft.Build.Evaluation.Provenance, int>>;
-using GlobResultList = System.Collections.Generic.List<System.Tuple<string, string[], System.Collections.Immutable.ImmutableHashSet<string>, System.Collections.Immutable.ImmutableHashSet<string>>>;
+using ProvenanceResultTupleList = System.Collections.Generic.List<(string, Microsoft.Build.Evaluation.Operation, Microsoft.Build.Evaluation.Provenance, int)>;
+using GlobResultList = System.Collections.Generic.List<(string, string[], System.Collections.Immutable.ImmutableHashSet<string>, System.Collections.Immutable.ImmutableHashSet<string>)>;
 using InvalidProjectFileException = Microsoft.Build.Exceptions.InvalidProjectFileException;
 using ToolLocationHelper = Microsoft.Build.Utilities.ToolLocationHelper;
 using TargetDotNetFrameworkVersion = Microsoft.Build.Utilities.TargetDotNetFrameworkVersion;
@@ -2756,8 +2754,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("B", Operation.Exclude, Provenance.StringLiteral, 1)
+                ("A", Operation.Include, Provenance.StringLiteral, 1),
+                ("B", Operation.Exclude, Provenance.StringLiteral, 1)
             };
 
             AssertProvenanceResult(expected, project, "1");
@@ -2792,7 +2790,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                ("A", Operation.Include, Provenance.Glob, 1),
             };
 
             AssertProvenanceResult(expected, project, "a");
@@ -2815,8 +2813,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                Tuple.Create("B", Operation.Exclude, Provenance.Glob, 1)
+                ("A", Operation.Include, Provenance.Glob, 1),
+                ("B", Operation.Exclude, Provenance.Glob, 1)
             };
 
             AssertProvenanceResult(expected, project, "2.foo");
@@ -2836,14 +2834,14 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
+                ("A", Operation.Include, Provenance.Glob, 1),
             };
 
             AssertProvenanceResult(expected, project, "ab*cd");
 
             expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.Glob, 1),
+                ("B", Operation.Include, Provenance.Glob, 1),
             };
 
             AssertProvenanceResult(expected, project, "tx?yz");
@@ -2852,7 +2850,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         [Fact]
         public void GetItemProvenanceResultsShouldBeInItemElementOrder()
         {
-            var itemElements = Environment.ProcessorCount * 5;
+            var itemElements = NativeMethodsShared.GetLogicalCoreCount() * 5;
             var expected = new ProvenanceResultTupleList();
 
             var project =
@@ -2866,8 +2864,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             var sb = new StringBuilder();
             for (int i = 0; i < itemElements; i++)
             {
-                sb.AppendLine($"<i_{i} Include=\"a\"/>");
-                expected.Add(Tuple.Create($"i_{i}", Operation.Include, Provenance.StringLiteral, 1));
+                sb.Append("<i_").Append(i).AppendLine(" Include=\"a\"/>");
+                expected.Add(($"i_{i}", Operation.Include, Provenance.StringLiteral, 1));
             }
 
             project = string.Format(project, sb);
@@ -2890,8 +2888,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                Tuple.Create("B", Operation.Exclude, Provenance.Glob, 1)
+                ("A", Operation.Include, Provenance.Glob, 1),
+                ("B", Operation.Exclude, Provenance.Glob, 1)
             };
 
             // Create a project. The initial evaluation does not record the information needed for GetItemProvenance
@@ -2923,7 +2921,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Exclude, Provenance.Glob, 1)
+                ("A", Operation.Exclude, Provenance.Glob, 1)
             };
 
             AssertProvenanceResult(expected, project, @"bin\1.cs");
@@ -2960,8 +2958,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.Glob | Provenance.StringLiteral, 3),
-                Tuple.Create("B", Operation.Exclude, Provenance.Glob | Provenance.StringLiteral, 4)
+                ("A", Operation.Include, Provenance.Glob | Provenance.StringLiteral, 3),
+                ("B", Operation.Exclude, Provenance.Glob | Provenance.StringLiteral, 4)
             };
 
             AssertProvenanceResult(expected, project, "1.foo");
@@ -2983,8 +2981,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.Glob | Provenance.StringLiteral, 2),
-                Tuple.Create("B", Operation.Exclude, Provenance.Glob | Provenance.StringLiteral, 2)
+                ("B", Operation.Include, Provenance.Glob | Provenance.StringLiteral, 2),
+                ("B", Operation.Exclude, Provenance.Glob | Provenance.StringLiteral, 2)
             };
 
             AssertProvenanceResult(expected, project, "1.foo", "B");
@@ -3008,10 +3006,10 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     0, // first item 'a' from the include
                     new ProvenanceResultTupleList()
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 2),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2)
+                        ("A", Operation.Include, Provenance.StringLiteral, 2),
+                        ("A", Operation.Update, Provenance.StringLiteral, 1),
+                        ("A", Operation.Update, Provenance.Glob, 1),
+                        ("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2)
                     }
                 };
 
@@ -3028,7 +3026,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     2, // item 'a' from last include
                     new ProvenanceResultTupleList()
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1)
+                        ("A", Operation.Include, Provenance.StringLiteral, 1)
                     }
                 };
 
@@ -3045,7 +3043,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     0, // item 'a' from first include
                     new ProvenanceResultTupleList()
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1)
+                        ("A", Operation.Include, Provenance.StringLiteral, 1)
                     }
                 };
 
@@ -3076,9 +3074,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     2, // item 'a' from second include
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral, 2),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2)
+                        ("A", Operation.Include, Provenance.StringLiteral, 1),
+                        ("A", Operation.Update, Provenance.StringLiteral, 2),
+                        ("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2)
                     }
                 };
             }
@@ -3110,8 +3108,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("A", Operation.Exclude, Provenance.Inconclusive | Provenance.StringLiteral, 3)
+                ("B", Operation.Include, Provenance.StringLiteral, 1),
+                ("A", Operation.Exclude, Provenance.Inconclusive | Provenance.StringLiteral, 3)
             };
 
             AssertProvenanceResult(expected, project, "1");
@@ -3136,9 +3134,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("A", Operation.Include, Provenance.Inconclusive | Provenance.StringLiteral, 3),
-                Tuple.Create("C", Operation.Include, Provenance.Inconclusive, 3)
+                ("B", Operation.Include, Provenance.StringLiteral, 1),
+                ("A", Operation.Include, Provenance.Inconclusive | Provenance.StringLiteral, 3),
+                ("C", Operation.Include, Provenance.Inconclusive, 3)
             };
 
             AssertProvenanceResult(expected, project, "1");
@@ -3162,8 +3160,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("A", Operation.Include, Provenance.Inconclusive | Provenance.Glob, 3)
+                ("B", Operation.Include, Provenance.StringLiteral, 1),
+                ("A", Operation.Include, Provenance.Inconclusive | Provenance.Glob, 3)
             };
 
             AssertProvenanceResult(expected, project, "1");
@@ -3190,8 +3188,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("B", Operation.Include, Provenance.StringLiteral | Provenance.Inconclusive, 1),
-                Tuple.Create("C", Operation.Include, Provenance.StringLiteral, 1)
+                ("B", Operation.Include, Provenance.StringLiteral | Provenance.Inconclusive, 1),
+                ("C", Operation.Include, Provenance.StringLiteral, 1)
             };
 
             AssertProvenanceResult(expected, project, "a");
@@ -3261,7 +3259,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected1Foo = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 3)
+                ("A", Operation.Include, Provenance.StringLiteral, 3)
             };
 
             AssertProvenanceResult(expected1Foo, projectContents, "1.foo");
@@ -3275,7 +3273,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
                 var expected2Foo = new ProvenanceResultTupleList
                 {
-                    Tuple.Create("B", Operation.Include, Provenance.StringLiteral, 1)
+                    ("B", Operation.Include, Provenance.StringLiteral, 1)
                 };
 
                 AssertProvenanceResult(expected2Foo, project.GetItemProvenance(@"../x/d13/../../x/d12/d23/../2.foo"));
@@ -3305,8 +3303,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
                 var expectedProvenance = new ProvenanceResultTupleList
                 {
-                    Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                    Tuple.Create("B", Operation.Include, Provenance.StringLiteral | Provenance.Inconclusive, 1)
+                    ("A", Operation.Include, Provenance.StringLiteral, 1),
+                    ("B", Operation.Include, Provenance.StringLiteral | Provenance.Inconclusive, 1)
                 };
 
                 AssertProvenanceResult(expectedProvenance, project.GetItemProvenance(@"1.foo"));
@@ -3331,7 +3329,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             AssertProvenanceResult(expected, project, @"?:/*\|");
 
-            expected.Add(Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1));
+            expected.Add(("A", Operation.Include, Provenance.StringLiteral, 1));
 
             AssertProvenanceResult(expected, project, @"|:/\");
         }
@@ -3354,7 +3352,6 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             AssertProvenanceResult(expected, project, longString + "a");
         }
 
-        // todo: on xplat, split this to windows and non-windows test
         [Fact]
         public void GetItemProvenancePathMatchingShouldBeCaseInsensitive()
         {
@@ -3368,10 +3365,10 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1)
+                ("A", Operation.Include, Provenance.StringLiteral, 1)
             };
 
-            AssertProvenanceResult(expected, project, "A");
+            AssertProvenanceResult(expected, project, FileUtilities.GetIsFileSystemCaseSensitive() ? "a" : "A");
         }
 
 
@@ -3397,9 +3394,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     // the expected GetItemProvenance result
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral | Provenance.Glob, 3),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 3),
-                        Tuple.Create("A", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 3)
+                        ("A", Operation.Include, Provenance.StringLiteral | Provenance.Glob, 3),
+                        ("A", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 3),
+                        ("A", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 3)
                     }
                 };
 
@@ -3416,9 +3413,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     "abc",
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.StringLiteral, 1),
-                        Tuple.Create("A", Operation.Remove, Provenance.StringLiteral, 1)
+                        ("A", Operation.Include, Provenance.StringLiteral, 1),
+                        ("A", Operation.Update, Provenance.StringLiteral, 1),
+                        ("A", Operation.Remove, Provenance.StringLiteral, 1)
                     }
                 };
 
@@ -3449,9 +3446,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     "abc",
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                        ("A", Operation.Include, Provenance.Glob, 1),
+                        ("A", Operation.Update, Provenance.Glob, 1),
+                        ("A", Operation.Remove, Provenance.Glob, 1)
                     }
                 };
 
@@ -3475,9 +3472,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     "a%62c",
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                        ("A", Operation.Include, Provenance.Glob, 1),
+                        ("A", Operation.Update, Provenance.Glob, 1),
+                        ("A", Operation.Remove, Provenance.Glob, 1)
                     }
                 };
 
@@ -3487,9 +3484,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     "abcdefc",
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                        ("A", Operation.Include, Provenance.Glob, 1),
+                        ("A", Operation.Update, Provenance.Glob, 1),
+                        ("A", Operation.Remove, Provenance.Glob, 1)
                     }
                 };
 
@@ -3499,9 +3496,9 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                     "a%62%61c",
                     new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Update, Provenance.Glob, 1),
-                        Tuple.Create("A", Operation.Remove, Provenance.Glob, 1)
+                        ("A", Operation.Include, Provenance.Glob, 1),
+                        ("A", Operation.Update, Provenance.Glob, 1),
+                        ("A", Operation.Remove, Provenance.Glob, 1)
                     }
                 };
             }
@@ -3534,10 +3531,10 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("C", Operation.Update, Provenance.StringLiteral, 1),
-                Tuple.Create("D", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2),
-                Tuple.Create("E", Operation.Update, Provenance.Glob | Provenance.Inconclusive, 3)
+                ("A", Operation.Include, Provenance.StringLiteral, 1),
+                ("C", Operation.Update, Provenance.StringLiteral, 1),
+                ("D", Operation.Update, Provenance.StringLiteral | Provenance.Glob, 2),
+                ("E", Operation.Update, Provenance.Glob | Provenance.Inconclusive, 3)
             };
 
             AssertProvenanceResult(expected, project, "1.foo");
@@ -3564,10 +3561,10 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new ProvenanceResultTupleList
             {
-                Tuple.Create("A", Operation.Include, Provenance.StringLiteral, 1),
-                Tuple.Create("C", Operation.Remove, Provenance.StringLiteral, 1),
-                Tuple.Create("D", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 2),
-                Tuple.Create("E", Operation.Remove, Provenance.Glob | Provenance.Inconclusive, 3)
+                ("A", Operation.Include, Provenance.StringLiteral, 1),
+                ("C", Operation.Remove, Provenance.StringLiteral, 1),
+                ("D", Operation.Remove, Provenance.StringLiteral | Provenance.Glob, 2),
+                ("E", Operation.Remove, Provenance.Glob | Provenance.Inconclusive, 3)
             };
 
             AssertProvenanceResult(expected, project, "1.foo");
@@ -3601,7 +3598,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
                 expectedProvenance = provenanceShouldFindAMatch
                     ? new ProvenanceResultTupleList
                     {
-                        Tuple.Create("A", Operation.Include, provenanceKind, 1)
+                        ("A", Operation.Include, provenanceKind, 1)
                     }
                     : new ProvenanceResultTupleList();
 
@@ -3676,7 +3673,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             var expectedExcludes = new[] { "1", "*", "3" }.ToImmutableHashSet();
             var expected = new GlobResultList
             {
-                Tuple.Create("A", expectedIncludes, expectedExcludes, ImmutableHashSet.Create<string>())
+                ("A", expectedIncludes, expectedExcludes, ImmutableHashSet.Create<string>())
             };
 
             AssertGlobResult(expected, project);
@@ -3699,8 +3696,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new GlobResultList
             {
-                Tuple.Create("A", new []{"**"}, new [] {"e**"}.ToImmutableHashSet(), new [] {"c"}.ToImmutableHashSet()),
-                Tuple.Create("A", new []{"*"}, new [] {"e*"}.ToImmutableHashSet(), new [] {"c", "b", "a"}.ToImmutableHashSet()),
+                ("A", new []{"**"}, new [] {"e**"}.ToImmutableHashSet(), new [] {"c"}.ToImmutableHashSet()),
+                ("A", new []{"*"}, new [] {"e*"}.ToImmutableHashSet(), new [] {"c", "b", "a"}.ToImmutableHashSet()),
             };
 
             AssertGlobResult(expected, project);
@@ -3740,6 +3737,11 @@ namespace Microsoft.Build.UnitTests.OM.Definition
         new[] {"aa", "bb", "cc"},
         new[] {"b", "c"}
         )]
+        [InlineData(
+            @"<A Include=`ab*;b|c*;de*`/>",
+            new[] {"ab", "de"},
+            new[] {"bc", "b|c", "b", "c"}
+            )]
         public void GetAllGlobsShouldProduceGlobThatMatches(string itemContents, string[] stringsThatShouldMatch, string[] stringsThatShouldNotMatch)
         {
             var projectTemplate =
@@ -3813,7 +3815,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
             var expectedExcludes = new[] { "1", "*", "3" }.ToImmutableHashSet();
             var expected = new GlobResultList
             {
-                Tuple.Create("A", expectedIncludes, expectedExcludes, ImmutableHashSet<string>.Empty)
+                ("A", expectedIncludes, expectedExcludes, ImmutableHashSet<string>.Empty)
             };
 
             AssertGlobResult(expected, project, "A");
@@ -3836,7 +3838,7 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
             var expected = new GlobResultList
             {
-                Tuple.Create("A", new []{"*"}, new[] {"*"}.ToImmutableHashSet(), ImmutableHashSet<string>.Empty),
+                ("A", new []{"*"}, new[] {"*"}.ToImmutableHashSet(), ImmutableHashSet<string>.Empty),
             };
 
             AssertGlobResult(expected, project);
@@ -3864,8 +3866,8 @@ namespace Microsoft.Build.UnitTests.OM.Definition
 
                 var expected = new GlobResultList
                 {
-                    Tuple.Create("C", new []{"**"}, new [] {"build.proj", "a", "b"}.ToImmutableHashSet(), new [] {"build.proj", "a", "b"}.ToImmutableHashSet()),
-                    Tuple.Create("A", new []{"*"}, ImmutableHashSet<string>.Empty, ImmutableHashSet<string>.Empty)
+                    ("C", new []{"**"}, new [] {"build.proj", "a", "b"}.ToImmutableHashSet(), new [] {"build.proj", "a", "b"}.ToImmutableHashSet()),
+                    ("A", new []{"*"}, ImmutableHashSet<string>.Empty, ImmutableHashSet<string>.Empty)
                 };
 
                 AssertGlobResultsEqual(expected, globResult);

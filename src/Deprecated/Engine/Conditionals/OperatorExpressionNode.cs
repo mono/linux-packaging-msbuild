@@ -1,12 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
-using System.IO;
-using System.Xml;
-using System;
-
 using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
@@ -72,15 +66,9 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         internal override void ResetState()
         {
-            if (leftChild != null)
-            {
-                leftChild.ResetState();
-            }
+            leftChild?.ResetState();
 
-            if (rightChild != null)
-            {
-                rightChild.ResetState();
-            }
+            rightChild?.ResetState();
         }
 
         /// <summary>

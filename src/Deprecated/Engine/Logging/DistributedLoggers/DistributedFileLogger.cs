@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
-using System.Text;
 using System.IO;
 
 using Microsoft.Build.Framework;
@@ -40,9 +38,7 @@ namespace Microsoft.Build.BuildEngine
         {
             if (this.Parameters != null)
             {
-                string[] parameterComponents;
-
-                parameterComponents = this.Parameters.Split(fileLoggerParameterDelimiters);
+                string[] parameterComponents = this.Parameters.Split(fileLoggerParameterDelimiters);
                 for (int param = 0; param < parameterComponents.Length; param++)
                 {
                     if (parameterComponents[param].Length > 0)
@@ -67,7 +63,7 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         private void ApplyFileLoggerParameter(string parameterName, string parameterValue)
         {
-            if (String.Compare("LOGFILE", parameterName, StringComparison.OrdinalIgnoreCase) == 0)
+            if (String.Equals("LOGFILE", parameterName, StringComparison.OrdinalIgnoreCase))
             {
                 if(string.IsNullOrEmpty(parameterValue))
                 {
@@ -90,7 +86,7 @@ namespace Microsoft.Build.BuildEngine
 
         public void Initialize(IEventSource eventSource)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(eventSource, "eventSource");
+            ErrorUtilities.VerifyThrowArgumentNull(eventSource, nameof(eventSource));
             ParseFileLoggerParameters();
             string fileName = logFile;
             try
@@ -112,11 +108,7 @@ namespace Microsoft.Build.BuildEngine
             }
             catch (ArgumentException e) // Catching Exception, but rethrowing unless it's a well-known exception.
             {
-
-                if(nodeFileLogger != null)
-                {
-                    nodeFileLogger.Shutdown();
-                }
+                nodeFileLogger?.Shutdown();
 
                 string errorCode;
                 string helpKeyword;
@@ -130,10 +122,7 @@ namespace Microsoft.Build.BuildEngine
 
         public void Shutdown()
         {
-            if (nodeFileLogger != null)
-            {
-                nodeFileLogger.Shutdown();
-            }
+            nodeFileLogger?.Shutdown();
         }
         #endregion
 

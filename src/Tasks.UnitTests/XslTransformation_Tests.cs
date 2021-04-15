@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
-using Microsoft.Build.UnitTests;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Shared;
 using System;
@@ -13,7 +11,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Text;
 using System.Xml.Xsl;
 using System.Xml;
 using Xunit;
@@ -527,7 +524,7 @@ namespace Microsoft.Build.UnitTests
                 t.BuildEngine = engine;
                 t.OutputPaths = outputPaths;
                 t.XmlContent = _xmlDocument;
-                xslCompiledPath.ItemSpec = xslCompiledPath.ItemSpec + ";xslt";
+                xslCompiledPath.ItemSpec += ";xslt";
                 t.XslCompiledDllPath = xslCompiledPath;
                 Assert.Equal(xslCompiledPath.ItemSpec, t.XslCompiledDllPath.ItemSpec);
                 Assert.True(t.Execute()); // "XsltComiledDll1 execution should've passed"
@@ -648,7 +645,7 @@ namespace Microsoft.Build.UnitTests
                 XslTransformation t = new XslTransformation();
                 t.BuildEngine = engine;
                 t.OutputPaths = outputPaths;
-                xmlPaths[0].ItemSpec = xmlPaths[0].ItemSpec + "bad";
+                xmlPaths[0].ItemSpec += "bad";
                 t.XmlInputPaths = xmlPaths;
                 t.XslInputPath = xslPath;
                 Console.WriteLine(engine.Log);
@@ -678,7 +675,7 @@ namespace Microsoft.Build.UnitTests
                 t.BuildEngine = engine;
                 t.OutputPaths = outputPaths;
                 t.XmlInputPaths = xmlPaths;
-                xslPath.ItemSpec = xslPath.ItemSpec + "bad";
+                xslPath.ItemSpec += "bad";
                 t.XslInputPath = xslPath;
                 Assert.False(t.Execute()); // "This test should've failed (bad xslt)."
                 Console.WriteLine(engine.Log);
@@ -707,7 +704,7 @@ namespace Microsoft.Build.UnitTests
                 t.BuildEngine = engine;
                 t.OutputPaths = outputPaths;
                 t.XmlContent = _xmlDocument;
-                xslCompiledPath.ItemSpec = xslCompiledPath.ItemSpec + "bad;xslt";
+                xslCompiledPath.ItemSpec += "bad;xslt";
                 t.XslCompiledDllPath = xslCompiledPath;
                 Assert.False(t.Execute()); // "XsltComiledDllBad execution should've failed"
                 Console.WriteLine(engine.Log);
@@ -1126,16 +1123,12 @@ namespace Microsoft.Build.UnitTests
 
             // Create TypeBuilder and compile the stylesheet into it
             TypeBuilder typeBldr = modBldr.DefineType(CompiledQueryName, TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit);
-
-            CompilerErrorCollection errors = null;
             try
             {
-                using (XmlReader reader = XmlReader.Create(sourceUri, readerSettings))
-                {
-                    errors = XslCompiledTransform.CompileToType(
-                        reader, xsltSettings, xmlResolver, false, typeBldr, scriptAsmPath
-                    );
-                }
+                using XmlReader reader = XmlReader.Create(sourceUri, readerSettings);
+                CompilerErrorCollection errors = XslCompiledTransform.CompileToType(reader, xsltSettings,
+                                                                                    xmlResolver, false, typeBldr,
+                                                                                    scriptAsmPath);
             }
             catch (Exception e)
             {

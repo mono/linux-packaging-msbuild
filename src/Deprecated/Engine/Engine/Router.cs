@@ -1,16 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Diagnostics;
-
-using Microsoft.Build.Framework;
-using Microsoft.Build.BuildEngine.Shared;
-
 namespace Microsoft.Build.BuildEngine
 {
     /// <summary>
@@ -85,7 +75,7 @@ namespace Microsoft.Build.BuildEngine
         {
             get
             {
-                return (!childMode && nodeManager.MaxNodeCount == 1);
+                return !childMode && nodeManager.MaxNodeCount == 1;
             }
         }
 
@@ -131,12 +121,12 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         internal void PostDoneNotice(int nodeId, BuildResult buildResult)
         {
-            if (scheduler != null)
-            {
+               
+            
                 // Notify the scheduler that a given node(nodeId) will be getting a buildResult.
                 // This method is a no-op if the router is on a child process
-                scheduler.NotifyOfBuildResult(nodeId, buildResult);
-            }
+                scheduler?.NotifyOfBuildResult(nodeId, buildResult);
+            
 
             if (nodeId == EngineCallback.inProcNode)
             {
@@ -179,12 +169,12 @@ namespace Microsoft.Build.BuildEngine
                                     (nodeIndex, currentRequest.HandleId, currentRequest.NodeIndex,
                                      currentRequest.RequestId, cacheScope, currentRequest, null);
 
-                    if (scheduler != null)
-                    {
+                       
+                    
                         // Check to see if we need to change the traversal strategy of the system
                         // parentHandleId and node index are not used in the function so it can be ignored
-                        scheduler.NotifyOfBuildRequest(nodeIndex, currentRequest, parentHandleId);
-                    }
+                        scheduler?.NotifyOfBuildRequest(nodeIndex, currentRequest, parentHandleId);
+                    
                     
                     nodeManager.PostBuildRequestToNode(nodeIndex, currentRequest);
                 }

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Globalization;
-using System.IO;
 using System;
 
 using Microsoft.Build.Shared;
@@ -55,8 +52,8 @@ namespace Microsoft.Build.Evaluation
                 "ComparisonOnNonNumericExpression",
                  state.Condition,
                  /* helpfully display unexpanded token and expanded result in error message */
-                 (LeftChild.CanNumericEvaluate(state) ? RightChild.GetUnexpandedValue(state) : LeftChild.GetUnexpandedValue(state)),
-                 (LeftChild.CanNumericEvaluate(state) ? RightChild.GetExpandedValue(state) : LeftChild.GetExpandedValue(state)));
+                 LeftChild.CanNumericEvaluate(state) ? RightChild.GetUnexpandedValue(state) : LeftChild.GetUnexpandedValue(state),
+                 LeftChild.CanNumericEvaluate(state) ? RightChild.GetExpandedValue(state) : LeftChild.GetExpandedValue(state));
 
             // If the values identify as numeric, make that comparison instead of the Version comparison since numeric has a stricter definition
             if (isNumeric)

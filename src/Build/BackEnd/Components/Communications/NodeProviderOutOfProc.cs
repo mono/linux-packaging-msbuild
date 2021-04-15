@@ -1,28 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using System.IO;
-using System.IO.Pipes;
 using System.Diagnostics;
-using System.Threading;
-using System.Runtime.InteropServices;
-using System.Security;
-#if FEATURE_SECURITY_PERMISSIONS
-using System.Security.AccessControl;
-#endif
-using System.Security.Principal;
-#if FEATURE_SECURITY_PERMISSIONS
-using System.Security.Permissions;
-#endif
 
 using Microsoft.Build.Shared;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Internal;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -78,29 +63,10 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         /// <param name="enableNodeReuse">Is reuse of build nodes allowed?</param>
         /// <param name="enableLowPriority">Is the build running at low priority?</param>
-        internal static long GetHostHandshake(bool enableNodeReuse, bool enableLowPriority)
+        internal static Handshake GetHandshake(bool enableNodeReuse, bool enableLowPriority)
         {
-            long baseHandshake = Constants.AssemblyTimestamp;
-
-            baseHandshake = baseHandshake*17 + EnvironmentUtilities.Is64BitProcess.GetHashCode();
-
-            baseHandshake = baseHandshake*17 + enableNodeReuse.GetHashCode();
-
-            baseHandshake = baseHandshake*17 + enableLowPriority.GetHashCode();
-
-            return CommunicationsUtilities.GenerateHostHandshakeFromBase(baseHandshake, GetClientHandshake());
-        }
-
-        /// <summary>
-        /// Magic number sent by the client to the host during the handshake.
-        /// Munged version of the host handshake.
-        /// </summary>
-        internal static long GetClientHandshake()
-        {
-            // Mask out the first byte. That's because old
-            // builds used a single, non zero initial byte,
-            // and we don't want to risk communicating with them
-            return (Constants.AssemblyTimestamp ^ Int64.MaxValue) & 0x00FFFFFFFFFFFFFF;
+            CommunicationsUtilities.Trace("MSBUILDNODEHANDSHAKESALT=\"{0}\", msbuildDirectory=\"{1}\", enableNodeReuse={2}, enableLowPriority={3}", Traits.MSBuildNodeHandshakeSalt, BuildEnvironmentHelper.Instance.MSBuildToolsDirectory32, enableNodeReuse, enableLowPriority);
+            return new Handshake(CommunicationsUtilities.GetHandshakeOptions(taskHost: false, nodeReuse: enableNodeReuse, lowPriority: enableLowPriority, is64Bit: EnvironmentUtilities.Is64BitProcess));
         }
 
         /// <summary>
@@ -108,7 +74,7 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         public bool CreateNode(int nodeId, INodePacketFactory factory, NodeConfiguration configuration)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(factory, "factory");
+            ErrorUtilities.VerifyThrowArgumentNull(factory, nameof(factory));
 
             if (_nodeContexts.Count == ComponentHost.BuildParameters.MaxNodeCount)
             {
@@ -125,10 +91,10 @@ namespace Microsoft.Build.BackEnd
             // Make it here.
             CommunicationsUtilities.Trace("Starting to acquire a new or existing node to establish node ID {0}...", nodeId);
 
-            long hostHandShake = NodeProviderOutOfProc.GetHostHandshake(ComponentHost.BuildParameters.EnableNodeReuse, ComponentHost.BuildParameters.LowPriority);
-            NodeContext context = GetNode(null, commandLineArgs, nodeId, factory, hostHandShake, NodeProviderOutOfProc.GetClientHandshake(), NodeContextTerminated);
+            Handshake hostHandshake = new Handshake(CommunicationsUtilities.GetHandshakeOptions(taskHost: false, nodeReuse: ComponentHost.BuildParameters.EnableNodeReuse, lowPriority: ComponentHost.BuildParameters.LowPriority, is64Bit: EnvironmentUtilities.Is64BitProcess));
+            NodeContext context = GetNode(null, commandLineArgs, nodeId, factory, hostHandshake, NodeContextTerminated);
 
-            if (null != context)
+            if (context != null)
             {
                 _nodeContexts[nodeId] = context;
 
@@ -188,11 +154,7 @@ namespace Microsoft.Build.BackEnd
             // down all the nodes on exit, we will attempt to shutdown
             // all matching nodes with and without the priority bit set.
             // This means we need both versions of the handshake.
-            ShutdownAllNodes(
-                NodeProviderOutOfProc.GetHostHandshake(nodeReuse, enableLowPriority: false),
-                NodeProviderOutOfProc.GetHostHandshake(nodeReuse, enableLowPriority: true),
-                NodeProviderOutOfProc.GetClientHandshake(),
-                NodeContextTerminated);
+            ShutdownAllNodes(nodeReuse, NodeContextTerminated);
         }
 
         #endregion

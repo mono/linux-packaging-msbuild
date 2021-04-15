@@ -85,7 +85,7 @@ namespace Microsoft.Build.Tasks.Deployment.ManifestUtilities
         [XmlIgnore]
         public bool IsDataFile
         {
-            get => String.Compare(_writeableType, "applicationData", StringComparison.OrdinalIgnoreCase) == 0;
+            get => String.Equals(_writeableType, "applicationData", StringComparison.OrdinalIgnoreCase);
             set => _writeableType = value ? "applicationData" : null;
         }
 
@@ -367,12 +367,12 @@ namespace Microsoft.Build.Tasks.Deployment.ManifestUtilities
         {
             get
             {
-                if (String.Compare(_versioned, "yes", StringComparison.OrdinalIgnoreCase) == 0)
+                if (String.Equals(_versioned, "yes", StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
 
-                if (String.Compare(_versioned, "no", StringComparison.OrdinalIgnoreCase) == 0)
+                if (String.Equals(_versioned, "no", StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }

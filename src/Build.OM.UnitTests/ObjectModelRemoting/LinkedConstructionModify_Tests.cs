@@ -2,24 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
 {
-
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
-    using System.IO;
     using System.Linq;
-    using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
     using Microsoft.Build.Construction;
     using Microsoft.Build.Evaluation;
-    using Microsoft.Build.Tasks;
-    using Microsoft.Build.UnitTests.OM.Construction;
     using Xunit;
-    using Xunit.Abstractions;
-    using Xunit.NetCore.Extensions;
-    using Xunit.Sdk;
 
     public class LinkedConstructionModify_Tests : IClassFixture<LinkedConstructionModify_Tests.MyTestCollectionGroup>
     {
@@ -41,7 +29,6 @@ namespace Microsoft.Build.UnitTests.OM.ObjectModelRemoting
         public MyTestCollectionGroup StdGroup { get; }
         public LinkedConstructionModify_Tests(MyTestCollectionGroup group)
         {
-
             this.StdGroup = group;
             group.Clear();
             this.StdGroup.Local.Importing = true;

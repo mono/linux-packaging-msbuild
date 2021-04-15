@@ -20,6 +20,7 @@ using Microsoft.Build.Shared;
 using InvalidProjectFileException = Microsoft.Build.Exceptions.InvalidProjectFileException;
 using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
 using Xunit;
+using Microsoft.Build.Engine.UnitTests.TestComparers;
 
 namespace Microsoft.Build.UnitTests.BackEnd
 {
@@ -135,8 +136,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         [Fact]
         public void ValidateNoParameters()
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-            parameters["ExecuteReturnParam"] = new Tuple<string, ElementLocation>("true", ElementLocation.Create("foo.proj"));
+            var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+            parameters["ExecuteReturnParam"] = ("true", ElementLocation.Create("foo.proj"));
 
             Assert.True(_host.SetTaskParameters(parameters));
             Assert.Single(_parametersSetOnTask);
@@ -151,7 +152,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
         {
             Assert.Throws<InvalidProjectFileException>(() =>
             {
-                Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
+                var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
                 _host.SetTaskParameters(parameters);
             }
            );
@@ -162,8 +163,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         [Fact]
         public void ValidateNonExistantParameter()
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-            parameters["NonExistantParam"] = new Tuple<string, ElementLocation>("foo", ElementLocation.Create("foo.proj"));
+            var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+            parameters["NonExistantParam"] = ("foo", ElementLocation.Create("foo.proj"));
             Assert.False(_host.SetTaskParameters(parameters));
         }
 
@@ -602,8 +603,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         [Fact]
         public void TestExecuteTrue()
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-            parameters["ExecuteReturnParam"] = new Tuple<string, ElementLocation>("true", ElementLocation.Create("foo.proj"));
+            var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+            parameters["ExecuteReturnParam"] = ("true", ElementLocation.Create("foo.proj"));
 
             Assert.True(_host.SetTaskParameters(parameters));
 
@@ -618,8 +619,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         [Fact]
         public void TestExecuteFalse()
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-            parameters["ExecuteReturnParam"] = new Tuple<string, ElementLocation>("false", ElementLocation.Create("foo.proj"));
+            var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+            parameters["ExecuteReturnParam"] = ("false", ElementLocation.Create("foo.proj"));
 
             Assert.True(_host.SetTaskParameters(parameters));
 
@@ -636,8 +637,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         {
             Assert.Throws<IndexOutOfRangeException>(() =>
             {
-                Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-                parameters["ExecuteReturnParam"] = new Tuple<string, ElementLocation>("false", ElementLocation.Create("foo.proj"));
+                var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+                parameters["ExecuteReturnParam"] = ("false", ElementLocation.Create("foo.proj"));
 
                 Dispose();
                 InitializeHost(true);
@@ -1132,12 +1133,12 @@ namespace Microsoft.Build.UnitTests.BackEnd
         /// </summary>
         private static bool IsTaskFactoryClass(Type type, object unused)
         {
-            return (type.GetTypeInfo().IsClass &&
+            return type.GetTypeInfo().IsClass &&
                 !type.GetTypeInfo().IsAbstract &&
 #if FEATURE_TYPE_GETINTERFACE
-                (type.GetInterface("Microsoft.Build.Framework.ITaskFactory") != null));
+                (type.GetInterface("Microsoft.Build.Framework.ITaskFactory") != null);
 #else
-                type.GetInterfaces().Any(interfaceType => interfaceType.FullName == "Microsoft.Build.Framework.ITaskFactory"));
+                type.GetInterfaces().Any(interfaceType => interfaceType.FullName == "Microsoft.Build.Framework.ITaskFactory");
 #endif
         }
 
@@ -1398,8 +1399,8 @@ namespace Microsoft.Build.UnitTests.BackEnd
         /// </summary>
         private void SetTaskParameter(string parameterName, string value)
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = GetStandardParametersDictionary(true);
-            parameters[parameterName] = new Tuple<string, ElementLocation>(value, ElementLocation.Create("foo.proj"));
+            var parameters = GetStandardParametersDictionary(true);
+            parameters[parameterName] = (value, ElementLocation.Create("foo.proj"));
             bool success = _host.SetTaskParameters(parameters);
             Assert.True(success);
         }
@@ -1407,10 +1408,10 @@ namespace Microsoft.Build.UnitTests.BackEnd
         /// <summary>
         /// Helper method for tests
         /// </summary>
-        private Dictionary<string, Tuple<string, ElementLocation>> GetStandardParametersDictionary(bool returnParam)
+        private Dictionary<string, (string, ElementLocation)> GetStandardParametersDictionary(bool returnParam)
         {
-            Dictionary<string, Tuple<string, ElementLocation>> parameters = new Dictionary<string, Tuple<string, ElementLocation>>(StringComparer.OrdinalIgnoreCase);
-            parameters["ExecuteReturnParam"] = new Tuple<string, ElementLocation>(returnParam ? "true" : "false", ElementLocation.Create("foo.proj"));
+            var parameters = new Dictionary<string, (string, ElementLocation)>(StringComparer.OrdinalIgnoreCase);
+            parameters["ExecuteReturnParam"] = (returnParam ? "true" : "false", ElementLocation.Create("foo.proj"));
             return parameters;
         }
 

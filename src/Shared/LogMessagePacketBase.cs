@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Reflection;
 
@@ -114,7 +113,7 @@ namespace Microsoft.Build.Shared
         {
             Assembly coreAssembly = typeof(object).GetTypeInfo().Assembly;
             Version coreAssemblyVersion = coreAssembly.GetName().Version;
-            return 1000 + coreAssemblyVersion.Major * 10 + coreAssemblyVersion.Minor;
+            return 1000 + (coreAssemblyVersion.Major * 10) + coreAssemblyVersion.Minor;
         }
 #endif
 

@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.Shared
@@ -23,7 +22,7 @@ namespace Microsoft.Build.Shared
 
         /// <summary>
         /// Name of the Visual Studio (and Blend) process.
-        // VS ASP intellisense server fails without Microsoft.VisualStudio.Web.Host. Remove when issue fixed: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/574986
+        /// VS ASP intellisense server fails without Microsoft.VisualStudio.Web.Host. Remove when issue fixed: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/574986
         /// </summary>
         private static readonly string[] s_visualStudioProcess = {"DEVENV", "BLEND", "Microsoft.VisualStudio.Web.Host"};
 
@@ -207,7 +206,6 @@ namespace Microsoft.Build.Shared
             }
 
             return null;
-
         }
 
         private static BuildEnvironment TryFromMSBuildAssemblyUnderVisualStudio(string msbuildAssembly, string msbuildExe, bool allowLegacyToolsVersion = false)
@@ -442,13 +440,20 @@ namespace Microsoft.Build.Shared
             BuildEnvironmentHelperSingleton.s_instance = Initialize();
         }
 
+        /// <summary>
+        /// Resets the current singleton instance (for testing).
+        /// </summary>
+        internal static void ResetInstance_ForUnitTestsOnly(BuildEnvironment buildEnvironment)
+        {
+            BuildEnvironmentHelperSingleton.s_instance = buildEnvironment;
+        }
+
         private static Func<string> s_getProcessFromRunningProcess = GetProcessFromRunningProcess;
         private static Func<string> s_getExecutingAssemblyPath = GetExecutingAssemblyPath;
         private static Func<string> s_getAppContextBaseDirectory = GetAppContextBaseDirectory;
         private static Func<IEnumerable<VisualStudioInstance>> s_getVisualStudioInstances = VisualStudioLocationHelper.GetInstances;
         private static Func<string, string> s_getEnvironmentVariable = GetEnvironmentVariable;
         private static Func<bool> s_runningTests = CheckIfRunningTests;
-
 
         private static class BuildEnvironmentHelperSingleton
         {
@@ -473,7 +478,7 @@ namespace Microsoft.Build.Shared
         VisualStudio,
 
         /// <summary>
-        /// Running in a standalone toolset mode. All toolsets and extensions paths are relative to the app 
+        /// Running in a standalone toolset mode. All toolsets and extensions paths are relative to the app
         /// running and not dependent on Visual Studio. (e.g. dotnet CLI, open source clone of our repo)
         /// </summary>
         Standalone,

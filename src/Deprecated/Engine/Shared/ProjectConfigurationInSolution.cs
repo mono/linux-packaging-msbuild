@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
-using System.Text;
 
 namespace Microsoft.Build.BuildEngine.Shared
 {
@@ -50,7 +48,7 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <owner>LukaszG</owner>
         static private string RemoveSpaceFromAnyCpuPlatform(string platformName)
         {
-            if (string.Compare(platformName, "Any CPU", StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Equals(platformName, "Any CPU", StringComparison.OrdinalIgnoreCase))
                 return "AnyCPU";
 
             return platformName;

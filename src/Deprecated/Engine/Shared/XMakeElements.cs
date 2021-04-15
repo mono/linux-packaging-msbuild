@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
 using System.Xml;
-using System.Globalization;
 
 namespace Microsoft.Build.BuildEngine.Shared
 {
@@ -44,9 +42,9 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <returns>true, if specified node can be a child of a task element</returns>
         internal static bool IsValidTaskChildNode(XmlNode childNode)
         {
-            return ((childNode.Name == output) ||
+            return (childNode.Name == output) ||
                     (childNode.NodeType == XmlNodeType.Comment) ||
-                    (childNode.NodeType == XmlNodeType.Whitespace));
+                    (childNode.NodeType == XmlNodeType.Whitespace);
         }
 
         internal static readonly char[] illegalTargetNameCharacters = new char[] { '$', '@', '(', ')', '%', '*', '?', '.' };
@@ -97,5 +95,4 @@ namespace Microsoft.Build.BuildEngine.Shared
             }
         }
     }
-
 }

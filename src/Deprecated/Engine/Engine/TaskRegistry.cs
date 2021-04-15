@@ -4,11 +4,8 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Security;
 using System.Reflection;
 using System.Collections;
-using System.Diagnostics;
-using System.Globalization;
 
 using Microsoft.Build.BuildEngine.Shared;
 using Microsoft.Build.Framework;
@@ -157,7 +154,7 @@ namespace Microsoft.Build.BuildEngine
                 cachedTaskClasses[taskName] = taskClass;
             }
 
-            return (taskClass != null);
+            return taskClass != null;
         }
 
         /// <summary>
@@ -194,7 +191,7 @@ namespace Microsoft.Build.BuildEngine
                 }
             }
 
-            return (registeredTasksFound.Count > 0);
+            return registeredTasksFound.Count > 0;
         }
 
         /// <summary>
@@ -331,7 +328,6 @@ namespace Microsoft.Build.BuildEngine
                             "InvalidAttributeValueWithException", assemblyFile,
                             XMakeAttributes.assemblyFile, XMakeElements.usingTask, ex.Message);
                     }
-
                 }
 
                 AssemblyLoadInfo taskAssembly = new AssemblyLoadInfo(assemblyName, assemblyFile);
@@ -366,9 +362,9 @@ namespace Microsoft.Build.BuildEngine
         /// <returns>true, if specified type is a task</returns>
         private static bool IsTaskClass(Type type, object unused)
         {
-            return (type.IsClass &&
+            return type.IsClass &&
                 !type.IsAbstract &&
-                (type.GetInterface("ITask") != null));
+                (type.GetInterface("ITask") != null);
         }
         #endregion
 

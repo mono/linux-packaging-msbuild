@@ -3,15 +3,11 @@
 
 using System;
 using System.IO;
-using System.Security;
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
-using System.Threading;
-using System.Runtime.InteropServices;
-
 
 namespace Microsoft.Build.BuildEngine.Shared
 {
@@ -96,7 +92,6 @@ namespace Microsoft.Build.BuildEngine.Shared
             {
                 return false;
             }
-
 
             /* 
              * What follows requires some explanation.
@@ -333,7 +328,7 @@ namespace Microsoft.Build.BuildEngine.Shared
 
                 try
                 {
-                    if (String.Compare(modifier, ItemSpecModifiers.FullPath, StringComparison.OrdinalIgnoreCase) == 0)
+                    if (String.Equals(modifier, ItemSpecModifiers.FullPath, StringComparison.OrdinalIgnoreCase))
                     {
                         if(currentDirectory == null)
                         {
@@ -342,7 +337,7 @@ namespace Microsoft.Build.BuildEngine.Shared
 
                         modifiedItemSpec = GetFullPath(itemSpec, currentDirectory);
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.RootDir, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.RootDir, StringComparison.OrdinalIgnoreCase))
                     {
                         if (currentDirectory == null)
                         {
@@ -362,7 +357,7 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec += Path.DirectorySeparatorChar;
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.Filename, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.Filename, StringComparison.OrdinalIgnoreCase))
                     {
                         // if the item-spec is a root directory, it can have no filename
                         if (Path.GetDirectoryName(itemSpec) == null)
@@ -376,7 +371,7 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec = Path.GetFileNameWithoutExtension(itemSpec);
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.Extension, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.Extension, StringComparison.OrdinalIgnoreCase))
                     {
                         // if the item-spec is a root directory, it can have no extension
                         if (Path.GetDirectoryName(itemSpec) == null)
@@ -390,11 +385,11 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec = Path.GetExtension(itemSpec);
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.RelativeDir, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.RelativeDir, StringComparison.OrdinalIgnoreCase))
                     {
                         modifiedItemSpec = GetDirectory(itemSpec);
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.Directory, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.Directory, StringComparison.OrdinalIgnoreCase))
                     {
                         if (currentDirectory == null)
                         {
@@ -417,16 +412,16 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec = modifiedItemSpec.Substring(root.Length + 1);
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.RecursiveDir, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.RecursiveDir, StringComparison.OrdinalIgnoreCase))
                     {
                         // only the BuildItem class can compute this modifier -- so leave empty
                         modifiedItemSpec = String.Empty;
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.Identity, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.Identity, StringComparison.OrdinalIgnoreCase))
                     {
                         modifiedItemSpec = itemSpec;
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.ModifiedTime, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.ModifiedTime, StringComparison.OrdinalIgnoreCase))
                     {
                         isVolatile = true;
 
@@ -446,7 +441,7 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec = String.Empty;
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.CreatedTime, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.CreatedTime, StringComparison.OrdinalIgnoreCase))
                     {
                         isVolatile = true;
 
@@ -464,7 +459,7 @@ namespace Microsoft.Build.BuildEngine.Shared
                             modifiedItemSpec = String.Empty;
                         }
                     }
-                    else if (String.Compare(modifier, ItemSpecModifiers.AccessedTime, StringComparison.OrdinalIgnoreCase) == 0)
+                    else if (String.Equals(modifier, ItemSpecModifiers.AccessedTime, StringComparison.OrdinalIgnoreCase))
                     {
                         isVolatile = true;
 
@@ -578,7 +573,7 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <returns>true, if slash</returns>
         internal static bool IsSlash(char c)
         {
-            return ((c == Path.DirectorySeparatorChar) || (c == Path.AltDirectorySeparatorChar));
+            return (c == Path.DirectorySeparatorChar) || (c == Path.AltDirectorySeparatorChar);
         }
 
         /// <summary>
@@ -776,7 +771,7 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// </summary>
         internal static bool IsVCProjFilename(string filename)
         {
-            return (String.Equals(Path.GetExtension(filename), ".vcproj", StringComparison.OrdinalIgnoreCase));
+            return String.Equals(Path.GetExtension(filename), ".vcproj", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -795,8 +790,8 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <returns>relative path (can be the full path)</returns>
         internal static string MakeRelative(string basePath, string path)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(basePath, "basePath");
-            ErrorUtilities.VerifyThrowArgumentLength(path, "path");
+            ErrorUtilities.VerifyThrowArgumentNull(basePath, nameof(basePath));
+            ErrorUtilities.VerifyThrowArgumentLength(path, nameof(path));
 
             if (basePath.Length == 0)
             {
@@ -828,9 +823,9 @@ namespace Microsoft.Build.BuildEngine.Shared
         /// <returns>uri object</returns>
         private static Uri CreateUriFromPath(string path)
         {
-            ErrorUtilities.VerifyThrowArgumentLength(path, "path");
+            ErrorUtilities.VerifyThrowArgumentLength(path, nameof(path));
 
-            Uri pathUri = null;
+            Uri pathUri;
 
             // Try absolute first, then fall back on relative, otherwise it
             // makes some absolute UNC paths like (\\foo\bar) relative ...

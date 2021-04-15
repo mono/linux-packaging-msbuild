@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
-using Microsoft.Build.BackEnd;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework.Profiler;
@@ -62,7 +61,6 @@ namespace Microsoft.Build.UnitTests
                 {EvaluationLocation.CreateLocationForGlob(null, EvaluationPass.InitialProperties, "1", "myFile", 42, "glob description"),
                 new ProfiledLocation(TimeSpan.MaxValue, TimeSpan.MinValue, 2)}
             }) };
-
         }
     }
 }

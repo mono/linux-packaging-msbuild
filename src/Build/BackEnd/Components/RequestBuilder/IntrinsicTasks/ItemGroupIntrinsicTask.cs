@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
 using System.Linq;
 using Microsoft.Build.Collections;
 using ElementLocation = Microsoft.Build.Construction.ElementLocation;
@@ -14,7 +12,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Shared.FileSystem;
-using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
 using ProjectItemInstanceFactory = Microsoft.Build.Execution.ProjectItemInstance.TaskItem.ProjectItemInstanceFactory;
 using EngineFileUtilities = Microsoft.Build.Internal.EngineFileUtilities;
 using TargetLoggingContext = Microsoft.Build.BackEnd.Logging.TargetLoggingContext;
@@ -82,6 +79,9 @@ namespace Microsoft.Build.BackEnd
                         {
                             HashSet<string> keepMetadata = null;
                             HashSet<string> removeMetadata = null;
+                            HashSet<string> matchOnMetadata = null;
+                            MatchOnMetadataOptions matchOnMetadataOptions = MatchOnMetadataConstants.MatchOnMetadataOptionsDefaultValue;
+
                             if (!String.IsNullOrEmpty(child.KeepMetadata))
                             {
                                 var keepMetadataEvaluated = bucket.Expander.ExpandIntoStringListLeaveEscaped(child.KeepMetadata, ExpanderOptions.ExpandAll, child.KeepMetadataLocation).ToList();
@@ -100,6 +100,17 @@ namespace Microsoft.Build.BackEnd
                                 }
                             }
 
+                            if (!String.IsNullOrEmpty(child.MatchOnMetadata))
+                            {
+                                var matchOnMetadataEvaluated = bucket.Expander.ExpandIntoStringListLeaveEscaped(child.MatchOnMetadata, ExpanderOptions.ExpandAll, child.MatchOnMetadataLocation).ToList();
+                                if (matchOnMetadataEvaluated.Count > 0)
+                                {
+                                    matchOnMetadata = new HashSet<string>(matchOnMetadataEvaluated);
+                                }
+
+                                Enum.TryParse(child.MatchOnMetadataOptions, out matchOnMetadataOptions);
+                            }
+
                             if ((child.Include.Length != 0) ||
                                 (child.Exclude.Length != 0))
                             {
@@ -109,7 +120,7 @@ namespace Microsoft.Build.BackEnd
                             else if (child.Remove.Length != 0)
                             {
                                 // It's a remove -- we're "removing" items from the world
-                                ExecuteRemove(child, bucket);
+                                ExecuteRemove(child, bucket, matchOnMetadata, matchOnMetadataOptions);
                             }
                             else
                             {
@@ -144,7 +155,7 @@ namespace Microsoft.Build.BackEnd
         {
             // First, collect up the appropriate metadata collections.  We need the one from the item definition, if any, and
             // the one we are using for this batching bucket.
-            ProjectItemDefinitionInstance itemDefinition = null;
+            ProjectItemDefinitionInstance itemDefinition;
             Project.ItemDefinitions.TryGetValue(child.ItemType, out itemDefinition);
 
             // The NestedMetadataTable will handle the aggregation of the different metadata collections
@@ -200,12 +211,13 @@ namespace Microsoft.Build.BackEnd
                 LoggingContext.BuildEventContext,
                 FileSystems.Default);
 
-            if (LogTaskInputs && !LoggingContext.LoggingService.OnlyLogCriticalEvents && itemsToAdd != null && itemsToAdd.Count > 0)
+            if (LogTaskInputs && !LoggingContext.LoggingService.OnlyLogCriticalEvents && itemsToAdd?.Count > 0)
             {
                 var itemGroupText = ItemGroupLoggingHelper.GetParameterText(
                     ItemGroupLoggingHelper.ItemGroupIncludeLogMessagePrefix,
                     child.ItemType,
-                    itemsToAdd);
+                    itemsToAdd,
+                    logItemMetadata: true);
                 LoggingContext.LogCommentFromText(MessageImportance.Low, itemGroupText);
             }
 
@@ -219,7 +231,9 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         /// <param name="child">The item specification to evaluate and remove.</param>
         /// <param name="bucket">The batching bucket.</param>
-        private void ExecuteRemove(ProjectItemGroupTaskItemInstance child, ItemBucket bucket)
+        /// <param name="matchOnMetadata">Metadata matching.</param>
+        /// <param name="matchingOptions">Options matching.</param>
+        private void ExecuteRemove(ProjectItemGroupTaskItemInstance child, ItemBucket bucket, HashSet<string> matchOnMetadata, MatchOnMetadataOptions matchingOptions)
         {
             ICollection<ProjectItemInstance> group = bucket.Lookup.GetItems(child.ItemType);
             if (group == null)
@@ -228,7 +242,15 @@ namespace Microsoft.Build.BackEnd
                 return;
             }
 
-            List<ProjectItemInstance> itemsToRemove = FindItemsMatchingSpecification(group, child.Remove, child.RemoveLocation, bucket.Expander);
+            List<ProjectItemInstance> itemsToRemove;
+            if (matchOnMetadata == null)
+            {
+                itemsToRemove = FindItemsMatchingSpecification(group, child.Remove, child.RemoveLocation, bucket.Expander);
+            }
+            else
+            {
+                itemsToRemove = FindItemsUsingMatchOnMetadata(group, child, bucket, matchOnMetadata, matchingOptions);
+            }
 
             if (itemsToRemove != null)
             {
@@ -237,12 +259,36 @@ namespace Microsoft.Build.BackEnd
                     var itemGroupText = ItemGroupLoggingHelper.GetParameterText(
                         ItemGroupLoggingHelper.ItemGroupRemoveLogMessage,
                         child.ItemType,
-                        itemsToRemove);
+                        itemsToRemove,
+                        logItemMetadata: true);
                     LoggingContext.LogCommentFromText(MessageImportance.Low, itemGroupText);
                 }
 
                 bucket.Lookup.RemoveItems(itemsToRemove);
             }
+        }
+
+        private List<ProjectItemInstance> FindItemsUsingMatchOnMetadata(
+            ICollection<ProjectItemInstance> items,
+            ProjectItemGroupTaskItemInstance child,
+            ItemBucket bucket,
+            HashSet<string> matchOnMetadata,
+            MatchOnMetadataOptions options)
+        {
+            ErrorUtilities.VerifyThrowArgumentNull(matchOnMetadata, nameof(matchOnMetadata));
+
+            var itemSpec = new ItemSpec<ProjectPropertyInstance, ProjectItemInstance>(child.Remove, bucket.Expander, child.RemoveLocation, Project.Directory, true);
+
+            ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(
+                itemSpec.Fragments.Count == 1
+                && itemSpec.Fragments.First() is ItemSpec<ProjectPropertyInstance, ProjectItemInstance>.ItemExpressionFragment
+                && matchOnMetadata.Count == 1,
+                new BuildEventFileInfo(string.Empty),
+                "OM_MatchOnMetadataIsRestrictedToOnlyOneReferencedItem",
+                child.RemoveLocation,
+                child.Remove);
+
+            return items.Where(item => itemSpec.MatchesItemOnMetadata(item, matchOnMetadata, options)).ToList();
         }
 
         /// <summary>
@@ -630,7 +676,7 @@ namespace Microsoft.Build.BackEnd
             public string GetEscapedValueIfPresent(string specifiedItemType, string name)
             {
                 string value = null;
-                if (null == specifiedItemType || specifiedItemType == _itemType)
+                if (specifiedItemType == null || specifiedItemType == _itemType)
                 {
                     // Look in the addTable
                     if (_addTable.TryGetValue(name, out value))
@@ -640,17 +686,17 @@ namespace Microsoft.Build.BackEnd
                 }
 
                 // Look in the bucket table
-                if (null != _bucketTable)
+                if (_bucketTable != null)
                 {
                     value = _bucketTable.GetEscapedValueIfPresent(specifiedItemType, name);
-                    if (null != value)
+                    if (value != null)
                     {
                         return value;
                     }
                 }
 
                 // Look in the item definition table
-                if (null != _itemDefinitionTable)
+                if (_itemDefinitionTable != null)
                 {
                     value = _itemDefinitionTable.GetEscapedValueIfPresent(specifiedItemType, name);
                 }

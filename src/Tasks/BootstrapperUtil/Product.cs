@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -213,7 +212,7 @@ namespace Microsoft.Build.Tasks.Deployment.Bootstrapper
             return ValidationResults?.PackageResults(culture);
         }
 
-        internal bool ValidationPassed => ValidationResults == null || ValidationResults.ValidationPassed;
+        internal bool ValidationPassed => ValidationResults?.ValidationPassed != false;
 
         internal ProductValidationResults ValidationResults { get; }
     }

@@ -3,13 +3,8 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System;
-using System.Text;
-using System.Xml;
-
-using Microsoft.Build.Framework;
 using Microsoft.Build.BuildEngine.Shared;
 
 namespace Microsoft.Build.BuildEngine
@@ -35,7 +30,7 @@ namespace Microsoft.Build.BuildEngine
         /// </summary>
         internal override bool BoolEvaluate(ConditionEvaluationState state)
         {
-            if (String.Compare(functionName, "exists", StringComparison.OrdinalIgnoreCase) == 0)
+            if (String.Equals(functionName, "exists", StringComparison.OrdinalIgnoreCase))
             {
                 // Check we only have one argument
                 VerifyArgumentCount(1, state);
@@ -63,13 +58,12 @@ namespace Microsoft.Build.BuildEngine
 
                         return false;
                     }
-
                 }
 
                 // Both Exists functions return false if the value is null or empty
                 return File.Exists(expandedValue) || Directory.Exists(expandedValue);
             }
-            else if (String.Compare(functionName, "HasTrailingSlash", StringComparison.OrdinalIgnoreCase) == 0)
+            else if (String.Equals(functionName, "HasTrailingSlash", StringComparison.OrdinalIgnoreCase))
             {
                 // Check we only have one argument
                 VerifyArgumentCount(1, state);
@@ -82,7 +76,7 @@ namespace Microsoft.Build.BuildEngine
                 {
                     char lastCharacter = expandedValue[expandedValue.Length - 1];
                     // Either back or forward slashes satisfy the function: this is useful for URL's
-                    return (lastCharacter == Path.DirectorySeparatorChar || lastCharacter == Path.AltDirectorySeparatorChar);
+                    return lastCharacter == Path.DirectorySeparatorChar || lastCharacter == Path.AltDirectorySeparatorChar;
                 }
                 else
                 {

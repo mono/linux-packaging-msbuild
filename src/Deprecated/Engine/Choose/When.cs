@@ -4,8 +4,6 @@
 using System;
 using System.Collections;
 using System.Xml;
-using System.IO;
-using System.Globalization;
 
 using Microsoft.Build.BuildEngine.Shared;
 
@@ -83,7 +81,6 @@ namespace Microsoft.Build.BuildEngine
             }
 
             ProcessWhenChildren(whenElement, parentProject, importedFromAnotherProject, nestingDepth);
-
         }
         #endregion
 

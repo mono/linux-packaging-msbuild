@@ -11,9 +11,6 @@ using Microsoft.Build.Collections;
 using Microsoft.Build.ObjectModelRemoting;
 using Microsoft.Build.Shared;
 
-using ProjectXmlUtilities = Microsoft.Build.Internal.ProjectXmlUtilities;
-using System.Collections;
-
 namespace Microsoft.Build.Construction
 {
     /// <summary>
@@ -35,7 +32,7 @@ namespace Microsoft.Build.Construction
         /// <summary>
         /// The parameters (excepting condition and continue-on-error)
         /// </summary>
-        private CopyOnWriteDictionary<string, Tuple<string, ElementLocation>> _parameters;
+        private CopyOnWriteDictionary<(string, ElementLocation)> _parameters;
 
         /// <summary>
         /// Protection for the parameters cache
@@ -48,7 +45,7 @@ namespace Microsoft.Build.Construction
         internal ProjectTaskElement(XmlElementWithLocation xmlElement, ProjectTargetElement parent, ProjectRootElement containingProject)
             : base(xmlElement, parent, containingProject)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(parent, "parent");
+            ErrorUtilities.VerifyThrowArgumentNull(parent, nameof(parent));
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Gets or sets the continue on error value. 
+        /// Gets or sets the continue on error value.
         /// Returns empty string if it is not present.
         /// Removes the attribute if the value to set is empty.
         /// </summary>
@@ -80,7 +77,7 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Gets or sets the runtime value for the task. 
+        /// Gets or sets the runtime value for the task.
         /// Returns empty string if it is not present.
         /// Removes the attribute if the value to set is empty.
         /// </summary>
@@ -100,7 +97,7 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Gets or sets the architecture value for the task. 
+        /// Gets or sets the architecture value for the task.
         /// Returns empty string if it is not present.
         /// Removes the attribute if the value to set is empty.
         /// </summary>
@@ -150,7 +147,7 @@ namespace Microsoft.Build.Construction
 
                     var parametersClone = new Dictionary<string, string>(_parameters.Count, StringComparer.OrdinalIgnoreCase);
 
-                    foreach (KeyValuePair<string, Tuple<string, ElementLocation>> entry in _parameters)
+                    foreach (KeyValuePair<string, (string, ElementLocation)> entry in _parameters)
                     {
                         parametersClone[entry.Key] = entry.Value.Item1;
                     }
@@ -179,7 +176,7 @@ namespace Microsoft.Build.Construction
                     EnsureParametersInitialized();
                     var parameterLocations = new List<KeyValuePair<string, ElementLocation>>();
 
-                    foreach (KeyValuePair<string, Tuple<string, ElementLocation>> entry in _parameters)
+                    foreach (KeyValuePair<string, (string, ElementLocation)> entry in _parameters)
                     {
                         parameterLocations.Add(new KeyValuePair<string, ElementLocation>(entry.Key, entry.Value.Item2));
                     }
@@ -210,7 +207,7 @@ namespace Microsoft.Build.Construction
         /// <summary>
         /// Retrieves a copy of the parameters as used during evaluation.
         /// </summary>
-        internal CopyOnWriteDictionary<string, Tuple<string, ElementLocation>> ParametersForEvaluation
+        internal CopyOnWriteDictionary<(string, ElementLocation)> ParametersForEvaluation
         {
             get
             {
@@ -226,8 +223,8 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Convenience method to add an Output Item to this task. 
-        /// Adds after the last child. 
+        /// Convenience method to add an Output Item to this task.
+        /// Adds after the last child.
         /// </summary>
         public ProjectOutputElement AddOutputItem(string taskParameter, string itemType)
         {
@@ -238,8 +235,8 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Convenience method to add a conditioned Output Item to this task. 
-        /// Adds after the last child. 
+        /// Convenience method to add a conditioned Output Item to this task.
+        /// Adds after the last child.
         /// </summary>
         public ProjectOutputElement AddOutputItem(string taskParameter, string itemType, string condition)
         {
@@ -256,8 +253,8 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Convenience method to add an Output Property to this task. 
-        /// Adds after the last child. 
+        /// Convenience method to add an Output Property to this task.
+        /// Adds after the last child.
         /// </summary>
         public ProjectOutputElement AddOutputProperty(string taskParameter, string propertyName)
         {
@@ -268,8 +265,8 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Convenience method to add a conditioned Output Property to this task. 
-        /// Adds after the last child. 
+        /// Convenience method to add a conditioned Output Property to this task.
+        /// Adds after the last child.
         /// </summary>
         public ProjectOutputElement AddOutputProperty(string taskParameter, string propertyName, string condition)
         {
@@ -302,7 +299,7 @@ namespace Microsoft.Build.Construction
 
                 EnsureParametersInitialized();
 
-                if (_parameters.TryGetValue(name, out Tuple<string, ElementLocation> parameter))
+                if (_parameters.TryGetValue(name, out (string, ElementLocation) parameter))
                 {
                     return parameter.Item1;
                 }
@@ -377,7 +374,7 @@ namespace Microsoft.Build.Construction
                 {
                     if (!XMakeAttributes.IsSpecialTaskAttribute(attribute.Name))
                     {
-                        toRemove = toRemove ?? new List<XmlAttribute>();
+                        toRemove ??= new List<XmlAttribute>();
                         toRemove.Add(attribute);
                     }
                 }
@@ -443,7 +440,7 @@ namespace Microsoft.Build.Construction
         {
             if (_parameters == null)
             {
-                _parameters = new CopyOnWriteDictionary<string, Tuple<string, ElementLocation>>(XmlElement.Attributes.Count, StringComparer.OrdinalIgnoreCase);
+                _parameters = new CopyOnWriteDictionary<(string, ElementLocation)>(XmlElement.Attributes.Count, StringComparer.OrdinalIgnoreCase);
 
                 foreach (XmlAttributeWithLocation attribute in XmlElement.Attributes)
                 {
@@ -453,7 +450,7 @@ namespace Microsoft.Build.Construction
                         // That means that if the name of the file is changed after first load (possibly from null) it will
                         // remain the old value here. Correctly, this should cache the attribute not the location. Fixing 
                         // that will need profiling, though, as this cache was added for performance.
-                        _parameters[attribute.Name] = new Tuple<string, ElementLocation>(attribute.Value, attribute.Location);
+                        _parameters[attribute.Name] = (attribute.Value, attribute.Location);
                     }
                 }
             }

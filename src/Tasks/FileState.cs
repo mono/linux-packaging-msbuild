@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Build.Shared;
-using Microsoft.Build.Shared.FileSystem;
 
 namespace Microsoft.Build.Tasks
 {
@@ -148,7 +147,6 @@ namespace Microsoft.Build.Tasks
                             IsReadOnly = fileInfo.IsReadOnly;
                             LastWriteTimeUtc = fileInfo.LastWriteTimeUtc;
                             Length = fileInfo.Length;
-
                         }
                         else
                         {
@@ -162,7 +160,6 @@ namespace Microsoft.Build.Tasks
                                 IsReadOnly = false;
                                 LastWriteTimeUtc = directoryInfo.LastWriteTimeUtc;
                             }
-
                         }
                     }
                 }

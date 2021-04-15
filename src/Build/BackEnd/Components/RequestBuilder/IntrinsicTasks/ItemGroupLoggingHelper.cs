@@ -8,7 +8,6 @@ using System.Globalization;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
-using System.Reflection;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -27,14 +26,6 @@ namespace Microsoft.Build.BackEnd
         /// </summary>
         internal static int parameterLimit = 200;
 
-        /// <summary>
-        /// Gets a text serialized value of a parameter for logging.
-        /// </summary>
-        internal static string GetParameterText(string prefix, string parameterName, params object[] parameterValues)
-        {
-            return GetParameterText(prefix, parameterName, (IList)parameterValues);
-        }
-
         internal static string ItemGroupIncludeLogMessagePrefix = ResourceUtilities.GetResourceString("ItemGroupIncludeLogMessagePrefix");
         internal static string ItemGroupRemoveLogMessage = ResourceUtilities.GetResourceString("ItemGroupRemoveLogMessage");
         internal static string OutputItemParameterMessagePrefix = ResourceUtilities.GetResourceString("OutputItemParameterMessagePrefix");
@@ -43,7 +34,7 @@ namespace Microsoft.Build.BackEnd
         /// <summary>
         /// Gets a text serialized value of a parameter for logging.
         /// </summary>
-        internal static string GetParameterText(string prefix, string parameterName, IList parameterValue)
+        internal static string GetParameterText(string prefix, string parameterName, IList parameterValue, bool logItemMetadata = true)
         {
             if (parameterValue == null || parameterValue.Count == 0)
             {
@@ -94,7 +85,7 @@ namespace Microsoft.Build.BackEnd
                         sb.Append("        ");
                     }
 
-                    AppendStringFromParameterValue(sb, parameterValue[i]);
+                    AppendStringFromParameterValue(sb, parameterValue[i], logItemMetadata);
 
                     if (!specialTreatmentForSingle && i < parameterValue.Count - 1)
                     {
@@ -118,7 +109,7 @@ namespace Microsoft.Build.BackEnd
         /// First line is already indented.
         /// Indent of any subsequent line should be 12 spaces.
         /// </summary>
-        internal static string GetStringFromParameterValue(object parameterValue)
+        internal static string GetStringFromParameterValue(object parameterValue, bool logItemMetadata = true)
         {
             // fast path for the common case
             if (parameterValue is string valueText)
@@ -128,7 +119,7 @@ namespace Microsoft.Build.BackEnd
 
             using (var sb = new ReuseableStringBuilder())
             {
-                AppendStringFromParameterValue(sb, parameterValue);
+                AppendStringFromParameterValue(sb, parameterValue, logItemMetadata);
                 return sb.ToString();
             }
         }
@@ -138,7 +129,7 @@ namespace Microsoft.Build.BackEnd
         [ThreadStatic]
         private static List<KeyValuePair<string, string>> keyValuePairList;
 
-        private static void AppendStringFromParameterValue(ReuseableStringBuilder sb, object parameterValue)
+        private static void AppendStringFromParameterValue(ReuseableStringBuilder sb, object parameterValue, bool logItemMetadata = true)
         {
             if (parameterValue is string text)
             {
@@ -147,6 +138,11 @@ namespace Microsoft.Build.BackEnd
             else if (parameterValue is ITaskItem item)
             {
                 sb.Append(item.ItemSpec);
+
+                if (!logItemMetadata)
+                {
+                    return;
+                }
 
                 var customMetadata = item.CloneCustomMetadata();
                 int count = customMetadata.Count;
