@@ -1,3 +1,9 @@
+msbuild (1:16.10.1+xamarinxplat.2021.05.26.14.00-0xamarin1) preview; urgency=medium
+
+  * New release - msbuild-16.10.1+xamarinxplat.2021.05.26.14.00.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 17 Jun 2021 15:32:32 +0000
+
 msbuild (1:16.9+xamarinxplat.2021.03.07.08.05-0xamarin3) preview; urgency=medium
 
   * Packaging bugfix:
